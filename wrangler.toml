@@ -1,9 +1,9 @@
 name = "harry-world"
 compatibility_date = "2026-01-01"
 
-[assets]
-directory = "."
-
 routes = [
   { pattern = "harryjia.com", custom_domain = true }
 ]
+
+[assets]
+directory = "."
