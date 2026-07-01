@@ -4,7 +4,14 @@
 
 從 Claude Design 的「Harry World」概念稿實作出來的**乾淨靜態網站**，採 1a「Soft Studio」溫暖俐落風格。
 
-**互動模式**：主畫面是一張地圖（hub），像素小人可以用方向鍵 / WASD 走動；靠近展廳按 **E**（或直接點展廳），就「走進」那個小房間看內頁。按 **Esc** 或左上角「回地圖」回到主畫面。四個展廳各是一個獨立內頁，網址會變成 `#builder` / `#lab` / `#journey` / `#connect`，瀏覽器上一頁也能用。
+**互動模式**：主畫面是一張地圖（hub），像素小人可以用方向鍵 / WASD 走動；靠近展廳按 **E**（或直接點展廳），會有一個彩色「傳送門」轉場、走進那個小房間看內頁。按 **Esc** 或左上角「回地圖」回到主畫面。四個展廳各是一個獨立內頁，網址會變成 `#builder` / `#lab` / `#journey` / `#connect`，瀏覽器上一頁也能用。
+
+**遊戲化細節**：
+- 🎵 走路有腳步音效、腳下有塵土粒子；撞到地圖邊界會有輕微回饋
+- 🌀 走進展廳＝彩色傳送門 wipe 轉場（顏色對應該展廳）
+- 🏅 每個展廳右上角有「探索進度」計數，首次造訪會跳出成就通知；全部走完會有彩帶慶祝
+- 🔇 右上角喇叭圖示可以靜音（狀態會記住，下次打開網站不會重置）
+- 探索進度會存在瀏覽器 `localStorage`，換瀏覽器 / 清除快取才會重置
 
 四個展廳：
 - 🟦 **Builder** → 關於我 ＋ 正在做的東西
@@ -74,36 +81,26 @@ python3 -m http.server 4173
 
 ---
 
-## 🚀 上架（把網站放到網路上）
+## 🚀 上架狀態
 
-推薦 **GitHub Pages**（免費、你已經有 GitHub 帳號 `harryjia1007`）。等你準備好，我可以一步步帶你做。大方向是：
+**已完成**：原始碼已經推上 GitHub → **[github.com/harryjia1007/harry-world](https://github.com/harryjia1007/harry-world)**（公開 repo）
 
-1. 把這個資料夾變成一個 GitHub repo（例如叫 `harry-world`）
-2. 推上 GitHub
-3. 在 repo 的 **Settings → Pages** 開啟，來源選 `main` 分支
-4. 幾分鐘後就有一個網址：`https://harryjia1007.github.io/harry-world/`
+因為你的網域已經買在 **Cloudflare**，最順的部署方式是 **Cloudflare Pages**（免費、跟網域同一帳號，綁定自訂網域幾乎是自動的，不用手動查 DNS）。
 
-之後每次改完 `app.js`，只要 push 上去，網站就自動更新。
+### 接下來請你在 Cloudflare 儀表板操作（這段是你的帳號，我沒辦法幫你點）：
 
-> 另一個更省事的選擇是 **Vercel** 或 **Netlify**：把資料夾拖上去就自動部署，還能一鍵綁自訂網域。要用哪個都行，跟我說我幫你設定。
+1. 登入 [dash.cloudflare.com](https://dash.cloudflare.com)
+2. 左側選單找 **Workers & Pages** → **Create** → **Pages** 分頁 → **Connect to Git**
+3. 授權並選擇 repo：`harryjia1007/harry-world`
+4. 建置設定全部**留空／預設**即可（這是純靜態網站，不需要 build command，Framework preset 選 **None**）
+   - Build command：留空
+   - Build output directory：留空（或填 `/`）
+5. 按 **Save and Deploy**，約 1 分鐘後會拿到一個 `xxx.pages.dev` 的網址，先確認能打開
+6. 進這個 Pages 專案的 **Custom domains** 分頁 → **Set up a custom domain** → 輸入你買的網域
+   - 因為網域跟 Pages 專案在同一個 Cloudflare 帳號，這步通常會**自動幫你設好 DNS**，等它顯示綠色的 Active 就完成了
+7. 之後只要我幫你改完 `app.js` 並 `git push`，Cloudflare Pages 會**自動重新部署**，不用再手動做任何事
 
----
-
-## 🌐 買網域（例如 harryworld.dev / harrychen.me）
-
-網域＝你的專屬網址，一年約 US$10–15。步驟：
-
-1. **想名字**：例如 `harrychen.me`、`harryjia.com`、`harry.world`、`harryworld.dev`。
-   - `.dev` 很適合工程師（設計稿裡用的就是 `harryworld.dev`）
-   - `.me` 適合個人品牌
-2. **到網域商查詢並購買**（挑一家就好）：
-   - [Cloudflare Registrar](https://www.cloudflare.com/products/registrar/)：業界最便宜、不哄抬續約價（**最推薦**）
-   - [Namecheap](https://www.namecheap.com/)：便宜、介面友善
-   - [Porkbun](https://porkbun.com/)：便宜、`.dev` 常有優惠
-3. **付款買下**（信用卡即可，這步要你自己操作）
-4. **把網域接到你的網站**：在網域商的 DNS 設定，指向 GitHub Pages（或 Vercel/Netlify）。這步有點技術，**買好之後跟我說，我帶你設定 DNS**。
-
-> 小提醒：`.dev` 網域強制 HTTPS（更安全），GitHub Pages / Vercel 都免費附 HTTPS，完全相容。
+> 如果卡在任何一步、畫面跟說明對不上，截圖給我，我可以就著畫面告訴你下一步按哪裡。
 
 ---
 
@@ -111,9 +108,9 @@ python3 -m http.server 4173
 
 1. 有新作品／新經歷 → 改 `app.js` 的對應陣列
 2. 本機打開 `index.html` 確認畫面
-3. push 上 GitHub（或拖上 Vercel）→ 網站自動更新
+3. push 上 GitHub → Cloudflare Pages 自動重新部署，網域上的網站幾分鐘內就更新
 
-就這麼簡單。這個網站設計成「會跟著你一起長大」——每做一個新東西，就多一個展品。
+就這麼簡單。這個網站設計成「會跟著你一起長大」——每做一個新東西，就多一個展品。之後你只要跟我說「幫我加一個新作品」之類的，我改完 `app.js` 就會直接幫你 commit + push。
 
 ---
 
