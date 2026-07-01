@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Harry World — 陳佳朋</title>
+  <meta name="description" content="Harry World — 陳佳朋的個人網站。一座還在長大的數位博物館，走進四個展廳，探索我正在做的東西。">
+
+  <meta property="og:title" content="Harry World — 陳佳朋">
+  <meta property="og:description" content="一座還在長大的數位博物館。走進四個展廳，探索我在做的東西。">
+  <meta property="og:type" content="website">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- 頂部：品牌（點了回地圖）＋ 語言切換 -->
+  <header class="site-header">
+    <a class="brand" id="brandHome" href="#" aria-label="回到地圖">
+      <span class="brand-badge">H</span>
+      <span class="brand-name" data-bind="name"></span>
+    </a>
+    <span class="here" id="hereLabel"></span>
+    <button class="sound-btn" id="soundBtn" aria-label="切換音效"></button>
+    <button class="lang-btn" id="langBtn" aria-label="切換語言"></button>
+  </header>
+
+  <!-- ============ 主畫面：探索地圖 ============ -->
+  <section class="hub" id="hub">
+    <div class="hub-kicker" data-bind="heroKicker"></div>
+    <h1 class="hub-title" data-bind="heroTagline"></h1>
+
+    <div class="progress-hud" id="progressHud"></div>
+
+    <div class="playground-scale">
+      <div class="playground" id="playground">
+        <div class="sky-sun"></div>
+        <span class="cloud c1"></span>
+        <span class="cloud c2"></span>
+        <span class="cloud c3"></span>
+        <div class="ground-shade"></div>
+        <div class="pg-hint">⌨ <span data-bind="ui.walkHint"></span></div>
+        <div class="pg-prompt" id="pgPrompt" hidden></div>
+        <div class="key-hint" id="keyHint" hidden></div>
+      </div>
+    </div>
+
+    <p class="hub-tip" data-bind="ui.enterTip"></p>
+  </section>
+
+  <!-- ============ 內頁：走進一個展廳 ============ -->
+  <section class="hall-view" id="hallView" aria-hidden="true">
+    <div class="hall-inner">
+      <button class="back-btn" id="backBtn"><i class="fa-solid fa-arrow-left"></i> <span data-bind="ui.back"></span></button>
+      <div class="hall-banner" id="hallBanner"></div>
+      <div class="hall-body" id="hallBody"></div>
+      <div class="footer" data-bind="footer"></div>
+    </div>
+  </section>
+
+  <!-- 遊戲化 UI：成就通知 / 彩帶 / 傳送門轉場 -->
+  <div class="toast" id="toast" hidden aria-live="polite"></div>
+  <div class="confetti-layer" id="confettiLayer"></div>
+  <div class="iris" id="iris"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
