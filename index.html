@@ -3,69 +3,183 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Harry World — 陳佳朋</title>
-  <meta name="description" content="Harry World — 陳佳朋的個人網站。一座還在長大的數位博物館，走進四個展廳，探索我正在做的東西。">
+  <title>陳佳朋 Harry Chen — AI Builder｜Portfolio</title>
+  <meta name="description" content="Harry Chen（陳佳朋）的個人作品集：AI 工具、macOS 小工具與正在路上的新作品。深色像素風格。">
 
-  <meta property="og:title" content="Harry World — 陳佳朋">
-  <meta property="og:description" content="一座還在長大的數位博物館。走進四個展廳，探索我在做的東西。">
+  <meta property="og:title" content="陳佳朋 Harry Chen — AI Builder Portfolio">
+  <meta property="og:description" content="把生活裡的小麻煩，做成真的有人會用的產品。">
   <meta property="og:type" content="website">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- 頂部：品牌（點了回地圖）＋ 語言切換 -->
-  <header class="site-header">
-    <a class="brand" id="brandHome" href="#" aria-label="回到地圖">
-      <span class="brand-badge">H</span>
-      <span class="brand-name" data-bind="name"></span>
-    </a>
-    <span class="here" id="hereLabel"></span>
-    <button class="sound-btn" id="soundBtn" aria-label="切換音效"></button>
-    <button class="lang-btn" id="langBtn" aria-label="切換語言"></button>
-  </header>
+  <!-- 背景質感層：掃描線 / 暈影 / 顆粒 -->
+  <div class="fx-scan" aria-hidden="true"></div>
+  <div class="fx-vignette" aria-hidden="true"></div>
+  <div class="fx-grain" aria-hidden="true"></div>
 
-  <!-- ============ 主畫面：探索地圖 ============ -->
-  <section class="hub" id="hub">
-    <div class="hub-kicker" data-bind="heroKicker"></div>
-    <h1 class="hub-title" data-bind="heroTagline"></h1>
+  <!-- 捲動進度條 -->
+  <div class="prog-bar" id="progBar"></div>
 
-    <div class="progress-hud" id="progressHud"></div>
+  <!-- 自訂像素游標（僅桌機） -->
+  <div class="pixel-cursor" id="pixelCursor" aria-hidden="true"></div>
+  <div class="pixel-cursor-ring" id="pixelCursorRing" aria-hidden="true"></div>
 
-    <div class="playground-scale">
-      <div class="playground" id="playground">
-        <div class="sky-sun"></div>
-        <span class="cloud c1"></span>
-        <span class="cloud c2"></span>
-        <span class="cloud c3"></span>
-        <div class="ground-shade"></div>
-        <div class="pg-hint">⌨ <span data-bind="ui.walkHint"></span></div>
-        <div class="pg-prompt" id="pgPrompt" hidden></div>
-        <div class="key-hint" id="keyHint" hidden></div>
+  <!-- 固定品牌角標 -->
+  <div class="brand-chip">
+    <span class="brand-badge">H</span>
+    <span>
+      <span class="brand-name">陳佳朋</span>
+      <span class="brand-sub">AI&nbsp;BUILDER</span>
+    </span>
+  </div>
+
+  <!-- 懸浮膠囊導覽 -->
+  <nav class="tab-nav" id="tabNav">
+    <button class="tab-btn" data-tab="work">WORK</button>
+    <button class="tab-btn" data-tab="journey">JOURNEY</button>
+    <button class="tab-btn" data-tab="about">ABOUT</button>
+  </nav>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-kicker">✦ 勇敢的人先享受世界。</div>
+
+      <div class="wordmark-wrap">
+        <div class="wordmark glitch-a" aria-hidden="true">HARRY CHEN</div>
+        <div class="wordmark glitch-b" aria-hidden="true">HARRY CHEN</div>
+        <h1 class="wordmark wordmark-main">
+          <span style="animation-delay:0s">H</span><span style="animation-delay:.05s">A</span><span style="animation-delay:.1s">R</span><span style="animation-delay:.15s">R</span><span style="animation-delay:.2s">Y</span><span class="wm-sp"></span><span style="animation-delay:.3s">C</span><span style="animation-delay:.35s">H</span><span style="animation-delay:.4s">E</span><span style="animation-delay:.45s">N</span>
+        </h1>
+        <span class="px-bit a"></span>
+        <span class="px-bit b"></span>
+        <span class="px-bit c"></span>
+        <span class="px-quad"><span></span><span></span><span></span><span></span></span>
+        <span class="px-tri"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+        <span class="px-bit d px-hide-m"></span>
+      </div>
+
+      <div class="hero-id">
+        <div class="hero-id-badge">
+          <span class="dot-blink"></span>
+          <span class="hero-id-name">陳佳朋</span>
+          <span class="hero-id-en">CHEN&nbsp;CHIA-PENG</span>
+        </div>
+        <div class="hero-line1">把生活裡的小麻煩，做成 <span class="accent">真的有人會用的產品</span></div>
+        <div class="hero-line2">NOW <span class="accent strong">@ 中原大學 電機工程學系</span> · PREV @ 臺北市立成功高中<span class="caret"></span></div>
+        <div class="hero-stats">
+          <span>[ 2+ 獨立產品 ]</span>
+          <span>[ 全國 15 個入選 AI 案例之一 ]</span>
+          <span>[ 圓夢基金 30 人正取・最年輕 ]</span>
+        </div>
+      </div>
+
+      <div class="hero-scroll">
+        <span>SCROLL</span>
+        <span class="scroll-dot"></span>
+      </div>
+    </section>
+
+    <!-- 跑馬燈 -->
+    <div class="marquee">
+      <div class="marquee-track">
+        <span class="marquee-item">AI BUILDER <b>✦</b> 陳佳朋 CHEN CHIA-PENG <b>✦</b> MACOS UTILITIES <b>✦</b> 把小麻煩變成產品 <b>✦</b> TAIPEI <b>✦</b> SHIP REAL THINGS <b>✦</b>&nbsp;</span>
+        <span class="marquee-item">AI BUILDER <b>✦</b> 陳佳朋 CHEN CHIA-PENG <b>✦</b> MACOS UTILITIES <b>✦</b> 把小麻煩變成產品 <b>✦</b> TAIPEI <b>✦</b> SHIP REAL THINGS <b>✦</b>&nbsp;</span>
       </div>
     </div>
 
-    <p class="hub-tip" data-bind="ui.enterTip"></p>
-  </section>
+    <!-- WORK -->
+    <section class="tab-panel" id="panel-work">
+      <div class="section-head">
+        <span class="section-dot"></span>
+        <span class="section-title">WORK</span>
+        <span class="section-line"></span>
+        <span class="section-tag">SELECTED&nbsp;BUILDS&nbsp;·&nbsp;001</span>
+      </div>
+      <div class="work-list" id="workList"></div>
+    </section>
 
-  <!-- ============ 內頁：走進一個展廳 ============ -->
-  <section class="hall-view" id="hallView" aria-hidden="true">
-    <div class="hall-inner">
-      <button class="back-btn" id="backBtn"><i class="fa-solid fa-arrow-left"></i> <span data-bind="ui.back"></span></button>
-      <div class="hall-banner" id="hallBanner"></div>
-      <div class="hall-body" id="hallBody"></div>
-      <div class="footer" data-bind="footer"></div>
+    <!-- JOURNEY -->
+    <section class="tab-panel" id="panel-journey" hidden>
+      <div class="section-head">
+        <span class="section-dot"></span>
+        <span class="section-title">JOURNEY</span>
+        <span class="section-line"></span>
+        <span class="section-tag">2023&nbsp;→&nbsp;NOW&nbsp;·&nbsp;002</span>
+      </div>
+      <div class="journey-list" id="journeyList"></div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="tab-panel" id="panel-about" hidden>
+      <div class="section-head">
+        <span class="section-dot"></span>
+        <span class="section-title">ABOUT</span>
+        <span class="section-line"></span>
+        <span class="section-tag">WHO&nbsp;IS&nbsp;HARRY&nbsp;·&nbsp;003</span>
+      </div>
+      <div class="about-grid">
+        <div class="about-photo-wrap">
+          <span class="px-bit e"></span>
+          <span class="px-bit f"></span>
+          <span class="px-bit g"></span>
+          <div class="polaroid">
+            <div class="img-slot" data-slot="about">
+              <img alt="陳佳朋" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+              <div class="img-placeholder"><i class="fa-solid fa-camera"></i></div>
+            </div>
+            <div class="polaroid-cap">harry_陳佳朋.jpg ✦</div>
+          </div>
+        </div>
+        <div class="about-copy">
+          <div class="about-hello">嗨，我是<span class="accent">陳佳朋</span>（Harry Chen）。</div>
+          <p class="about-p1">臺北市立成功高中畢業，即將進<b class="accent">中原大學 電機工程學系</b>。比起頭銜，更在意「<b>做出真的有人在用的東西</b>」。</p>
+          <p class="about-p2">從 macOS 小工具到 AI 系統，喜歡把生活裡的小麻煩變成一個會動的產品。這個網站會跟著我一起長大——每做一個新東西，就多一個作品。</p>
+          <div class="chips" id="aboutChips"></div>
+        </div>
+      </div>
+
+      <div class="beyond">
+        <div class="section-head">
+          <span class="section-dot pink"></span>
+          <span class="section-title pink">BEYOND THE KEYBOARD</span>
+          <span class="section-line"></span>
+          <span class="section-tag px-hide-m">AUTO&nbsp;SCROLL&nbsp;·&nbsp;DROP&nbsp;PHOTOS&nbsp;IN&nbsp;→</span>
+        </div>
+        <div class="strip" id="strip"></div>
+        <p class="beyond-p">打羽球、逛 3C 賣場、和朋友做小專案——好奇心驅動的日常，都收在這排底片裡。</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-h">CURRENTLY I'M…</div>
+          <div class="currently-list" id="currentlyList"></div>
+        </div>
+        <div class="footer-contacts">
+          <div class="footer-h">SAY HI ✦</div>
+          <div class="contact-list" id="contactList"></div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div>
+          <div class="footer-credit">陳佳朋 CHEN CHIA-PENG ✦ MADE IN TAIPEI</div>
+          <div class="footer-wordmark">HARRY CHEN © 2026</div>
+        </div>
+        <button class="top-btn" id="topBtn">↑ TOP</button>
+      </div>
     </div>
-  </section>
-
-  <!-- 遊戲化 UI：成就通知 / 彩帶 / 傳送門轉場 -->
-  <div class="toast" id="toast" hidden aria-live="polite"></div>
-  <div class="confetti-layer" id="confettiLayer"></div>
-  <div class="iris" id="iris"></div>
+  </footer>
 
   <script src="app.js"></script>
 </body>
