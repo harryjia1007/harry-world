@@ -300,15 +300,23 @@ b{font-weight:700}
 
 /* ---------- ABOUT ---------- */
 .about-grid{display:grid;grid-template-columns:280px 1fr;gap:56px;align-items:start;margin-bottom:70px}
-.about-photo-wrap{position:relative}
+.about-photo-wrap{
+  position:relative;
+  animation:photo-drift 6s ease-in-out infinite;
+}
+@keyframes photo-drift{
+  0%,100%{transform:translateY(0) rotate(0deg)}
+  25%{transform:translateY(-9px) rotate(.9deg)}
+  60%{transform:translateY(3px) rotate(-.7deg)}
+}
 .polaroid{
   background:#F4F4EF;
   background-image:repeating-linear-gradient(0deg, rgba(0,0,0,.045) 0px, rgba(0,0,0,.045) 1px, transparent 1px, transparent 3px);
   padding:14px 14px 46px;border-radius:4px;transform:rotate(-2.5deg);
   box-shadow:0 20px 44px rgba(0,0,0,.5);position:relative;
-  transition:transform .3s cubic-bezier(.2,.9,.3,1);
+  transition:transform .3s cubic-bezier(.2,.9,.3,1),box-shadow .3s ease;
 }
-.polaroid:hover{transform:rotate(0deg) scale(1.02)}
+.polaroid:hover{transform:rotate(0deg) scale(1.03);box-shadow:0 30px 60px rgba(0,0,0,.6)}
 .polaroid .img-slot{width:100%;aspect-ratio:4/3}
 .polaroid-cap{position:absolute;bottom:14px;left:0;right:0;text-align:center;font:14px var(--mono);color:#3A3A36}
 .about-hello{font:900 26px/1.5 var(--sans);color:var(--ink);margin:0 0 14px}

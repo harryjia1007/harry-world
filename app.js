@@ -51,9 +51,8 @@ const CURRENTLY = ['中原大學電機系', '打磨 NotchGlass 中', '規劃下�
 const CONTACTS = [
   { label: 'EMAIL', sub: 'harryjia1007@gmail.com', href: 'mailto:harryjia1007@gmail.com' },
   { label: 'GITHUB', sub: '@harryjia1007', href: 'https://github.com/harryjia1007' },
-  { label: 'INSTAGRAM', sub: '日常與作品', href: '#' },
-  { label: 'LINKEDIN', sub: '專業經歷', href: '#' },
-  { label: 'RESUME', sub: 'PDF', href: '#' },
+  { label: 'INSTAGRAM', sub: '@jia.1oo7', href: 'https://www.instagram.com/jia.1oo7' },
+  { label: 'LINKEDIN', sub: '專業經歷', href: 'https://www.linkedin.com/in/chia-peng-chen-60981531b/' },
 ];
 const STRIP = [
   { slot: 'strip-1', cap: '01 ✦ life' },

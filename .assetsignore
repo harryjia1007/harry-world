@@ -4,3 +4,5 @@
 wrangler.toml
 .assetsignore
 *.md
+.DS_Store
+IMG_6558.JPG
