@@ -3,4 +3,4 @@
 .wrangler
 wrangler.toml
 .assetsignore
-README.md
+*.md
