@@ -271,6 +271,14 @@ b{font-weight:700}
 .work-impact p{font:13px/1.7 var(--sans);color:rgba(237,237,232,.75);margin:0}
 .work-stack{display:flex;flex-wrap:wrap;gap:8px}
 .work-stack span{font:11px var(--mono);color:rgba(255,255,255,.6);background:#1E1E1E;border:1px solid var(--line);padding:5px 11px;border-radius:4px}
+.work-cta{display:inline-flex;align-items:center;gap:8px;margin-top:16px;
+  font:700 13px var(--sans);color:#0A0A0A;background:var(--cta,#fff);
+  padding:9px 16px;border-radius:6px;text-decoration:none;letter-spacing:.02em;
+  transition:transform .18s ease, box-shadow .18s ease}
+.work-cta:hover{transform:translateY(-2px);box-shadow:0 8px 20px color-mix(in srgb,var(--cta,#fff) 40%,transparent)}
+.work-cta i{font-size:11px;transition:transform .18s ease}
+.work-cta:hover i{transform:translateX(3px)}
+.work-shot-link{position:absolute;inset:0;z-index:2}
 @media (max-width:720px){.work-card{grid-template-columns:1fr}}
 
 /* ---------- JOURNEY ---------- */

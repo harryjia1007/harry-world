@@ -6,3 +6,5 @@ wrangler.toml
 *.md
 .DS_Store
 IMG_6558.JPG
+*.bak
+*.bak2

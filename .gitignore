@@ -1,3 +1,5 @@
 .DS_Store
 .wrangler/
 images/IMG_6558.JPG
+*.bak
+*.bak2

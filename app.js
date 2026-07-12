@@ -10,10 +10,11 @@ const el = (t, c) => { const e = document.createElement(t); if (c) e.className =
 
 /* ---------------- 內容 ---------------- */
 const WORKS = [
-  { slot: 'work-notchglass', year: '2026', kind: 'macOS App', status: '開發中', badge: '#FF8A3D',
+  { slot: 'work-notchglass', year: '2026', kind: 'macOS App', status: '已上架', badge: '#D6FF3F',
     name: 'NotchGlass',
-    desc: '把筆電瀏海那塊「沒用的空間」，變成隨手可用的工具列。獨立設計、獨立開發中。',
-    impact: null, stack: ['Swift', 'SwiftUI', 'macOS'] },
+    desc: '把筆電瀏海那塊「沒用的空間」，變成隨手可用的工具列。獨立設計、獨立開發，已於 Gumroad 上架。',
+    impact: null, stack: ['Swift', 'SwiftUI', 'macOS'],
+    link: 'notchglass.html', cta: '看介紹・購買' },
   { slot: 'work-injury', year: '2025', kind: 'AI 系統', status: '已收錄', badge: '#D6FF3F',
     name: '運動傷害預防系統',
     desc: '用 AI 預測並提醒運動傷害風險，已在真實場域落地驗證。',
@@ -93,10 +94,18 @@ function renderWork() {
         <p class="work-desc">${w.desc}</p>
         ${w.impact ? `<div class="work-impact" style="border-color:${w.badge}"><p>${w.impact}</p></div>` : ''}
         <div class="work-stack">${w.stack.map(s => `<span>${s}</span>`).join('')}</div>
+        ${w.link ? `<a class="work-cta" href="${w.link}" style="--cta:${w.badge}">${w.cta || '查看'} <i class="fa-solid fa-arrow-right"></i></a>` : ''}
       </div>`;
     const shot = card.querySelector('.work-shot');
     shot.appendChild(imgSlot(w.slot));
     shot.innerHTML += `<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>`;
+    // 有專頁的作品：整張封面也可點
+    if (w.link) {
+      const a = el('a'); a.href = w.link; a.className = 'work-shot-link';
+      a.setAttribute('aria-label', w.name);
+      shot.style.cursor = 'pointer';
+      shot.addEventListener('click', () => { window.location.href = w.link; });
+    }
     list.appendChild(card);
   });
 }
