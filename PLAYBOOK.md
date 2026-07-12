@@ -19,3 +19,4 @@ Cloudflare（網域＋Workers）＝harryjia1007 的帳號；GitHub repo＝harryj
 - 2026-07｜加圖片｜iPhone 照片可能是 HEIC 卻叫 .jpg，瀏覽器不吃｜先 `file` 檢查，`sips -s format jpeg` 轉檔；大圖用 `sips -Z <maxpx>` 壓縮
 - 2026-07｜敏感檔外洩｜.wrangler/ 曾被推上公開 repo｜`.gitignore` 已加 `.wrangler/`；`.assetsignore` 用 `*.md` 排除說明檔
 - 2026-07｜部署驗證｜dashboard 綠燈不可信｜部署後 curl harryjia.com 實測
+- 2026-07｜NotchGlass 專頁｜`notchglass.html` 部署後對外網址是 `harryjia.com/notchglass`（Cloudflare 自動 307 去掉 .html，正常行為別當 bug）；該檔 13.7MB 是完整版落地頁（內嵌全部資源），Gumroad 上的是 267K 瘦身版
