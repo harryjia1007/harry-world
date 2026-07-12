@@ -177,6 +177,14 @@ function renderFanStack() {
 
   function set(i) { active = ((i % N) + N) % N; layout(); }
 
+  // 自動輪播：3.2 秒換一張；滑鼠移入（想看清楚）時暫停，移開後續播
+  let timer = null;
+  function play() { stop(); timer = setInterval(() => set(active + 1), 3200); }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } }
+  stage.addEventListener('mouseenter', stop);
+  stage.addEventListener('mouseleave', play);
+  play();
+
   function layout() {
     const gap = Math.min(110, stage.clientWidth * 0.16);
     cards.forEach((c, i) => {

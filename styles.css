@@ -188,14 +188,14 @@ b{font-weight:700}
 }
 
 .px-bit{position:absolute;image-rendering:pixelated}
-.px-bit.a{left:-6%;top:-10%;width:18px;height:18px;background:var(--accent);animation:px-float-a 4.5s ease-in-out infinite}
-.px-bit.b{right:-7%;top:16%;width:14px;height:14px;background:var(--pink);animation:px-float-b 5.2s ease-in-out infinite}
-.px-bit.c{left:12%;bottom:-8%;width:22px;height:8px;background:var(--purple);animation:px-float-c 4s ease-in-out infinite}
-.px-bit.d{right:-13%;bottom:22%;width:10px;height:10px;background:var(--accent);transform:rotate(45deg);animation:px-float-b 4.8s ease-in-out infinite}
-.px-quad{position:absolute;right:18%;bottom:-13%;display:grid;grid-template-columns:8px 8px;grid-template-rows:8px 8px;animation:px-float-a 6s ease-in-out infinite}
+.px-bit.a{left:-6%;top:-10%;width:18px;height:18px;background:var(--accent);animation:px-float-a 9s ease-in-out infinite}
+.px-bit.b{right:-7%;top:16%;width:14px;height:14px;background:var(--pink);animation:px-float-b 10.5s ease-in-out infinite}
+.px-bit.c{left:12%;bottom:-8%;width:22px;height:8px;background:var(--purple);animation:px-float-c 8s ease-in-out infinite}
+.px-bit.d{right:-13%;bottom:22%;width:10px;height:10px;background:var(--accent);transform:rotate(45deg);animation:px-float-b 9.5s ease-in-out infinite}
+.px-quad{position:absolute;right:18%;bottom:-13%;display:grid;grid-template-columns:8px 8px;grid-template-rows:8px 8px;animation:px-float-a 12s ease-in-out infinite}
 .px-quad span:nth-child(1){background:var(--orange)}
 .px-quad span:nth-child(4){background:var(--orange)}
-.px-tri{position:absolute;left:34%;top:-16%;display:grid;grid-template-columns:6px 6px 6px;grid-template-rows:6px 6px 6px;animation:px-float-c 5.6s ease-in-out infinite}
+.px-tri{position:absolute;left:34%;top:-16%;display:grid;grid-template-columns:6px 6px 6px;grid-template-rows:6px 6px 6px;animation:px-float-c 11s ease-in-out infinite}
 .px-tri span:nth-child(2),.px-tri span:nth-child(4),.px-tri span:nth-child(5),.px-tri span:nth-child(6),.px-tri span:nth-child(8){background:var(--pink)}
 @media (max-width:640px){.px-hide-m{display:none!important}}
 @keyframes px-float-a{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
@@ -375,6 +375,7 @@ b{font-weight:700}
 /* ---------- 圖片欄位（無圖時顯示佔位圖） ---------- */
 .img-slot{position:relative;display:block;background:#1A1A1A;overflow:hidden;border-radius:inherit}
 .img-slot img{width:100%;height:100%;object-fit:cover;display:block}
+.img-slot img[src*="journey-biostem"]{object-position:center top}
 .img-placeholder{
   display:none;position:absolute;inset:0;
   flex-direction:column;align-items:center;justify-content:center;gap:8px;
