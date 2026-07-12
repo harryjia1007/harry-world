@@ -140,15 +140,77 @@ function renderAbout() {
   photoMount.dataset.slot = 'about';
   photoMount.querySelector('img').src = 'images/about.jpg';
 
+  renderFanStack();
+}
+
+/* ---------------- 生活照扇形卡片堆疊 ----------------
+   拍立得照片像撲克牌一樣扇形展開：點旁邊的卡或左右拖曳換張，
+   下方圓點可直接跳。純 CSS transform + transition，無任何函式庫。 */
+function renderFanStack() {
   const strip = $('#strip');
-  STRIP.forEach(s => {
-    const card = el('div', 'strip-card');
+  strip.classList.add('fanstack');
+  const stage = el('div', 'fan-stage');
+  const dots  = el('div', 'fan-dots');
+  strip.appendChild(stage); strip.appendChild(dots);
+
+  const N = STRIP.length;
+  let active = 0;
+
+  const cards = STRIP.map((s, i) => {
+    const card = el('div', 'strip-card fan-card');
     card.appendChild(imgSlot(s.slot));
     const cap = el('div', 'strip-cap');
     cap.textContent = s.cap;
     card.appendChild(cap);
-    strip.appendChild(card);
+    card.addEventListener('click', () => { if (i !== active) set(i); });
+    stage.appendChild(card);
+    return card;
   });
+
+  const dotEls = STRIP.map((s, i) => {
+    const d = el('button', 'fan-dot');
+    d.setAttribute('aria-label', s.cap);
+    d.addEventListener('click', () => set(i));
+    dots.appendChild(d);
+    return d;
+  });
+
+  function set(i) { active = ((i % N) + N) % N; layout(); }
+
+  function layout() {
+    const gap = Math.min(110, stage.clientWidth * 0.16);
+    cards.forEach((c, i) => {
+      let off = i - active;
+      if (off >  N / 2) off -= N;      // 環狀：最短路徑
+      if (off < -N / 2) off += N;
+      const abs = Math.abs(off);
+      const lift  = off === 0 ? -18 : abs * 12;
+      const scale = off === 0 ? 1.04 : 0.9;
+      c.style.transform =
+        `translate(calc(-50% + ${off * gap}px), ${lift}px) rotate(${off * 8}deg) scale(${scale})`;
+      c.style.zIndex = String(100 - abs);
+      c.classList.toggle('active', off === 0);
+    });
+    dotEls.forEach((d, i) => d.classList.toggle('on', i === active));
+  }
+
+  // 左右拖曳（滑鼠與觸控皆可）
+  let sx = null;
+  stage.addEventListener('pointerdown', e => { sx = e.clientX; });
+  window.addEventListener('pointerup', e => {
+    if (sx === null) return;
+    const dx = e.clientX - sx; sx = null;
+    if (dx > 40) set(active - 1);
+    else if (dx < -40) set(active + 1);
+  });
+  stage.tabIndex = 0;
+  stage.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft')  set(active - 1);
+    if (e.key === 'ArrowRight') set(active + 1);
+  });
+
+  layout();
+  window.addEventListener('resize', layout);
 }
 
 function renderFooter() {
@@ -217,26 +279,60 @@ function initScrollProgress() {
   }, { passive: true });
 }
 
-/* ---------------- 生活照底片：自動來回捲動，滑過暫停 ---------------- */
-function initStrip() {
-  const strip = $('#strip');
-  if (!strip) return;
-  let paused = false, dir = 1;
-  strip.addEventListener('pointerenter', () => { paused = true; });
-  strip.addEventListener('pointerleave', () => { paused = false; });
-  function loop() {
-    if (!paused) {
-      const max = strip.scrollWidth - strip.clientWidth;
-      if (max > 4) {
-        let sl = strip.scrollLeft + dir * 0.55;
-        if (sl >= max) { sl = max; dir = -1; }
-        if (sl <= 0) { sl = 0; dir = 1; }
-        strip.scrollLeft = sl;
+/* ---------------- Hero 抖動網點底紋（dithering） ----------------
+   低解析 Bayer 4×4 抖動 + 流動場，畫在 hero 背景的 canvas 上，
+   低透明度、像素風、滑過 hero 會加速流動。無 WebGL、無函式庫。 */
+function initDither() {
+  const hero = $('.hero');
+  if (!hero) return;
+  const cv = document.createElement('canvas');
+  cv.className = 'dither-bg';
+  cv.setAttribute('aria-hidden', 'true');
+  hero.prepend(cv);
+  const ctx = cv.getContext('2d');
+
+  // Bayer 4×4 門檻矩陣（0..1）
+  const B = [0,8,2,10, 12,4,14,6, 3,11,1,9, 15,7,13,5].map(v => (v + .5) / 16);
+  const SCALE = 7;                 // 每 7px 一個網點（像素感）
+  const R = 157, G = 92, Bb = 255; // #9D5CFF 紫，配合站上像素點綴色
+
+  let w = 0, h = 0, img = null;
+  function resize() {
+    w = Math.max(2, Math.ceil(hero.clientWidth  / SCALE));
+    h = Math.max(2, Math.ceil(hero.clientHeight / SCALE));
+    cv.width = w; cv.height = h;
+    img = ctx.createImageData(w, h);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let t = 0, speed = 1, target = 1;
+  hero.addEventListener('pointerenter', () => { target = 3; });
+  hero.addEventListener('pointerleave', () => { target = 1; });
+
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function frame() {
+    speed += (target - speed) * 0.05;
+    t += 0.012 * speed;
+    const d = img.data;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        // 流動場：兩層正弦交織＋往上淡出（讓底部較濃、頂部乾淨）
+        const v = 0.5 + 0.5 * Math.sin(x * 0.11 + t) * Math.cos(y * 0.13 - t * 0.8)
+                * (0.35 + 0.65 * (y / h));
+        const on = v > B[(y % 4) * 4 + (x % 4)];
+        const i = (y * w + x) * 4;
+        d[i] = R; d[i + 1] = G; d[i + 2] = Bb;
+        d[i + 3] = on ? 255 : 0;
       }
     }
-    requestAnimationFrame(loop);
+    ctx.putImageData(img, 0, 0);
+    if (!still && !document.hidden) requestAnimationFrame(frame);
   }
-  requestAnimationFrame(loop);
+  if (still) { frame(); return; }               // 減少動態：只畫一張靜態
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) requestAnimationFrame(frame); });
+  requestAnimationFrame(frame);
 }
 
 /* ---------------- 啟動 ---------------- */
@@ -248,7 +344,7 @@ function init() {
   initTabs();
   initCursor();
   initScrollProgress();
-  initStrip();
+  initDither();
 
   $('#topBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 }

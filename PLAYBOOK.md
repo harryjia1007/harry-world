@@ -20,3 +20,5 @@ Cloudflare（網域＋Workers）＝harryjia1007 的帳號；GitHub repo＝harryj
 - 2026-07｜敏感檔外洩｜.wrangler/ 曾被推上公開 repo｜`.gitignore` 已加 `.wrangler/`；`.assetsignore` 用 `*.md` 排除說明檔
 - 2026-07｜部署驗證｜dashboard 綠燈不可信｜部署後 curl harryjia.com 實測
 - 2026-07｜NotchGlass 專頁｜`notchglass.html` 部署後對外網址是 `harryjia.com/notchglass`（Cloudflare 自動 307 去掉 .html，正常行為別當 bug）；該檔 13.7MB 是完整版落地頁（內嵌全部資源），Gumroad 上的是 267K 瘦身版
+- 2026-07｜本機預覽｜Claude 的預覽伺服器沙盒讀不到 `Desktop/專案` 路徑（連 ASCII symlink 也不行）→ 要預覽就 rsync 整個資料夾到 scratchpad 再 serve；或叫 Harry 直接雙擊 index.html
+- 2026-07｜文案修改｜Harry 自改文案流程見 `文案修改指南.md`（app.js 頂部 DATA 區 + 一行 wrangler deploy）
