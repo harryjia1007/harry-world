@@ -2,12 +2,21 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>星塵捕手 · Stardust Catcher｜Harry Chen Lab</title>
-<meta name="description" content="星塵捕手：移動滑鼠收集金色能量星、避開暗物質漩渦。純 HTML/Canvas 手寫的小遊戲，無框架、無外部相依。陳佳朋（Harry Chen）作品。" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>星塵捕手 · Stardust Catcher</title>
+<meta name="description" content="在生成藝術的粒子流場中收集能量星、閃避暗物質漩渦。連擊、脈衝波、擦邊、彗星——免費網頁小遊戲，手機電腦都能玩。" />
 <meta property="og:title" content="星塵捕手 · Stardust Catcher" />
-<meta property="og:description" content="一顆游標、一片會流動的星空。純 Canvas 手寫小遊戲，點開就能玩。" />
+<meta property="og:description" content="在生成藝術的粒子流場中收集能量星、閃避暗物質漩渦。免費，手機電腦都能玩。" />
 <meta property="og:type" content="website" />
+<meta property="og:url" content="https://harryjia.com/stardust" />
+<meta property="og:image" content="https://harryjia.com/images/og-stardust.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌌</text></svg>' />
+<!-- 手機／加入主畫面體驗 -->
+<meta name="theme-color" content="#05030f" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <style>
   /* ===================== 基本版面 ===================== */
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -16,124 +25,118 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #05030f;          /* 深夜藍黑底色 */
-    cursor: none;                  /* 隱藏系統游標，改用畫布上自己畫的發光游標 */
+    background: #05030f;
+    cursor: none;                  /* 隱藏系統游標，改用畫布上的發光游標 */
     font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     -webkit-user-select: none;
     user-select: none;
     touch-action: none;
   }
 
-  /* 全螢幕畫布 */
-  #game {
-    display: block;
-    position: fixed;
-    inset: 0;
+  #game { display: block; position: fixed; inset: 0; }
+
+  /* 暗角（vignette）：讓畫面四周自然沉下去，質感關鍵 */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 4;
+    background: radial-gradient(ellipse at center,
+      rgba(0,0,0,0) 55%, rgba(2,1,10,0.42) 100%);
   }
 
-  /* ===================== 左上角分數 HUD ===================== */
+  /* ===================== 左上角 HUD ===================== */
   #hud {
-    position: fixed;
-    top: 22px;
-    left: 28px;
-    z-index: 10;
-    color: #bcd6ff;
-    letter-spacing: 3px;
-    pointer-events: none;          /* 不擋滑鼠 */
+    position: fixed; z-index: 10;
+    /* iPhone 瀏海／動態島安全區：取安全區與預設值較大者 */
+    top: max(22px, env(safe-area-inset-top));
+    left: max(28px, env(safe-area-inset-left));
+    color: #bcd6ff; letter-spacing: 3px;
+    pointer-events: none;
     text-shadow: 0 0 10px rgba(90,140,255,.35);
   }
-  #hud .label {
-    font-size: 12px;
-    font-weight: 300;
-    opacity: .7;
-  }
+  #hud .label { font-size: 12px; font-weight: 300; opacity: .7; }
   #score-num {
     display: inline-block;
-    font-size: 34px;
-    font-weight: 300;
-    line-height: 1;
+    font-size: 34px; font-weight: 300; line-height: 1;
     color: #eaf4ff;
-    transform-origin: left center;  /* 跳動放大時從左側基準，避免文字位移 */
-    text-shadow:
-      0 0 12px rgba(140,190,255,.85),
-      0 0 28px rgba(90,140,255,.5);
+    transform-origin: left center;
+    text-shadow: 0 0 12px rgba(140,190,255,.85), 0 0 28px rgba(90,140,255,.5);
   }
-  #hud .best {
-    margin-top: 6px;
-    font-size: 12px;
-    font-weight: 300;
-    opacity: .55;
-  }
+  #hud .best { margin-top: 6px; font-size: 12px; font-weight: 300; opacity: .55; }
 
-  /* ===================== 開場提示（幾秒後淡出） ===================== */
+  /* 連擊倍率小徽章 */
+  #combo {
+    margin-top: 10px;
+    display: inline-flex; flex-direction: column; gap: 4px;
+    padding: 5px 12px;
+    border: 1px solid rgba(255,200,110,.5);
+    border-radius: 8px;
+    background: rgba(255,190,90,.08);
+  }
+  #combo-x {
+    font-size: 18px; font-weight: 600; letter-spacing: 2px;
+    color: #ffd98f;
+    text-shadow: 0 0 12px rgba(255,190,90,.8);
+  }
+  #combo-bar {
+    width: 66px; height: 3px; border-radius: 2px;
+    background: rgba(255,200,110,.18);
+    overflow: hidden;
+  }
+  #combo-bar i {
+    display: block; height: 100%; width: 100%;
+    background: #ffcf7a;
+    box-shadow: 0 0 8px rgba(255,200,110,.9);
+  }
+  .hidden { display: none !important; }
+
+  /* 靜音按鈕 */
+  #mute {
+    position: fixed; z-index: 30;
+    top: max(20px, env(safe-area-inset-top));
+    right: max(24px, env(safe-area-inset-right));
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    border: 1px solid rgba(150,180,255,.35);
+    background: rgba(120,150,255,.08);
+    color: #cfe0ff; font-size: 17px;
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  #mute:hover { background: rgba(140,170,255,.18); border-color: rgba(190,210,255,.7); }
+
+  /* 遊戲中提示（脈衝教學） */
   #hint {
-    position: fixed;
-    left: 50%;
-    bottom: 42px;
-    transform: translateX(-50%);
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: max(42px, env(safe-area-inset-bottom));
     z-index: 10;
-    color: #cfe0ff;
-    font-size: 14px;
-    font-weight: 300;
-    letter-spacing: 2px;
-    opacity: .85;
-    pointer-events: none;
+    color: #cfe0ff; font-size: 14px; font-weight: 300; letter-spacing: 2px;
+    opacity: 0; pointer-events: none;
     text-shadow: 0 0 14px rgba(90,140,255,.5);
-    transition: opacity 1.2s ease;
+    transition: opacity 1s ease;
   }
 
-  /* ===================== 遊戲結束畫面 ===================== */
-  #gameover {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 26px;
-    text-align: center;
+  /* ===================== 覆蓋層（主選單 / 結束畫面） ===================== */
+  .overlay {
+    position: fixed; inset: 0; z-index: 20;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 22px; text-align: center;
     color: #eaf0ff;
-    background: radial-gradient(ellipse at center, rgba(20,6,40,.35), rgba(5,3,15,.72));
+    background: radial-gradient(ellipse at center, rgba(20,6,40,.30), rgba(5,3,15,.72));
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
-    opacity: 0;
-    pointer-events: none;          /* 隱藏時不擋操作 */
+    opacity: 0; pointer-events: none;
     transition: opacity .7s ease;
     cursor: default;
   }
-  #gameover.show {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  #gameover .title {
-    font-size: 15px;
-    letter-spacing: 8px;
-    font-weight: 300;
-    color: #c9a6ff;
-    text-shadow: 0 0 16px rgba(160,90,255,.6);
-  }
-  #gameover .final {
-    font-size: 84px;
-    font-weight: 200;
-    line-height: 1;
-    color: #fff;
-    text-shadow:
-      0 0 22px rgba(255,210,120,.8),
-      0 0 50px rgba(255,170,70,.5);
-  }
-  #gameover .sub {
-    font-size: 13px;
-    font-weight: 300;
-    letter-spacing: 2px;
-    opacity: .7;
-  }
-  #restart {
-    margin-top: 6px;
+  .overlay.show { opacity: 1; pointer-events: auto; }
+
+  .btn {
     padding: 14px 34px;
     font-family: inherit;
-    font-size: 15px;
-    letter-spacing: 4px;
+    font-size: 15px; letter-spacing: 4px;
     color: #eaf4ff;
     background: rgba(120,150,255,.10);
     border: 1px solid rgba(150,180,255,.55);
@@ -143,90 +146,159 @@
     transition: all .25s ease;
     text-shadow: 0 0 10px rgba(120,180,255,.6);
   }
-  #restart:hover {
+  .btn:hover {
     background: rgba(140,170,255,.22);
     border-color: rgba(190,210,255,.9);
     box-shadow: 0 0 26px rgba(120,160,255,.5);
     transform: translateY(-1px);
   }
 
-  /* ===================== 右上角：回作品集 ===================== */
-  #homeLink {
-    position: fixed;
-    top: 24px;
-    right: 28px;
-    z-index: 30;                   /* 蓋過 gameover 遮罩，結束畫面也能離開 */
-    color: #bcd6ff;
-    font-size: 12px;
-    font-weight: 300;
-    letter-spacing: 3px;
-    text-decoration: none;
-    opacity: .55;
-    cursor: pointer;               /* body 隱藏了系統游標，連結上要還原 */
-    text-shadow: 0 0 10px rgba(90,140,255,.35);
-    transition: opacity .25s ease, text-shadow .25s ease;
+  /* ---- 主選單 ---- */
+  .menu-title {
+    font-size: 54px; font-weight: 200; letter-spacing: 18px;
+    padding-left: 18px;   /* 抵銷 letter-spacing 造成的視覺偏移 */
+    color: #fff;
+    text-shadow: 0 0 24px rgba(150,190,255,.9), 0 0 60px rgba(100,140,255,.5);
   }
-  #homeLink:hover {
-    opacity: 1;
-    text-shadow: 0 0 14px rgba(140,190,255,.8);
+  .menu-sub {
+    font-size: 12px; letter-spacing: 8px; font-weight: 300;
+    color: #9ab4e8; opacity: .8; margin-top: -10px;
+  }
+  .menu-list {
+    list-style: none;
+    margin: 14px 0 6px;
+    display: flex; flex-direction: column; gap: 12px;
+    font-size: 14px; font-weight: 300; letter-spacing: 2px;
+    color: #d7e4ff;
+    text-align: left;
+  }
+  .menu-list .mk { display: inline-block; width: 26px; text-align: center; }
+  .mk.gold   { color: #ffd98f; text-shadow: 0 0 10px rgba(255,190,90,.9); }
+  .mk.cyan   { color: #8fe0ff; text-shadow: 0 0 10px rgba(90,200,255,.9); }
+  .mk.blue   { color: #a8c4ff; text-shadow: 0 0 10px rgba(120,160,255,.9); }
+  .mk.pink   { color: #ff9ad8; text-shadow: 0 0 10px rgba(255,110,200,.9); }
+  .mk.purple { color: #c9a6ff; text-shadow: 0 0 10px rgba(170,100,255,.9); }
+  .menu-tip { font-size: 11px; letter-spacing: 2px; opacity: .45; margin-top: 4px; }
+
+  /* ---- 結束畫面 ---- */
+  #gameover .title {
+    font-size: 15px; letter-spacing: 8px; font-weight: 300;
+    color: #c9a6ff;
+    text-shadow: 0 0 16px rgba(160,90,255,.6);
+  }
+  #gameover .final {
+    font-size: 84px; font-weight: 200; line-height: 1;
+    color: #fff;
+    text-shadow: 0 0 22px rgba(255,210,120,.8), 0 0 50px rgba(255,170,70,.5);
+  }
+  .stats { display: flex; gap: 38px; margin-top: 2px; }
+  .stat { display: flex; flex-direction: column; gap: 5px; }
+  .stat-v {
+    font-size: 22px; font-weight: 300; color: #dcebff;
+    text-shadow: 0 0 12px rgba(140,190,255,.6);
+  }
+  .stat-k { font-size: 11px; letter-spacing: 3px; opacity: .55; }
+  #new-record {
+    font-size: 13px; letter-spacing: 5px;
+    color: #ffe9a8;
+    text-shadow: 0 0 16px rgba(255,210,110,.9);
+    animation: recpulse 1.4s ease-in-out infinite;
+  }
+  @keyframes recpulse {
+    0%,100% { opacity: .75; transform: scale(1); }
+    50%     { opacity: 1;   transform: scale(1.06); }
+  }
+  #gameover .subtip { font-size: 11px; letter-spacing: 2px; opacity: .4; }
+
+  /* ---- 小螢幕（手機）排版 ---- */
+  @media (max-width: 600px) {
+    .menu-title { font-size: 38px; letter-spacing: 10px; padding-left: 10px; }
+    .menu-sub { letter-spacing: 5px; }
+    .menu-list { font-size: 13px; gap: 10px; padding: 0 24px; }
+    #gameover .final { font-size: 60px; }
+    .stats { gap: 22px; }
+    .stat-v { font-size: 18px; }
+    #hud { top: 14px; left: 16px; }
+    #score-num { font-size: 28px; }
+    #mute { top: 12px; right: 14px; width: 38px; height: 38px; }
+    #hint { bottom: 28px; font-size: 12px; width: 90%; text-align: center; }
   }
 </style>
 </head>
 <body>
-  <!-- 遊戲畫布 -->
   <canvas id="game"></canvas>
 
-  <!-- 左上角分數 -->
+  <!-- 左上角分數 HUD -->
   <div id="hud">
     <div class="label">STARDUST</div>
     <span id="score-num">0</span>
-    <div class="best">最高 <span id="best-num">0</span></div>
+    <div class="best">最高 <span id="best-num">0</span> · 關卡 <span id="level-num">1</span></div>
+    <div id="combo" class="hidden">
+      <span id="combo-x">×2</span>
+      <div id="combo-bar"><i></i></div>
+    </div>
   </div>
 
-  <!-- 開場提示 -->
-  <div id="hint">移動滑鼠收集金色能量星 · 避開紫色暗物質漩渦</div>
+  <button id="mute" title="靜音切換（M）">🔊</button>
+  <div id="hint"></div>
 
-  <!-- 回作品集 -->
-  <a id="homeLink" href="/">✦ HARRYJIA.COM</a>
+  <!-- 主選單 -->
+  <div id="menu" class="overlay show">
+    <div class="menu-title">星塵捕手</div>
+    <div class="menu-sub">STARDUST CATCHER</div>
+    <ul class="menu-list">
+      <li><span class="mk gold">✦</span>移動滑鼠，收集金色能量星</li>
+      <li><span class="mk cyan">◆</span>連續收集疊高連擊，分數最高 ×5</li>
+      <li><span class="mk blue">◉</span>點擊發射「脈衝波」，推開漩渦（冷卻 6 秒）</li>
+      <li><span class="mk pink">◠</span>貼著漩渦邊緣「擦邊」偷分——高風險高報酬</li>
+      <li><span class="mk purple">◎</span>碰到暗物質漩渦，遊戲結束</li>
+    </ul>
+    <button id="start" class="btn">開 始 遊 戲</button>
+    <div class="menu-tip">空白鍵也可開始 · M 靜音</div>
+  </div>
 
   <!-- 結束畫面 -->
-  <div id="gameover">
+  <div id="gameover" class="overlay">
     <div class="title">GAME OVER</div>
     <div class="final" id="final-score">0</div>
-    <div class="sub">本局收集的星塵</div>
-    <button id="restart">再 來 一 局</button>
+    <div id="new-record" class="hidden">★ 新 紀 錄 ★</div>
+    <div class="stats">
+      <div class="stat"><div class="stat-v" id="stat-combo">×1</div><div class="stat-k">最高連擊</div></div>
+      <div class="stat"><div class="stat-v" id="stat-stars">0</div><div class="stat-k">收集星數</div></div>
+      <div class="stat"><div class="stat-v" id="stat-time">0:00</div><div class="stat-k">存活時間</div></div>
+    </div>
+    <button id="restart" class="btn">再 來 一 局</button>
+    <div class="subtip">空白鍵也可重新開始</div>
   </div>
 
 <script>
 /* =====================================================================
-   星塵捕手 Stardust Catcher
+   星塵捕手 Stardust Catcher — v2
    ---------------------------------------------------------------------
-   純 HTML / CSS / JavaScript，無任何框架、無外部相依（Simplex Noise 內嵌）。
-   結構：
-     1) SimplexNoise ── 內嵌的 3D 單純形雜訊（用來驅動流場）
-     2) 工具函式 ────── 亂數、限制範圍、發光貼圖產生器
-     3) 類別 ────────── Particle(背景星塵) / Star(能量星) / Vortex(漩渦) / Burst(特效粒子)
-     4) 遊戲狀態 ────── playing / gameover 兩種
-     5) 主迴圈 ──────── 更新流場 → 更新物件 → 繪製背景 → 繪製物件 → 繪製 UI
+   純 HTML / CSS / JS，零相依（Simplex Noise 內嵌）。
+   v2 相較 v1 的重點：
+   ・玩法：連擊倍率、脈衝波（點擊）、擦邊得分、藍色脈衝星、彗星事件、
+           漩渦輕微追蹤玩家、慢動作死亡演出、主選單與統計結算。
+   ・視覺：向量場筆觸層（致敬 vector-field 參考元件）、星雲底色、
+           游標彗尾、震屏、升級閃字、浮動得分。
+   ・效能：流場改為粗網格＋雙線性取樣（噪聲呼叫大減）、
+           拖尾層以 1× 邏輯解析度渲染再放大（Retina 省 75% 填充率）。
    ===================================================================== */
 
 
 /* =====================================================================
    1) SimplexNoise ── 內嵌版（改編自 Stefan Gustavson 的公有領域實作）
-   保留 new SimplexNoise() 的用法，等同你原本設計的意圖，但不需連 CDN。
-   noise3D(x,y,z) 回傳約 [-1, 1] 之間的平滑數值。
    ===================================================================== */
 class SimplexNoise {
   constructor(seed = Math.random()) {
     const grad3 = [1,1,0,-1,1,0,1,-1,0,-1,-1,0,1,0,1,-1,0,1,1,0,-1,-1,0,-1,0,1,1,0,-1,1,0,1,-1,0,-1,-1];
     this.grad3 = grad3;
-    // 用種子做一個簡單的可重現亂數，洗牌出置換表 permutation
     const p = new Uint8Array(256);
     for (let i = 0; i < 256; i++) p[i] = i;
     let n = Math.floor(seed * 2147483647) || 1;
-    const rand = () => { n = (n * 16807) % 2147483647; return (n - 1) / 2147483646; };
+    const rnd = () => { n = (n * 16807) % 2147483647; return (n - 1) / 2147483646; };
     for (let i = 255; i > 0; i--) {
-      const r = Math.floor(rand() * (i + 1));
+      const r = Math.floor(rnd() * (i + 1));
       const t = p[i]; p[i] = p[r]; p[r] = t;
     }
     this.perm = new Uint8Array(512);
@@ -272,18 +344,34 @@ class SimplexNoise {
 
 
 /* =====================================================================
-   2) 工具函式
+   2) 工具與貼圖
    ===================================================================== */
-const rand  = (a, b) => a + Math.random() * (b - a);          // [a,b) 浮點亂數
-const randI = (a, b) => Math.floor(rand(a, b + 1));           // [a,b] 整數亂數
-const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));   // 限制在範圍內
+const rand  = (a, b) => a + Math.random() * (b - a);
+const randI = (a, b) => Math.floor(rand(a, b + 1));
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const TAU = Math.PI * 2;
+const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 
-/**
- * 產生一張「發光圓點」貼圖（離屏 canvas）。
- * 之所以先做成貼圖再重複貼上，是為了效能：1500 顆背景粒子若每顆都畫漸層會很慢，
- * 用 drawImage 貼現成貼圖則非常快。
- */
+// 觸控裝置偵測：粒子降載、拖曳操作、震動回饋、衝刺減速都依此切換
+const IS_TOUCH = window.matchMedia('(pointer: coarse)').matches;
+
+/** 震動回饋。
+ *  打包成 App（Capacitor）時走 iOS/Android 原生觸覺引擎；
+ *  純網頁時退回 Vibration API（Android 有效；iOS Safari 不支援，靜默略過）。 */
+function vib(pattern) {
+  try {
+    const H = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics;
+    if (H && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      // 依震動總長挑強度：短=輕、中=中、長（如死亡）=重
+      const total = Array.isArray(pattern) ? pattern.reduce((a, b) => a + b, 0) : pattern;
+      H.impact({ style: total < 15 ? 'LIGHT' : total < 60 ? 'MEDIUM' : 'HEAVY' });
+      return;
+    }
+    if (navigator.vibrate) navigator.vibrate(pattern);
+  } catch (e) {}
+}
+
+/** 發光圓點貼圖（離屏 canvas）——重複 drawImage 遠快於每顆畫漸層 */
 function makeGlow(r, g, b, size = 32) {
   const cv = document.createElement('canvas');
   cv.width = cv.height = size;
@@ -298,110 +386,277 @@ function makeGlow(r, g, b, size = 32) {
   return cv;
 }
 
-// 冷色調色盤（背景星塵）：深藍、靛、紫、青綠、青
-const COOL = [
-  makeGlow(70, 110, 235),   // 藍
-  makeGlow(120, 90, 230),   // 紫
-  makeGlow(70, 70, 190),    // 靛
-  makeGlow(50, 170, 190),   // 青綠
-  makeGlow(80, 200, 210),   // 青
-  makeGlow(110, 130, 255),  // 藍紫
+/** 大型星雲貼圖（依關卡色相重建） */
+function makeNebula(sizePx, hue) {
+  const s = Math.max(64, Math.ceil(sizePx));
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = s;
+  const c = cv.getContext('2d');
+  const g = c.createRadialGradient(s/2, s/2, 0, s/2, s/2, s/2);
+  g.addColorStop(0,   `hsla(${hue},70%,60%,0.55)`);
+  g.addColorStop(0.5, `hsla(${hue+30},75%,50%,0.22)`);
+  g.addColorStop(1,   `hsla(${hue+30},75%,50%,0)`);
+  c.fillStyle = g;
+  c.fillRect(0, 0, s, s);
+  return cv;
+}
+
+// 調色盤
+const COOL = [                       // 背景星塵（冷色）
+  makeGlow(70, 110, 235), makeGlow(120, 90, 230), makeGlow(70, 70, 190),
+  makeGlow(50, 170, 190), makeGlow(80, 200, 210), makeGlow(110, 130, 255),
 ];
-// 暖色調色盤（吃到能量星時的慶祝粒子）：金、橘、暖白
-const WARM = [
-  makeGlow(255, 210, 110),
-  makeGlow(255, 170, 90),
-  makeGlow(255, 240, 200),
+const WARM = [                       // 金色能量星／彗星
+  makeGlow(255, 210, 110), makeGlow(255, 170, 90), makeGlow(255, 240, 200),
 ];
-// 漩渦爆炸時的碎片顏色（紫 / 洋紅 / 白）
-const SHARDS = [
-  makeGlow(170, 90, 255),
-  makeGlow(230, 90, 200),
-  makeGlow(230, 220, 255),
+const CYAN = [                       // 藍色脈衝星
+  makeGlow(120, 220, 255), makeGlow(160, 240, 255), makeGlow(230, 250, 255),
+];
+const SHARDS = [                     // 漩渦碎片／軌道粒子
+  makeGlow(170, 90, 255), makeGlow(230, 90, 200), makeGlow(230, 220, 255),
 ];
 
 
 /* =====================================================================
-   全域畫布與尺寸
+   3) 畫布與雙層架構
    ===================================================================== */
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
-// 離屏「拖尾層」：只有背景星塵畫在這，靠每幀覆蓋半透明黑累積出絲綢拖尾；
-// 遊戲物件（星、漩渦、游標、特效）則每幀重新畫在可見層上，不累積、不爆白。
+// 拖尾層：只有「背景星塵＋星雲＋向量場」畫在這，累積出絲綢極光；
+// 以 1× 邏輯解析度渲染再放大到可見層 → Retina 省 75% 填充率＋免費柔光。
 const trail = document.createElement('canvas');
 const tctx = trail.getContext('2d');
 
-let W = 0, H = 0;               // 邏輯尺寸（不含 devicePixelRatio 縮放）
-let prevW = 0, prevH = 0;       // 上一次尺寸，用來在縮放時等比例搬移粒子
-let DPR = 1;                    // 目前的裝置像素比（供 render 複製拖尾層時使用）
+let W = 0, H = 0;
+let prevW = 0, prevH = 0;
+let DPR = 1;
 
-const simplex = new SimplexNoise();  // ← 你原本設計的 new SimplexNoise()
-
-// 流場參數
-const FLOW_SCALE = 0.0016;   // 空間縮放：越小，紋理越大越柔順
-let flowTime = 0;            // 第三維（時間），讓流場緩慢演化成極光感
+const simplex = new SimplexNoise();
 
 
 /* =====================================================================
-   3) 類別定義
+   4) 流場：粗網格 + 雙線性取樣（效能核心優化）
+   每格 44px，噪聲呼叫從「每粒子每幀」降為「每格每幀」（約 -60%）。
+   向量場筆觸層直接重用同一批格點 → 零額外噪聲成本。
+   ===================================================================== */
+const FLOW_CELL = 44;
+const FLOW_SCALE = 0.0016;
+let flowTime = rand(0, 100);
+let flowCols = 0, flowRows = 0, flowVX = null, flowVY = null;
+
+function rebuildFlowGrid() {
+  flowCols = Math.ceil(W / FLOW_CELL) + 2;
+  flowRows = Math.ceil(H / FLOW_CELL) + 2;
+  flowVX = new Float32Array(flowCols * flowRows);
+  flowVY = new Float32Array(flowCols * flowRows);
+  recomputeFlow();
+}
+function recomputeFlow() {
+  let i = 0;
+  for (let r = 0; r < flowRows; r++) {
+    const ny = r * FLOW_CELL * FLOW_SCALE;
+    for (let c = 0; c < flowCols; c++, i++) {
+      const a = simplex.noise3D(c * FLOW_CELL * FLOW_SCALE, ny, flowTime) * TAU;
+      flowVX[i] = Math.cos(a);
+      flowVY[i] = Math.sin(a);
+    }
+  }
+}
+const _fs = { x: 0, y: 0 };   // 共用暫存物件，避免每次取樣配置記憶體
+function sampleFlow(x, y, out) {
+  let gx = x / FLOW_CELL, gy = y / FLOW_CELL;
+  if (gx < 0) gx = 0; if (gy < 0) gy = 0;
+  const mx = flowCols - 2, my = flowRows - 2;
+  if (gx > mx) gx = mx; if (gy > my) gy = my;
+  const cx = Math.floor(gx), cy = Math.floor(gy);
+  const fx = gx - cx, fy = gy - cy;
+  const i00 = cy * flowCols + cx, i10 = i00 + 1, i01 = i00 + flowCols, i11 = i01 + 1;
+  const vx0 = flowVX[i00] + (flowVX[i10] - flowVX[i00]) * fx;
+  const vx1 = flowVX[i01] + (flowVX[i11] - flowVX[i01]) * fx;
+  out.x = vx0 + (vx1 - vx0) * fy;
+  const vy0 = flowVY[i00] + (flowVY[i10] - flowVY[i00]) * fx;
+  const vy1 = flowVY[i01] + (flowVY[i11] - flowVY[i01]) * fx;
+  out.y = vy0 + (vy1 - vy0) * fy;
+}
+
+
+/* =====================================================================
+   5) 音效（WebAudio 合成，零音檔；瀏覽器需要一次點擊解鎖）
+   ===================================================================== */
+let AC = null;
+let muted = false;
+try { muted = localStorage.getItem('stardust_muted') === '1'; } catch (e) {}
+
+function ac() {
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    return AC;
+  } catch (e) { return null; }
+}
+function tone(freq, dur, opt = {}) {
+  if (muted) return;
+  const a = ac(); if (!a) return;
+  const { type = 'sine', vol = 0.12, slide = 1, delay = 0 } = opt;
+  const t0 = a.currentTime + delay;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, t0);
+  o.frequency.exponentialRampToValueAtTime(Math.max(20, freq * slide), t0 + dur);
+  g.gain.setValueAtTime(vol, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g).connect(a.destination);
+  o.start(t0); o.stop(t0 + dur + 0.05);
+}
+let noiseBuf = null;
+function noiseBurstSfx(dur, vol, delay = 0, freq = 600) {
+  if (muted) return;
+  const a = ac(); if (!a) return;
+  if (!noiseBuf) {
+    noiseBuf = a.createBuffer(1, a.sampleRate, a.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const t0 = a.currentTime + delay;
+  const src = a.createBufferSource(); src.buffer = noiseBuf;
+  const f = a.createBiquadFilter(); f.type = 'lowpass';
+  f.frequency.setValueAtTime(freq, t0);
+  f.frequency.exponentialRampToValueAtTime(80, t0 + dur);
+  const g = a.createGain();
+  g.gain.setValueAtTime(vol, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  src.connect(f).connect(g).connect(a.destination);
+  src.start(t0); src.stop(t0 + dur + 0.05);
+}
+// 收集音：五聲音階隨連擊爬升，越連越高
+const SCALE_FREQ = [523.25, 587.33, 659.25, 783.99, 880, 987.77, 1174.66, 1318.5];
+function sfxCollect(comboN, blue) {
+  const f = SCALE_FREQ[Math.min(comboN - 1, SCALE_FREQ.length - 1)];
+  if (blue) { tone(880, 0.1, { vol: 0.1 }); tone(1318.5, 0.2, { vol: 0.09, delay: 0.06 }); }
+  else { tone(f, 0.18, { vol: 0.11 }); tone(f * 2, 0.12, { vol: 0.04, delay: 0.02 }); }
+}
+function sfxPulse()  { tone(220, 0.35, { vol: 0.18, slide: 0.25 }); noiseBurstSfx(0.28, 0.07, 0, 900); }
+function sfxDeath()  { tone(150, 0.9,  { vol: 0.26, slide: 0.15 }); noiseBurstSfx(0.8, 0.22, 0, 500); }
+function sfxLevel()  { [523.25, 659.25, 783.99].forEach((f, i) => tone(f, 0.16, { delay: i * 0.09, vol: 0.09 })); }
+function sfxComet()  { [659.25, 783.99, 987.77, 1318.5].forEach((f, i) => tone(f, 0.15, { delay: i * 0.07, vol: 0.1 })); }
+function sfxWindup() { tone(180, 0.5, { vol: 0.06, slide: 2.2 }); }                                  // 衝刺蓄力：上滑警告音
+function sfxDash()   { noiseBurstSfx(0.22, 0.1, 0, 1400); tone(520, 0.18, { vol: 0.07, slide: 0.4 }); }  // 衝刺：短促呼嘯
+
+
+/* =====================================================================
+   6) 遊戲常數與狀態
+   ===================================================================== */
+const DUST_COUNT   = IS_TOUCH ? 900 : 1500;   // 背景星塵（手機降載保流暢）
+const MAX_BURST    = 220;    // 特效粒子上限
+const DUST_SPEED   = 36;     // 流場基礎速度
+const CURSOR_R     = 11;     // 游標半徑
+const PULSE_CD     = 6;      // 脈衝冷卻（秒）
+const COMBO_WINDOW = 3;      // 連擊視窗（秒）
+const GRAZE_BAND   = 34;     // 擦邊區厚度（px）
+
+let state = 'menu';          // 'menu' | 'playing' | 'dying' | 'gameover'
+let score = 0, best = 0, level = 0, speedMul = 1;
+let combo = 0, comboTimer = 0, mult = 1;
+let maxMult = 1, starsCollected = 0, runTime = 0;
+let pulseCd = 0, pulseReady = true, readyFlash = 0;
+let shake = 0, dyingT = 0, levelFlash = 0, levelFlashText = '', hintTimer = 0;
+let grazeTick = 0, starTimer = 0, scoreScale = 1;
+let cometTimer = 12, comet = null;
+
+let particles = [], stars = [], vortices = [], bursts = [];
+let shockwaves = [], rings = [], popups = [];
+let nebulas = [], nebulaSeeds = [];
+
+const cursor = { x: 0, y: 0 };
+const mouse  = { x: 0, y: 0 };
+const cursorTrail = [];
+
+// DOM
+const scoreNum   = document.getElementById('score-num');
+const bestNum    = document.getElementById('best-num');
+const levelNum   = document.getElementById('level-num');
+const comboEl    = document.getElementById('combo');
+const comboX     = document.getElementById('combo-x');
+const comboBarI  = document.querySelector('#combo-bar i');
+const hintEl     = document.getElementById('hint');
+const menuEl     = document.getElementById('menu');
+const gameoverEl = document.getElementById('gameover');
+const finalScoreEl = document.getElementById('final-score');
+const statCombo  = document.getElementById('stat-combo');
+const statStars  = document.getElementById('stat-stars');
+const statTime   = document.getElementById('stat-time');
+const newRecordEl = document.getElementById('new-record');
+const muteBtn    = document.getElementById('mute');
+
+try { best = parseInt(localStorage.getItem('stardust_best') || '0', 10) || 0; } catch (e) {}
+bestNum.textContent = best;
+
+
+/* =====================================================================
+   7) 類別
    ===================================================================== */
 
-// ---- 背景星塵粒子（永遠存在，約 1500 顆） ----
+// ---- 背景星塵 ----
 class Particle {
-  constructor() { this.reset(true); }
-  reset(anywhere) {
+  constructor() { this.reset(); }
+  reset() {
     this.x = Math.random() * W;
     this.y = Math.random() * H;
     this.sprite = COOL[randI(0, COOL.length - 1)];
-    this.size = rand(0.3, 1.1);       // 貼圖縮放（footprint 小一點才細緻）
-    this.alpha = rand(0.05, 0.16);    // 透明度（壓低，避免加亮混合累積成白霧）
-    this.speedMul = rand(0.6, 1.4);   // 個別速度差異，讓流動更自然
+    this.size = rand(0.25, 0.95);
+    this.alpha = rand(0.035, 0.11);   // 壓低透明度：保留黑色留白，避免中間調霧化
+    this.speedMul = rand(0.6, 1.4);
   }
   update(dt) {
-    // 依流場算出當下方向（每幀重新計算，避免速度累積失控）
-    const ang = simplex.noise3D(this.x * FLOW_SCALE, this.y * FLOW_SCALE, flowTime) * TAU;
-    let vx = Math.cos(ang) * BG_SPEED * this.speedMul;
-    let vy = Math.sin(ang) * BG_SPEED * this.speedMul;
+    sampleFlow(this.x, this.y, _fs);
+    let vx = _fs.x * DUST_SPEED * this.speedMul;
+    let vy = _fs.y * DUST_SPEED * this.speedMul;
 
-    // 游標吸引：距離游標 100px 內的星塵，會被輕輕吸過去並繞著跳舞
-    if (state === 'playing') {
+    // 游標吸引（選單與遊戲中都生效——選單畫面也會跟著游標起舞）
+    if (state === 'playing' || state === 'menu') {
       const dx = cursor.x - this.x, dy = cursor.y - this.y;
       const d2 = dx * dx + dy * dy;
-      if (d2 < 100 * 100 && d2 > 1) {
+      if (d2 < 10000 && d2 > 1) {
         const d = Math.sqrt(d2);
-        const f = (1 - d / 100) * 60;          // 越近吸力越強
-        vx += (dx / d) * f;
-        vy += (dy / d) * f;
-        vx += (-dy / d) * f * 0.6;             // 加一點切線分量 → 繞圈起舞
-        vy += (dx / d) * f * 0.6;
+        const f = (1 - d / 100) * 60;
+        vx += (dx / d) * f + (-dy / d) * f * 0.6;
+        vy += (dy / d) * f + (dx / d) * f * 0.6;
       }
-      // 漩渦吸入：附近的星塵速度向量偏向漩渦中心，並帶旋轉，形成被吸入的視覺
+    }
+    // 漩渦吸入
+    if (state === 'playing' || state === 'dying') {
       for (const v of vortices) {
         const vdx = v.x - this.x, vdy = v.y - this.y;
-        const vd2 = vdx * vdx + vdy * vdy;
         const range = v.r * 5;
+        const vd2 = vdx * vdx + vdy * vdy;
         if (vd2 < range * range && vd2 > 1) {
           const vd = Math.sqrt(vd2);
-          const f = (1 - vd / range) * 90;
-          vx += (vdx / vd) * f;                // 吸向中心
-          vy += (vdy / vd) * f;
-          vx += (-vdy / vd) * f * 1.1;         // 螺旋切線
-          vy += (vdx / vd) * f * 1.1;
+          const f = (1 - vd / range) * 90 * v.scale;
+          vx += (vdx / vd) * f + (-vdy / vd) * f * 1.1;
+          vy += (vdy / vd) * f + (vdx / vd) * f * 1.1;
+        }
+      }
+    }
+    // 衝擊波把星塵推成漣漪
+    for (const sw of shockwaves) {
+      const dx = this.x - sw.x, dy = this.y - sw.y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d > 4) {
+        const band = Math.abs(d - sw.r);
+        if (band < 80) {
+          const f = (1 - band / 80) * 380 * clamp(sw.life, 0, 1);
+          vx += dx / d * f;
+          vy += dy / d * f;
         }
       }
     }
 
     this.x += vx * dt;
     this.y += vy * dt;
-
-    // 邊界環繞：飄出畫面就從另一側回來，維持恆定 1500 顆
-    if (this.x < -20) this.x = W + 20;
-    else if (this.x > W + 20) this.x = -20;
-    if (this.y < -20) this.y = H + 20;
-    else if (this.y > H + 20) this.y = -20;
+    if (this.x < -20) this.x = W + 20; else if (this.x > W + 20) this.x = -20;
+    if (this.y < -20) this.y = H + 20; else if (this.y > H + 20) this.y = -20;
   }
-  // 畫在傳入的繪圖脈絡上（背景星塵畫在「拖尾層」tctx，而非可見層）
   draw(g) {
     const s = this.sprite.width * this.size;
     g.globalAlpha = this.alpha;
@@ -409,11 +664,12 @@ class Particle {
   }
 }
 
-// ---- 能量星（金黃暖色，緩慢旋轉+脈動，碰到 +10 分） ----
+// ---- 能量星（gold：+10×倍率；blue：+30×倍率＋立即充滿脈衝） ----
 class Star {
   constructor(x, y) {
     this.x = x; this.y = y;
-    this.r = rand(8, 15);
+    this.type = Math.random() < 0.15 ? 'blue' : 'gold';
+    this.r = this.type === 'blue' ? rand(9, 12) : rand(8, 15);
     this.rot = rand(0, TAU);
     this.rotSpeed = rand(0.4, 1.3) * (Math.random() < 0.5 ? 1 : -1);
     this.pulse = rand(0, TAU);
@@ -424,126 +680,311 @@ class Star {
     this.pulse += dt * 2.5;
   }
   draw() {
-    const pr = this.r * (1 + 0.15 * Math.sin(this.pulse));   // 脈動半徑
+    const pr = this.r * (1 + 0.15 * Math.sin(this.pulse));
+    const blue = this.type === 'blue';
     ctx.save();
     ctx.translate(this.x, this.y);
-
-    // 外層柔和光暈
+    // 外層光暈
     ctx.globalAlpha = 0.9;
-    ctx.drawImage(WARM[0], -pr * 3, -pr * 3, pr * 6, pr * 6);
-
-    // 核心：中心亮白 → 外圈金黃 的徑向漸層
+    ctx.drawImage(blue ? CYAN[0] : WARM[0], -pr * 3, -pr * 3, pr * 6, pr * 6);
+    // 核心
     ctx.globalAlpha = 1;
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, pr);
-    g.addColorStop(0,   'rgba(255,255,255,1)');
-    g.addColorStop(0.4, 'rgba(255,225,140,0.95)');
-    g.addColorStop(1,   'rgba(255,180,60,0)');
+    if (blue) {
+      g.addColorStop(0,   'rgba(255,255,255,1)');
+      g.addColorStop(0.4, 'rgba(150,230,255,0.95)');
+      g.addColorStop(1,   'rgba(60,170,255,0)');
+    } else {
+      g.addColorStop(0,   'rgba(255,255,255,1)');
+      g.addColorStop(0.4, 'rgba(255,225,140,0.95)');
+      g.addColorStop(1,   'rgba(255,180,60,0)');
+    }
     ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(0, 0, pr, 0, TAU);
-    ctx.fill();
-
-    // 旋轉光芒：用多條由中心向外、透明度不同的細光束模擬轉動
+    ctx.beginPath(); ctx.arc(0, 0, pr, 0, TAU); ctx.fill();
+    // 呼吸光環
+    ctx.strokeStyle = blue
+      ? `rgba(140,220,255,${0.25 + 0.15 * Math.sin(this.pulse * 1.3)})`
+      : `rgba(255,210,120,${0.2 + 0.12 * Math.sin(this.pulse * 1.1)})`;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(0, 0, pr * 1.75, 0, TAU); ctx.stroke();
+    // 旋轉光芒
     ctx.rotate(this.rot);
-    for (let i = 0; i < 6; i++) {
-      ctx.rotate(TAU / 6);
+    const rays = blue ? 4 : 6;
+    for (let i = 0; i < rays; i++) {
+      ctx.rotate(TAU / rays);
       const len = pr * (2.4 + 0.4 * Math.sin(this.pulse + i));
       const lg = ctx.createLinearGradient(0, 0, 0, -len);
-      lg.addColorStop(0, 'rgba(255,230,150,0.55)');
-      lg.addColorStop(1, 'rgba(255,200,90,0)');
+      lg.addColorStop(0, blue ? 'rgba(170,230,255,0.55)' : 'rgba(255,230,150,0.55)');
+      lg.addColorStop(1, blue ? 'rgba(120,200,255,0)'    : 'rgba(255,200,90,0)');
       ctx.strokeStyle = lg;
       ctx.lineWidth = 1.6;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(0, -len);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -len); ctx.stroke();
     }
     ctx.restore();
   }
 }
 
-// ---- 暗物質漩渦（深紫黑螺旋，會移動，碰到 = 遊戲結束） ----
+// ---- 暗物質漩渦 ----
 class Vortex {
   constructor(x, y) {
     this.x = x; this.y = y;
-    this.r = rand(18, 30);                 // 核心半徑
-    this.angle = rand(0, TAU);             // 螺旋自轉
-    this.spin = rand(0.6, 1.2) * (Math.random() < 0.5 ? 1 : -1);
-    const dir = rand(0, TAU);
-    this.heading = dir;                    // 移動方向
-    this.baseSpeed = rand(18, 34);         // 基礎移動速度（px/秒）
+    this.r = rand(18, 30);
+    this.angle = rand(0, TAU);
+    this.spin = rand(0.7, 1.3) * (Math.random() < 0.5 ? 1 : -1);
+    this.heading = rand(0, TAU);
+    this.baseSpeed = rand(20, 36);
+    this.kbx = 0; this.kby = 0;      // 脈衝擊退速度
+    this.scale = 0;                  // 生成動畫（0→1，未成形前無殺傷力）
+    this.flash = 0;                  // 被脈衝擊中／擊殺玩家時閃白
+    this.grazeGlow = 0;              // 擦邊提示弧的亮度
+    this.entered = false;            // 是否已進場（從畫面外滑入前不吃邊界反彈）
+    this.hunt = rand(0.75, 1.25);    // 獵性（個體差異：有的兇、有的懶）
+    this.flankA = rand(0, TAU);      // 包抄目標：瞄準游標「旁邊」的偏移點
+    this.flankR = rand(40, 150);
+    this.flankT = rand(5, 9);
+    this.mode = 'cruise';            // cruise | windup | dash | recover（衝刺狀態機）
+    this.modeT = 0; this.modeT0 = 1;
+    this.dashTimer = rand(6, 12);
+    this.dvx = 0; this.dvy = 0;
+    this.aimX = 1; this.aimY = 0;    // 衝刺瞄準方向（蓄力前段追蹤玩家，最後 0.3 秒鎖定）
+    this.minD = 1e9;                 // 衝刺期間與玩家的最近距離（閃避獎勵用）
+    this.orbs = [];                  // 軌道粒子
+    const n = randI(4, 6);
+    for (let i = 0; i < n; i++) {
+      this.orbs.push({ ph: rand(0, TAU), rr: rand(1.25, 1.85), sp: rand(1.2, 2.4) * (Math.random() < 0.5 ? 1 : -1) });
+    }
   }
+  killR() { return this.r * 0.8 + CURSOR_R; }
   update(dt) {
-    this.angle += this.spin * dt;
-    // 用雜訊讓移動方向緩慢飄移，看起來像有機地遊蕩
-    this.heading += (simplex.noise3D(this.x * 0.002, this.y * 0.002, flowTime * 2) ) * dt * 1.5;
-    const spd = this.baseSpeed * speedMul;  // 難度越高越快
-    this.x += Math.cos(this.heading) * spd * dt;
-    this.y += Math.sin(this.heading) * spd * dt;
-    // 碰到邊界就反彈，避免漂出畫面
-    if (this.x < this.r)     { this.x = this.r;     this.heading = Math.PI - this.heading; }
-    if (this.x > W - this.r) { this.x = W - this.r; this.heading = Math.PI - this.heading; }
-    if (this.y < this.r)     { this.y = this.r;     this.heading = -this.heading; }
-    if (this.y > H - this.r) { this.y = H - this.r; this.heading = -this.heading; }
+    this.scale = Math.min(1, this.scale + dt / 0.7);
+    this.angle += this.spin * dt * (this.mode === 'windup' ? 3 : 1);  // 蓄力時螺旋加速旋轉（警告訊號）
+    this.flash = Math.max(0, this.flash - dt * 3);
+
+    const dxc = cursor.x - this.x, dyc = cursor.y - this.y;
+    const dc = Math.hypot(dxc, dyc) || 1;
+
+    // ---- 衝刺狀態機（LEVEL 3 起解鎖；脈衝波可打斷）----
+    if (state === 'playing' && this.scale >= 1) {
+      if (this.mode === 'cruise') {
+        if (level >= 2) {
+          this.dashTimer -= dt;
+          if (this.dashTimer <= 0 && dc < 560) {
+            this.mode = 'windup';
+            this.modeT0 = Math.max(0.55, 0.85 - level * 0.025);  // 蓄力至少 0.55 秒（含 0.3 秒鎖定期）
+            this.modeT = this.modeT0;
+            this.aimX = dxc / dc; this.aimY = dyc / dc;
+            sfxWindup();
+            if (dc < 420) vib(15);                               // 近距離蓄力：手機震一下提醒
+          }
+        }
+      } else if (this.mode === 'windup') {
+        this.modeT -= dt;
+        if (this.modeT > 0.3) {
+          this.aimX = dxc / dc; this.aimY = dyc / dc;   // 前段：瞄準線追蹤玩家
+        }                                                // 最後 0.3 秒：方向鎖定 → 明確的閃避窗口
+        if (this.modeT <= 0) {
+          this.mode = 'dash'; this.modeT = 0.45; this.minD = 1e9;
+          const dspd = dashSpeed();
+          this.dvx = this.aimX * dspd;
+          this.dvy = this.aimY * dspd;
+          sfxDash();
+        }
+      } else if (this.mode === 'dash') {
+        this.modeT -= dt;
+        this.minD = Math.min(this.minD, dc);
+        // 衝刺殘影
+        if (bursts.length < MAX_BURST) {
+          bursts.push(new Burst(this.x, this.y, {
+            vx: rand(-15, 15), vy: rand(-15, 15), gravity: 0, drag: 0.92,
+            sprite: SHARDS[0], size: rand(0.4, 0.8), followFlow: false, life: rand(0.3, 0.6),
+          }));
+        }
+        if (this.modeT <= 0) {
+          this.mode = 'recover'; this.modeT = 0.85;
+          // 閃避獎勵：衝刺曾貼近玩家但沒擊中
+          if (state === 'playing' && this.minD < 130) {
+            addScore(10 * mult);
+            popups.push(new TextPop(cursor.x, cursor.y - 24, '閃避 +' + (10 * mult), '#9fe8ff', false));
+          }
+        }
+      } else if (this.mode === 'recover') {
+        this.modeT -= dt;
+        if (this.modeT <= 0) {
+          this.mode = 'cruise';
+          this.dashTimer = clamp(rand(7, 11) - level * 0.5, 3.2, 11);  // 等級越高衝刺越頻繁
+        }
+      }
+    }
+
+    // ---- 巡航轉向 ----
+    this.heading += simplex.noise3D(this.x * 0.002, this.y * 0.002, flowTime * 2) * dt * 1.2;
+    if (state === 'playing') {
+      // 包抄：瞄準游標「旁邊」的個人偏移點（定期換位）→ 群體會從四面八方圍上來，不會擠成一團
+      this.flankT -= dt;
+      if (this.flankT <= 0) { this.flankA = rand(0, TAU); this.flankR = rand(40, 150); this.flankT = rand(5, 9); }
+      const tx = cursor.x + Math.cos(this.flankA) * this.flankR;
+      const ty = cursor.y + Math.sin(this.flankA) * this.flankR;
+      const ta = Math.atan2(ty - this.y, tx - this.x);
+      let diff = ta - this.heading;
+      while (diff > Math.PI) diff -= TAU;
+      while (diff < -Math.PI) diff += TAU;
+      this.heading += clamp(diff, -1.2, 1.2) * (0.5 + level * 0.18) * this.hunt * dt;  // 轉向力隨等級無上限成長
+    }
+
+    // ---- 移動 ----
+    let spd = this.baseSpeed * speedMul * this.hunt;
+    if (state === 'playing' && dc < 320) spd *= 1 + (1 - dc / 320) * 0.85;   // 貼近玩家時加速：真正的追擊壓力
+    if (this.mode === 'windup') spd *= 0.2;
+    else if (this.mode === 'recover') spd *= 0.45;
+
+    let mvx = Math.cos(this.heading) * spd + this.kbx;
+    let mvy = Math.sin(this.heading) * spd + this.kby;
+    if (this.mode === 'dash') { mvx += this.dvx; mvy += this.dvy; }
+    this.x += mvx * dt;
+    this.y += mvy * dt;
+    const kd = Math.exp(-3.2 * dt);
+    this.kbx *= kd; this.kby *= kd;
+
+    // 邊界：從畫面外滑入前不反彈，進場後才反彈
+    if (!this.entered) {
+      if (this.x > this.r && this.x < W - this.r && this.y > this.r && this.y < H - this.r) this.entered = true;
+    } else {
+      if (this.x < this.r)     { this.x = this.r;     this.heading = Math.PI - this.heading; this.kbx *= -0.5; }
+      if (this.x > W - this.r) { this.x = W - this.r; this.heading = Math.PI - this.heading; this.kbx *= -0.5; }
+      if (this.y < this.r)     { this.y = this.r;     this.heading = -this.heading; this.kby *= -0.5; }
+      if (this.y > H - this.r) { this.y = H - this.r; this.heading = -this.heading; this.kby *= -0.5; }
+    }
+    for (const o of this.orbs) o.ph += o.sp * dt;
   }
-  // 繪製分兩步：先挖出黑色空洞（source-over），再疊上發光的紫色螺旋（lighter）
   drawVoid() {
-    const vr = this.r * 2.2;
+    const vr = this.r * 2.2 * this.scale;
+    if (vr < 1) return;
     const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, vr);
     g.addColorStop(0,   'rgba(2,0,8,0.95)');
     g.addColorStop(0.6, 'rgba(10,2,24,0.6)');
     g.addColorStop(1,   'rgba(10,2,24,0)');
-    ctx.globalAlpha = 1;
     ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, vr, 0, TAU);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(this.x, this.y, vr, 0, TAU); ctx.fill();
   }
   drawArms() {
+    const s = this.scale;
+    if (s <= 0.02) return;
     ctx.save();
     ctx.translate(this.x, this.y);
-    const arms = 4, steps = 26;
-    for (let a = 0; a < arms; a++) {
-      ctx.beginPath();
-      for (let t = 0; t <= steps; t++) {
-        const p = t / steps;
-        const rr = p * this.r * 2.1;
-        const ang = this.angle + a * (TAU / arms) + p * 3.4;  // 越外圈扭得越多
-        const px = Math.cos(ang) * rr;
-        const py = Math.sin(ang) * rr;
-        if (t === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    ctx.scale(s, s);
+    // 雙層螺旋：外層粗暗紫、內層細亮紫反向旋轉 → 立體感
+    for (let L = 0; L < 2; L++) {
+      const arms = 3, steps = 22;
+      const dir = L === 0 ? 1 : -0.7;
+      const rMax = this.r * (L === 0 ? 2.15 : 1.3);
+      ctx.strokeStyle = L === 0 ? 'rgba(150,60,225,0.42)' : 'rgba(225,150,255,0.55)';
+      ctx.lineWidth = L === 0 ? 2.4 : 1.4;
+      for (let a = 0; a < arms; a++) {
+        ctx.beginPath();
+        for (let t = 0; t <= steps; t++) {
+          const p = t / steps;
+          const rr = p * rMax;
+          const ang = this.angle * dir + a * (TAU / arms) + p * (L === 0 ? 3.2 : 4.2);
+          const px = Math.cos(ang) * rr, py = Math.sin(ang) * rr;
+          if (t === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
       }
-      ctx.strokeStyle = 'rgba(150,60,225,0.5)';
+    }
+    // 核心光與閃白
+    ctx.globalAlpha = 0.85;
+    ctx.drawImage(SHARDS[0], -this.r, -this.r, this.r * 2, this.r * 2);
+    if (this.flash > 0) {
+      ctx.globalAlpha = this.flash;
+      ctx.drawImage(SHARDS[2], -this.r * 1.6, -this.r * 1.6, this.r * 3.2, this.r * 3.2);
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    // 軌道粒子（世界座標）
+    for (const o of this.orbs) {
+      const rr = this.r * o.rr * s;
+      const px = this.x + Math.cos(o.ph) * rr;
+      const py = this.y + Math.sin(o.ph) * rr * 0.92;
+      const sz = SHARDS[1].width * 0.35;
+      ctx.globalAlpha = 0.55;
+      ctx.drawImage(SHARDS[1], px - sz / 2, py - sz / 2, sz, sz);
+    }
+    ctx.globalAlpha = 1;
+    // 衝刺蓄力警告環：紅粉色、向內收縮
+    if (this.mode === 'windup') {
+      const f = clamp(this.modeT / this.modeT0, 0, 1);
+      ctx.strokeStyle = `rgba(255,90,140,${(1 - f) * 0.85})`;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.killR() + 10 + f * 42, 0, TAU);
+      ctx.stroke();
+
+      // 預瞄軌跡線：流動虛線＋箭頭。前段跟著玩家（粉紅），最後 0.3 秒鎖定（亮紅）＝閃避窗口
+      const locked = this.modeT <= 0.3;
+      const prog = 1 - f;
+      const len = dashSpeed() * 0.45;                       // 與實際衝刺距離一致
+      const sx0 = this.x + this.aimX * this.r;
+      const sy0 = this.y + this.aimY * this.r;
+      const ex = this.x + this.aimX * len;
+      const ey = this.y + this.aimY * len;
+      ctx.save();
+      ctx.setLineDash([7, 7]);
+      ctx.lineDashOffset = -performance.now() * 0.02;       // 虛線朝衝刺方向流動
+      const lg = ctx.createLinearGradient(sx0, sy0, ex, ey);
+      if (locked) {
+        lg.addColorStop(0, 'rgba(255,90,130,1)');
+        lg.addColorStop(1, 'rgba(255,90,130,0.3)');
+      } else {
+        lg.addColorStop(0, `rgba(255,150,190,${0.45 + prog * 0.35})`);
+        lg.addColorStop(1, 'rgba(255,150,190,0.12)');
+      }
+      ctx.strokeStyle = lg;
+      ctx.lineWidth = locked ? 3.2 : 2;
+      ctx.beginPath(); ctx.moveTo(sx0, sy0); ctx.lineTo(ex, ey); ctx.stroke();
+      ctx.setLineDash([]);
+      // 終點箭頭
+      const aa = Math.atan2(this.aimY, this.aimX);
+      ctx.strokeStyle = locked ? 'rgba(255,80,120,0.9)' : 'rgba(255,140,180,0.5)';
       ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex - 10 * Math.cos(aa - 0.5), ey - 10 * Math.sin(aa - 0.5));
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex - 10 * Math.cos(aa + 0.5), ey - 10 * Math.sin(aa + 0.5));
+      ctx.stroke();
+      ctx.restore();
+    }
+    // 擦邊提示弧（面向玩家、粉紅色，越近越亮）
+    if (this.grazeGlow > 0.03) {
+      const a = Math.atan2(cursor.y - this.y, cursor.x - this.x);
+      ctx.strokeStyle = `rgba(255,120,200,${this.grazeGlow * 0.75})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.killR() + 13, a - 0.7, a + 0.7);
       ctx.stroke();
     }
-    // 中心一點暗紫核光
-    ctx.globalAlpha = 0.8;
-    ctx.drawImage(SHARDS[0], -this.r, -this.r, this.r * 2, this.r * 2);
-    ctx.restore();
   }
 }
 
-// ---- 特效粒子：吃星慶祝 / 遊戲結束爆炸，通用一個類別 ----
+// ---- 特效粒子 ----
 class Burst {
   constructor(x, y, opt) {
     this.x = x; this.y = y;
-    this.vx = opt.vx;
-    this.vy = opt.vy;
-    this.gravity = opt.gravity;        // 正值下墜、負值上飄
-    this.drag = opt.drag;              // 空氣阻力（每秒衰減）
+    this.vx = opt.vx; this.vy = opt.vy;
+    this.gravity = opt.gravity;
+    this.drag = opt.drag;
     this.sprite = opt.sprite;
     this.size = opt.size;
-    this.followFlow = opt.followFlow;  // 是否受流場帶動
+    this.followFlow = opt.followFlow;
     this.life = opt.life;
     this.maxLife = opt.life;
     this.dead = false;
   }
   update(dt) {
     if (this.followFlow) {
-      const ang = simplex.noise3D(this.x * FLOW_SCALE, this.y * FLOW_SCALE, flowTime) * TAU;
-      this.vx += Math.cos(ang) * 40 * dt;
-      this.vy += Math.sin(ang) * 40 * dt;
+      sampleFlow(this.x, this.y, _fs);
+      this.vx += _fs.x * 40 * dt;
+      this.vy += _fs.y * 40 * dt;
     }
     this.vy += this.gravity * dt;
     const d = Math.pow(this.drag, dt * 60);
@@ -554,136 +995,371 @@ class Burst {
     if (this.life <= 0) this.dead = true;
   }
   draw() {
-    const k = this.life / this.maxLife;                 // 隨壽命淡出
+    const k = this.life / this.maxLife;
     const s = this.sprite.width * this.size * 2 * (0.5 + k * 0.5);
     ctx.globalAlpha = clamp(k, 0, 1) * 0.9;
     ctx.drawImage(this.sprite, this.x - s / 2, this.y - s / 2, s, s);
   }
 }
 
+// ---- 彗星（稀有事件：橫越畫面，接住 +100×倍率） ----
+class Comet {
+  constructor() {
+    const m = 80;
+    const side = randI(0, 3);
+    if (side === 0)      { this.x = -m;    this.y = rand(H * 0.15, H * 0.85); }
+    else if (side === 1) { this.x = W + m; this.y = rand(H * 0.15, H * 0.85); }
+    else if (side === 2) { this.x = rand(W * 0.15, W * 0.85); this.y = -m; }
+    else                 { this.x = rand(W * 0.15, W * 0.85); this.y = H + m; }
+    const tx = W * rand(0.3, 0.7), ty = H * rand(0.3, 0.7);
+    const d = Math.hypot(tx - this.x, ty - this.y);
+    const sp = rand(300, 420);
+    this.vx = (tx - this.x) / d * sp;
+    this.vy = (ty - this.y) / d * sp;
+    this.r = 9;
+    this.hist = [];
+    this.dead = false;
+  }
+  update(dt) {
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+    this.hist.unshift({ x: this.x, y: this.y });
+    if (this.hist.length > 18) this.hist.pop();
+    // 尾焰
+    if (bursts.length < MAX_BURST) {
+      for (let i = 0; i < 2; i++) {
+        bursts.push(new Burst(this.x + rand(-3, 3), this.y + rand(-3, 3), {
+          vx: this.vx * -0.06 + rand(-14, 14),
+          vy: this.vy * -0.06 + rand(-14, 14),
+          gravity: 0, drag: 0.9,
+          sprite: WARM[randI(0, 2)],
+          size: rand(0.25, 0.6),
+          followFlow: true,
+          life: rand(0.4, 0.9),
+        }));
+      }
+    }
+    if (this.x < -120 || this.x > W + 120 || this.y < -120 || this.y > H + 120) this.dead = true;
+  }
+  draw() {
+    for (let i = 0; i < this.hist.length - 1; i++) {
+      const k = 1 - i / this.hist.length;
+      ctx.strokeStyle = `rgba(255,220,160,${k * 0.5})`;
+      ctx.lineWidth = k * 5;
+      ctx.beginPath();
+      ctx.moveTo(this.hist[i].x, this.hist[i].y);
+      ctx.lineTo(this.hist[i + 1].x, this.hist[i + 1].y);
+      ctx.stroke();
+    }
+    const s = WARM[2].width * 1.4;
+    ctx.globalAlpha = 1;
+    ctx.drawImage(WARM[2], this.x - s / 2, this.y - s / 2, s, s);
+    const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r);
+    g.addColorStop(0, 'rgba(255,255,255,1)');
+    g.addColorStop(0.6, 'rgba(255,240,200,0.9)');
+    g.addColorStop(1, 'rgba(255,220,150,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, TAU); ctx.fill();
+  }
+}
+
+// ---- 浮動得分文字 ----
+class TextPop {
+  constructor(x, y, text, color, big) {
+    this.x = x; this.y = y;
+    this.text = text; this.color = color; this.big = big;
+    this.life = 1.0;
+  }
+  update(dt) { this.y -= 44 * dt; this.life -= dt; }
+  draw() {
+    const k = clamp(this.life, 0, 1);
+    ctx.globalAlpha = k;
+    ctx.fillStyle = this.color;
+    ctx.font = (this.big ? '700 20px ' : '600 15px ') + MONO;
+    ctx.textAlign = 'center';
+    ctx.fillText(this.text, this.x, this.y);
+    ctx.globalAlpha = 1;
+  }
+}
+
+// ---- 擴散圓環特效 ----
+class Ring {
+  constructor(x, y, opt = {}) {
+    this.x = x; this.y = y;
+    this.r = opt.r0 || 6;
+    this.vr = opt.vr || 380;
+    this.life = opt.life || 0.6;
+    this.maxLife = this.life;
+    this.color = opt.color || 'rgba(255,210,120,';
+    this.lw = opt.lw || 3;
+  }
+  update(dt) { this.r += this.vr * dt; this.life -= dt; }
+  draw() {
+    const k = clamp(this.life / this.maxLife, 0, 1);
+    ctx.strokeStyle = this.color + (k * 0.7) + ')';
+    ctx.lineWidth = this.lw * k + 0.5;
+    ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, TAU); ctx.stroke();
+  }
+}
+
 
 /* =====================================================================
-   4) 遊戲狀態
+   8) 星雲底層
    ===================================================================== */
-const BG_COUNT   = 1500;   // 背景星塵數量
-const MAX_BURST  = 200;    // 特效粒子上限（超過就回收最舊的）
-let BG_SPEED     = 34;     // 背景流場基礎速度（px/秒）
-
-let particles = [];        // 背景星塵
-let stars     = [];        // 能量星
-let vortices  = [];        // 漩渦
-let bursts    = [];        // 特效粒子
-
-let state   = 'playing';   // 'playing' | 'gameover'
-let score   = 0;
-let best    = 0;
-let level   = 0;           // 每 100 分 +1
-let speedMul = 1;          // 漩渦速度倍率（隨難度上升）
-
-const cursor = { x: 0, y: 0 };          // 畫面上的發光游標（會平滑追向滑鼠）
-const mouse  = { x: 0, y: 0 };          // 滑鼠實際位置
-
-let starTimer = 0;         // 補星冷卻計時
-let scoreScale = 1;        // 分數跳動用的縮放值
-
-// DOM 參照
-const scoreNum  = document.getElementById('score-num');
-const bestNum   = document.getElementById('best-num');
-const hintEl    = document.getElementById('hint');
-const gameoverEl = document.getElementById('gameover');
-const finalScoreEl = document.getElementById('final-score');
-
-// 讀取本機最高分（file:// 下可能被瀏覽器擋，故用 try 包起來）
-try { best = parseInt(localStorage.getItem('stardust_best') || '0', 10) || 0; } catch (e) {}
-bestNum.textContent = best;
+function initNebulaSeeds() {
+  nebulaSeeds = [
+    { f: 0.95, hOff: -25, bx: rand(0.2, 0.8),  by: rand(0.2, 0.8),  ph: rand(0, TAU) },
+    { f: 0.70, hOff:  15, bx: rand(0.15, 0.85), by: rand(0.15, 0.85), ph: rand(0, TAU) },
+    { f: 0.55, hOff:  55, bx: rand(0.15, 0.85), by: rand(0.15, 0.85), ph: rand(0, TAU) },
+  ];
+}
+function rebuildNebulas() {
+  const md = Math.min(W, H);
+  const baseHue = 225 + level * 22;    // 每升一級，星雲色相緩慢往紫紅漂移
+  nebulas = nebulaSeeds.map(sd => ({
+    sprite: makeNebula(md * sd.f, baseHue + sd.hOff),
+    size: md * sd.f,
+    bx: sd.bx, by: sd.by, ph: sd.ph,
+  }));
+}
 
 
-/* ---- 產生一個「避開游標一定距離」的隨機座標 ---- */
-function randomPos(minDistFromCursor) {
-  for (let tries = 0; tries < 30; tries++) {
-    const x = rand(40, W - 40);
-    const y = rand(40, H - 40);
+/* =====================================================================
+   9) 遊戲邏輯
+   ===================================================================== */
+function multFor(c) { return c >= 15 ? 5 : c >= 10 ? 4 : c >= 6 ? 3 : c >= 3 ? 2 : 1; }
+// 衝刺速度：隨等級成長；手機螢幕小，衝刺降速 25% 保持公平
+function dashSpeed() { return Math.min(640, 380 + level * 28) * (IS_TOUCH ? 0.75 : 1); }
+function formatTime(t) {
+  const m = Math.floor(t / 60), s = Math.floor(t % 60);
+  return m + ':' + String(s).padStart(2, '0');
+}
+
+function randomPos(minDistCursor, minDistVortex = 90) {
+  for (let tries = 0; tries < 40; tries++) {
+    const x = rand(40, W - 40), y = rand(40, H - 40);
     const dx = x - cursor.x, dy = y - cursor.y;
-    if (dx * dx + dy * dy >= minDistFromCursor * minDistFromCursor) return { x, y };
+    if (dx * dx + dy * dy < minDistCursor * minDistCursor) continue;
+    let ok = true;
+    for (const v of vortices) {
+      const vdx = x - v.x, vdy = y - v.y;
+      if (vdx * vdx + vdy * vdy < minDistVortex * minDistVortex) { ok = false; break; }
+    }
+    if (ok) return { x, y };
   }
   return { x: rand(40, W - 40), y: rand(40, H - 40) };
 }
 
-/* ---- 依難度計算漩渦「目標數量」（初始 2，每 100 分 +1，上限 6） ---- */
-function targetVortexCount() { return Math.min(6, 2 + level); }
+function addScore(v) {
+  score += v;
+  scoreNum.textContent = score;
+  scoreScale = 1.4;
+  updateDifficulty();
+}
 
-/* ---- 難度檢查：分數變動後呼叫 ---- */
+// 新漩渦從畫面外滑入（不再憑空出現在場中央，也避開游標側）
+function spawnVortexEdge() {
+  for (let tries = 0; tries < 10; tries++) {
+    const m = 50;
+    const side = randI(0, 3);
+    let x, y;
+    if (side === 0)      { x = -m;    y = rand(H * 0.1, H * 0.9); }
+    else if (side === 1) { x = W + m; y = rand(H * 0.1, H * 0.9); }
+    else if (side === 2) { x = rand(W * 0.1, W * 0.9); y = -m; }
+    else                 { x = rand(W * 0.1, W * 0.9); y = H + m; }
+    if (Math.hypot(x - cursor.x, y - cursor.y) < 300) continue;   // 別從玩家臉上進場
+    const v = new Vortex(x, y);
+    v.heading = Math.atan2(H * rand(0.25, 0.75) - y, W * rand(0.25, 0.75) - x);  // 朝場內滑入
+    vortices.push(v);
+    return;
+  }
+  const p = randomPos(260);
+  vortices.push(new Vortex(p.x, p.y));   // 保底：找不到合適邊就場內生成
+}
+
+// 每一級的升級說明（顯示在 LEVEL 閃字下方）
+function levelDesc(lv) {
+  if (lv === 2) return '漩渦學會衝刺！小心紅色警告環';
+  const parts = [];
+  if (2 + lv <= 8) parts.push('漩渦 +1');
+  parts.push(lv >= 6 ? '更快 · 衝刺更頻繁 · 星星更稀少' : '更快更兇');
+  return parts.join(' · ');
+}
+
 function updateDifficulty() {
-  const newLevel = Math.floor(score / 100);
-  if (newLevel !== level) {
-    level = newLevel;
-    speedMul = 1 + level * 0.18;                 // 漩渦越來越快
-    // 依需要補足漩渦（生成位置離游標至少 150px）
-    while (vortices.length < targetVortexCount()) {
-      const p = randomPos(150);
-      vortices.push(new Vortex(p.x, p.y));
-    }
+  const nl = Math.floor(score / 200);
+  if (nl > level) {
+    level = nl;
+    levelNum.textContent = level + 1;
+    speedMul = Math.min(1 + level * 0.16, 3.0);          // 速度上限 3 倍（原 2.1）
+    const target = Math.min(2 + level, 8);               // 漩渦上限 8 個（原 6）
+    while (vortices.length < target) spawnVortexEdge();
+    levelFlash = 1.6;
+    levelFlashText = levelDesc(level);
+    sfxLevel();
+    vib([20, 40, 20]);
+    rebuildNebulas();
   }
 }
 
-/* ---- 補充能量星：數量低於 5 顆時補到 8~12 顆，難度越高補得越慢 ---- */
 function refillStars(dt) {
   starTimer -= dt;
   if (stars.length < 5 && starTimer <= 0) {
-    const target = randI(8, 12);
+    const target = randI(8, 12) - Math.min(3, Math.floor(level / 2));   // 後期星星更稀少：逼你移動冒險
     while (stars.length < target) {
-      const p = randomPos(100);                  // 避開游標周圍 100px
+      const p = randomPos(100);
       stars.push(new Star(p.x, p.y));
     }
-    starTimer = 0.4 * (1 + level * 0.15);        // 難度越高，補星間隔略長 → 出現頻率略降
+    starTimer = 0.4 * (1 + level * 0.15);
   }
 }
 
-/* ---- 吃到能量星：加分 + 從該處爆出暖色慶祝粒子 ---- */
-function collectStar(s) {
-  s.dead = true;
-  score += 10;
-  scoreScale = 1.55;                             // 觸發分數跳動放大
-  scoreNum.textContent = score;
-  updateDifficulty();
-
-  const n = randI(20, 30);
-  for (let i = 0; i < n; i++) {
-    const a = rand(0, TAU);
-    const spd = rand(20, 90);
-    bursts.push(new Burst(s.x, s.y, {
-      vx: Math.cos(a) * spd,
-      vy: Math.sin(a) * spd - rand(20, 60),      // 整體略帶向上飄
-      gravity: -12,                              // 微微上升（浮力）
-      drag: 0.94,
-      sprite: WARM[randI(0, WARM.length - 1)],
-      size: rand(0.4, 1.0),
-      followFlow: true,                          // 隨流場帶走
-      life: rand(1.2, 1.8),                      // 壽命約 1.5 秒
-    }));
-  }
-  trimBursts();
-}
-
-/* ---- 特效粒子超過上限時，回收最舊的 ---- */
 function trimBursts() {
   if (bursts.length > MAX_BURST) bursts.splice(0, bursts.length - MAX_BURST);
 }
 
-/* ---- 遊戲結束：所有漩渦同時爆開，全螢幕粒子混亂噴發 ---- */
-function gameOver() {
+function applyImpulse(x, y, radius, power) {
+  for (const v of vortices) {
+    const dx = v.x - x, dy = v.y - y;
+    const d = Math.hypot(dx, dy);
+    if (d < radius && d > 1) {
+      const k = (1 - d / radius) * power;
+      v.kbx += dx / d * k;
+      v.kby += dy / d * k;
+      v.flash = Math.max(v.flash, 0.4);
+      // 脈衝波可打斷蓄力／衝刺 → 玩家的防身反制
+      if (v.mode === 'windup' || v.mode === 'dash') { v.mode = 'recover'; v.modeT = 0.9; }
+    }
+  }
+}
+
+function separateVortices(dt) {
+  for (let i = 0; i < vortices.length; i++) {
+    for (let j = i + 1; j < vortices.length; j++) {
+      const a = vortices[i], b = vortices[j];
+      if (a.mode === 'dash' || b.mode === 'dash') continue;   // 衝刺中的漩渦可以穿過同伴
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const d = Math.hypot(dx, dy);
+      const min = (a.r + b.r) * 1.7;                          // 分離距離加大：不再擠成一團
+      if (d < min && d > 1) {
+        const k = (min - d) / min * 160 * dt;
+        a.x -= dx / d * k; a.y -= dy / d * k;
+        b.x += dx / d * k; b.y += dy / d * k;
+      }
+    }
+  }
+}
+
+function collectStar(s) {
+  s.dead = true;
+  starsCollected++;
+  combo++;
+  comboTimer = COMBO_WINDOW;
+  mult = multFor(combo);
+  if (mult > maxMult) maxMult = mult;
+  if (mult >= 2) { comboEl.classList.remove('hidden'); comboX.textContent = '×' + mult; }
+
+  const blue = s.type === 'blue';
+  const val = (blue ? 30 : 10) * mult;
+  addScore(val);
+  popups.push(new TextPop(s.x, s.y - 16, '+' + val, blue ? '#8fe0ff' : '#ffd98f', mult >= 3));
+  rings.push(new Ring(s.x, s.y, {
+    vr: blue ? 420 : 300, life: 0.5, lw: 2.5,
+    color: blue ? 'rgba(120,210,255,' : 'rgba(255,200,110,',
+  }));
+  const n = randI(20, 30);
+  const pal = blue ? CYAN : WARM;
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, TAU), spd = rand(20, 90);
+    bursts.push(new Burst(s.x, s.y, {
+      vx: Math.cos(a) * spd,
+      vy: Math.sin(a) * spd - rand(20, 60),
+      gravity: -12, drag: 0.94,
+      sprite: pal[randI(0, pal.length - 1)],
+      size: rand(0.4, 1.0),
+      followFlow: true,
+      life: rand(1.2, 1.8),
+    }));
+  }
+  sfxCollect(combo, blue);
+  vib(blue ? [10, 30, 14] : 12);
+  if (blue) {
+    // 藍星：脈衝立即充滿 + 迷你衝擊波
+    pulseReady = true; pulseCd = 0; readyFlash = 1;
+    shockwaves.push({ x: s.x, y: s.y, r: 8, speed: 760, life: 0.55 });
+    applyImpulse(s.x, s.y, 300, 260);
+  }
+  trimBursts();
+}
+
+function catchComet() {
+  const val = 100 * mult;
+  addScore(val);
+  starsCollected++;
+  popups.push(new TextPop(comet.x, comet.y - 18, '彗星 +' + val, '#ffe9b0', true));
+  rings.push(new Ring(comet.x, comet.y, { vr: 620, life: 0.7, lw: 3.5, color: 'rgba(255,225,160,' }));
+  for (let i = 0; i < 40; i++) {
+    const a = rand(0, TAU), spd = rand(60, 320);
+    bursts.push(new Burst(comet.x, comet.y, {
+      vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+      gravity: -8, drag: 0.94,
+      sprite: WARM[randI(0, 2)],
+      size: rand(0.4, 1.1),
+      followFlow: true,
+      life: rand(0.9, 1.8),
+    }));
+  }
+  sfxComet();
+  vib([15, 25, 30]);
+  shake = Math.max(shake, 6);
+  comet = null;
+  trimBursts();
+}
+
+function pulse() {
+  if (state !== 'playing' || !pulseReady) return;
+  pulseReady = false;
+  pulseCd = PULSE_CD;
+  shockwaves.push({ x: cursor.x, y: cursor.y, r: 12, speed: 900, life: 0.9 });
+  applyImpulse(cursor.x, cursor.y, 430, 540);
+  rings.push(new Ring(cursor.x, cursor.y, { vr: 900, life: 0.5, lw: 3, color: 'rgba(170,200,255,' }));
+  shake = Math.max(shake, 5);
+  sfxPulse();
+  vib(20);
+}
+
+// 死亡演出：慢動作 → 漩渦全爆 → 結算
+function startDeath(v) {
+  state = 'dying';
+  dyingT = 1.05;
+  shake = 24;
+  v.flash = 1;
+  sfxDeath();
+  vib([70, 50, 140]);
+  for (let i = 0; i < 34; i++) {
+    const a = rand(0, TAU), sp = rand(60, 340);
+    bursts.push(new Burst(cursor.x, cursor.y, {
+      vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+      gravity: 140, drag: 0.95,
+      sprite: i % 3 ? COOL[5] : SHARDS[2],
+      size: rand(0.35, 0.9),
+      followFlow: false,
+      life: rand(0.6, 1.6),
+    }));
+  }
+  rings.push(new Ring(cursor.x, cursor.y, { vr: 520, life: 0.7, lw: 4, color: 'rgba(200,220,255,' }));
+  trimBursts();
+}
+
+function finishGameOver() {
   state = 'gameover';
-  // 每個漩渦爆成一團向外飛濺、會下墜的碎片
   for (const v of vortices) {
     const n = randI(26, 40);
     for (let i = 0; i < n; i++) {
-      const a = rand(0, TAU);
-      const spd = rand(120, 420);
+      const a = rand(0, TAU), spd = rand(120, 420);
       bursts.push(new Burst(v.x, v.y, {
-        vx: Math.cos(a) * spd,
-        vy: Math.sin(a) * spd,
-        gravity: 220,                            // 正重力 → 粒子墜落
-        drag: 0.96,
+        vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+        gravity: 220, drag: 0.96,
         sprite: SHARDS[randI(0, SHARDS.length - 1)],
         size: rand(0.5, 1.3),
         followFlow: false,
@@ -692,221 +1368,507 @@ function gameOver() {
     }
   }
   trimBursts();
-  vortices = [];
-  stars = [];
+  vortices = []; stars = []; comet = null; shockwaves = [];
 
-  // 更新最高分並顯示結束畫面
   if (score > best) {
     best = score;
     bestNum.textContent = best;
     try { localStorage.setItem('stardust_best', String(best)); } catch (e) {}
+    newRecordEl.classList.remove('hidden');
+  } else {
+    newRecordEl.classList.add('hidden');
   }
   finalScoreEl.textContent = score;
+  statCombo.textContent = '×' + maxMult;
+  statStars.textContent = starsCollected;
+  statTime.textContent = formatTime(runTime);
   gameoverEl.classList.add('show');
 }
 
-/* ---- 重新開始 ---- */
 function resetGame() {
   score = 0; level = 0; speedMul = 1;
-  scoreNum.textContent = '0';
+  combo = 0; comboTimer = 0; mult = 1;
+  maxMult = 1; starsCollected = 0; runTime = 0;
+  pulseCd = 0; pulseReady = true; readyFlash = 0;
+  shake = 0; levelFlash = 0; grazeTick = 0;
+  cometTimer = rand(10, 15); comet = null;
   stars = []; vortices = []; bursts = [];
-  starTimer = 0;
-  // 初始 8 顆能量星
-  for (let i = 0; i < 8; i++) {
-    const p = randomPos(100);
-    stars.push(new Star(p.x, p.y));
-  }
-  // 初始 2 個漩渦
-  for (let i = 0; i < 2; i++) {
-    const p = randomPos(150);
-    vortices.push(new Vortex(p.x, p.y));
-  }
+  shockwaves = []; rings = []; popups = [];
+  cursorTrail.length = 0;
+  starTimer = 0; scoreScale = 1;
+  scoreNum.textContent = '0';
+  comboEl.classList.add('hidden');
+  rebuildNebulas();
+  levelNum.textContent = '1';
+  levelFlashText = '';
+  for (let i = 0; i < 8; i++) { const p = randomPos(100); stars.push(new Star(p.x, p.y)); }
+  for (let i = 0; i < 2; i++) spawnVortexEdge();   // 開局漩渦也從邊緣滑入
   gameoverEl.classList.remove('show');
+  menuEl.classList.remove('show');
   state = 'playing';
+  showHint(IS_TOUCH ? '輕點＝脈衝波 · 紅色虛線＝漩渦衝刺軌跡' : '點擊＝脈衝波 · 紅色虛線＝漩渦衝刺軌跡', 6);
+}
+
+function startGame() { ac(); resetGame(); }
+
+function showHint(text, dur) {
+  hintEl.textContent = text;
+  hintEl.style.opacity = '0.85';
+  hintTimer = dur;
 }
 
 
 /* =====================================================================
-   5) 主迴圈（更新與繪製分離）
+   10) 更新（與繪製分離）
    ===================================================================== */
 function update(dt) {
-  flowTime += dt * 0.15;                          // 流場緩慢演化
+  flowTime += dt * 0.15;
+  recomputeFlow();
 
-  // 背景星塵永遠更新（兩種狀態下都在流動）
   for (const p of particles) p.update(dt);
-
-  // 特效粒子永遠更新
+  for (const sw of shockwaves) { sw.r += sw.speed * dt; sw.life -= dt; }
+  shockwaves = shockwaves.filter(s => s.life > 0);
   for (const b of bursts) b.update(dt);
   bursts = bursts.filter(b => !b.dead);
+  for (const r of rings) r.update(dt);
+  rings = rings.filter(r => r.life > 0);
+  for (const t of popups) t.update(dt);
+  popups = popups.filter(t => t.life > 0);
 
-  // 游標平滑追向滑鼠（保有靈敏度，又有一點滑順拖尾感）
-  cursor.x += (mouse.x - cursor.x) * clamp(18 * dt, 0, 1);
-  cursor.y += (mouse.y - cursor.y) * clamp(18 * dt, 0, 1);
+  cursor.x += (mouse.x - cursor.x) * clamp(20 * dt, 0, 1);
+  cursor.y += (mouse.y - cursor.y) * clamp(20 * dt, 0, 1);
+  if (state === 'playing' || state === 'menu') {
+    cursorTrail.unshift({ x: cursor.x, y: cursor.y });
+    if (cursorTrail.length > 15) cursorTrail.pop();
+  }
 
-  // 分數跳動：縮放值彈回 1
   scoreScale += (1 - scoreScale) * clamp(12 * dt, 0, 1);
   scoreNum.style.transform = `scale(${scoreScale})`;
+  shake *= Math.exp(-5.5 * dt);
+  if (shake < 0.05) shake = 0;
+  if (levelFlash > 0) levelFlash -= dt;
+  if (readyFlash > 0) readyFlash -= dt * 2.2;
+  if (hintTimer > 0) { hintTimer -= dt; if (hintTimer <= 0) hintEl.style.opacity = '0'; }
 
   if (state === 'playing') {
+    runTime += dt;
+    // 連擊倒數
+    if (combo > 0) {
+      comboTimer -= dt;
+      if (comboTimer <= 0) {
+        combo = 0; mult = 1;
+        comboEl.classList.add('hidden');
+      } else {
+        comboBarI.style.width = (comboTimer / COMBO_WINDOW * 100) + '%';
+      }
+    }
+    // 脈衝冷卻
+    if (!pulseReady) {
+      pulseCd -= dt;
+      if (pulseCd <= 0) { pulseReady = true; readyFlash = 1; }
+    }
     refillStars(dt);
-
+    // 彗星
+    if (comet) {
+      comet.update(dt);
+      if (comet.dead) comet = null;
+    } else {
+      cometTimer -= dt;
+      if (cometTimer <= 0) { comet = new Comet(); cometTimer = rand(14, 24); }
+    }
     for (const s of stars) s.update(dt);
     for (const v of vortices) v.update(dt);
+    separateVortices(dt);
 
-    // 碰撞：游標 vs 能量星（圓形碰撞，距離 < 半徑和）
+    // 碰撞：能量星
     for (const s of stars) {
       const dx = s.x - cursor.x, dy = s.y - cursor.y;
-      if (dx * dx + dy * dy < (s.r + CURSOR_R) * (s.r + CURSOR_R)) collectStar(s);
+      const rr = s.r + CURSOR_R;
+      if (dx * dx + dy * dy < rr * rr) collectStar(s);
     }
     stars = stars.filter(s => !s.dead);
-
-    // 碰撞：游標 vs 漩渦（核心略小於視覺，判定稍寬容一點才公平）
-    for (const v of vortices) {
-      const dx = v.x - cursor.x, dy = v.y - cursor.y;
-      const hit = v.r * 0.85 + CURSOR_R;
-      if (dx * dx + dy * dy < hit * hit) { gameOver(); break; }
+    // 碰撞：彗星
+    if (comet) {
+      const dx = comet.x - cursor.x, dy = comet.y - cursor.y;
+      const rr = comet.r + CURSOR_R + 8;
+      if (dx * dx + dy * dy < rr * rr) catchComet();
     }
+    // 碰撞：漩渦（死亡）＋ 擦邊
+    grazeTick -= dt;
+    for (const v of vortices) {
+      if (v.scale < 0.85) { v.grazeGlow *= 0.9; continue; }   // 未成形不判定
+      const dx = v.x - cursor.x, dy = v.y - cursor.y;
+      const d = Math.hypot(dx, dy);
+      const kd = v.killR();
+      if (d < kd) { startDeath(v); break; }
+      if (d < kd + GRAZE_BAND) {
+        v.grazeGlow = Math.min(1, v.grazeGlow + dt * 6);
+        if (grazeTick <= 0) {
+          grazeTick = 0.12;
+          addScore(2 * mult);
+          // 擦邊火花：在游標邊緣朝切線方向噴出
+          const px = cursor.x + dx / d * CURSOR_R * 1.4;
+          const py = cursor.y + dy / d * CURSOR_R * 1.4;
+          for (let i = 0; i < 2; i++) {
+            const sgn = Math.random() < 0.5 ? 1 : -1;
+            bursts.push(new Burst(px, py, {
+              vx: -dy / d * rand(40, 130) * sgn + rand(-20, 20),
+              vy: dx / d * rand(40, 130) * sgn + rand(-20, 20),
+              gravity: 0, drag: 0.9,
+              sprite: SHARDS[randI(1, 2)],
+              size: rand(0.2, 0.45),
+              followFlow: false,
+              life: rand(0.25, 0.5),
+            }));
+          }
+        }
+      } else {
+        v.grazeGlow = Math.max(0, v.grazeGlow - dt * 4);
+      }
+    }
+  } else if (state === 'dying') {
+    // 慢動作：世界以 0.22 倍速演出
+    const wdt = dt * 0.22;
+    for (const v of vortices) v.update(wdt);
+    for (const s of stars) s.update(wdt);
+    if (comet) comet.update(wdt);
+    dyingT -= dt;
+    if (dyingT <= 0) finishGameOver();
   }
 }
 
-const CURSOR_R = 12;   // 游標半徑
+
+/* =====================================================================
+   11) 繪製
+   ===================================================================== */
+
+// 向量場筆觸層（致敬 vector-field 參考元件：格狀短筆觸＋紫色重點箭頭）
+function isAccent(c, r) { return ((c * 7 + r * 13) % 29) === 0; }
+function drawVectorField() {
+  const LEN = 13;
+  tctx.lineWidth = 1;
+  // 一般筆觸：分 4 個相位群組輪流呼吸，重現參考元件的明暗律動
+  for (let g = 0; g < 4; g++) {
+    const puls = (Math.sin(flowTime * 4 + g * 1.6) + 1) * 0.5;
+    tctx.strokeStyle = 'rgba(140,175,235,1)';
+    tctx.globalAlpha = 0.012 + 0.02 * puls;
+    tctx.beginPath();
+    let i = 0;
+    for (let r = 0; r < flowRows; r++) {
+      for (let c = 0; c < flowCols; c++, i++) {
+        if (((c + r * 3) & 3) !== g) continue;
+        if (isAccent(c, r)) continue;
+        const x = c * FLOW_CELL, y = r * FLOW_CELL;
+        tctx.moveTo(x, y);
+        tctx.lineTo(x + flowVX[i] * LEN, y + flowVY[i] * LEN);
+      }
+    }
+    tctx.stroke();
+  }
+  // 紫色重點向量（帶小箭頭）
+  tctx.strokeStyle = 'rgba(190,120,255,1)';
+  tctx.globalAlpha = 0.05 + 0.03 * Math.sin(flowTime * 3);
+  tctx.lineWidth = 1.4;
+  tctx.beginPath();
+  let i = 0;
+  for (let r = 0; r < flowRows; r++) {
+    for (let c = 0; c < flowCols; c++, i++) {
+      if (!isAccent(c, r)) continue;
+      const x = c * FLOW_CELL, y = r * FLOW_CELL;
+      const vx = flowVX[i], vy = flowVY[i];
+      const ex = x + vx * 18, ey = y + vy * 18;
+      tctx.moveTo(x, y); tctx.lineTo(ex, ey);
+      const aa = Math.atan2(vy, vx);
+      tctx.moveTo(ex, ey);
+      tctx.lineTo(ex - 5 * Math.cos(aa - 0.4), ey - 5 * Math.sin(aa - 0.4));
+      tctx.moveTo(ex, ey);
+      tctx.lineTo(ex - 5 * Math.cos(aa + 0.4), ey - 5 * Math.sin(aa + 0.4));
+    }
+  }
+  tctx.stroke();
+  tctx.globalAlpha = 1;
+  tctx.lineWidth = 1;
+}
+
+function drawCursor() {
+  // 彗尾
+  for (let i = 0; i < cursorTrail.length - 1; i++) {
+    const k = 1 - i / cursorTrail.length;
+    ctx.strokeStyle = `rgba(160,200,255,${k * 0.28})`;
+    ctx.lineWidth = k * 7;
+    ctx.beginPath();
+    ctx.moveTo(cursorTrail[i].x, cursorTrail[i].y);
+    ctx.lineTo(cursorTrail[i + 1].x, cursorTrail[i + 1].y);
+    ctx.stroke();
+  }
+  // 外層淡藍光暈
+  const og = ctx.createRadialGradient(cursor.x, cursor.y, 0, cursor.x, cursor.y, CURSOR_R * 4);
+  og.addColorStop(0, 'rgba(140,190,255,0.5)');
+  og.addColorStop(1, 'rgba(140,190,255,0)');
+  ctx.fillStyle = og;
+  ctx.beginPath(); ctx.arc(cursor.x, cursor.y, CURSOR_R * 4, 0, TAU); ctx.fill();
+  // 內層亮白核
+  const ig = ctx.createRadialGradient(cursor.x, cursor.y, 0, cursor.x, cursor.y, CURSOR_R);
+  ig.addColorStop(0,   'rgba(255,255,255,1)');
+  ig.addColorStop(0.6, 'rgba(220,235,255,0.9)');
+  ig.addColorStop(1,   'rgba(200,225,255,0)');
+  ctx.fillStyle = ig;
+  ctx.beginPath(); ctx.arc(cursor.x, cursor.y, CURSOR_R, 0, TAU); ctx.fill();
+
+  if (state !== 'playing') return;
+  // 脈衝指示環（半徑 20）
+  if (!pulseReady) {
+    const f = 1 - pulseCd / PULSE_CD;
+    ctx.strokeStyle = 'rgba(150,190,255,0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cursor.x, cursor.y, 20, -Math.PI / 2, -Math.PI / 2 + f * TAU);
+    ctx.stroke();
+  } else {
+    const a = 0.14 + 0.1 * Math.sin(performance.now() * 0.004);
+    ctx.strokeStyle = `rgba(170,210,255,${a})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(cursor.x, cursor.y, 20, 0, TAU); ctx.stroke();
+    if (readyFlash > 0) {
+      ctx.strokeStyle = `rgba(190,220,255,${readyFlash * 0.5})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cursor.x, cursor.y, 20 + (1 - readyFlash) * 26, 0, TAU);
+      ctx.stroke();
+    }
+  }
+  // 連擊倒數環（半徑 26，金色）
+  if (combo > 0) {
+    const f = comboTimer / COMBO_WINDOW;
+    ctx.strokeStyle = 'rgba(255,200,100,0.55)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(cursor.x, cursor.y, 26, -Math.PI / 2, -Math.PI / 2 + f * TAU);
+    ctx.stroke();
+  }
+}
+
+function drawLevelFlash() {
+  const a = clamp(Math.min(levelFlash, 1.6 - levelFlash) * 1.8, 0, 1);
+  ctx.globalAlpha = a;
+  ctx.textAlign = 'center';
+  ctx.shadowColor = 'rgba(255,200,110,0.9)';
+  ctx.shadowBlur = 24;
+  ctx.font = '300 40px ' + MONO;
+  ctx.fillStyle = 'rgba(255,225,160,0.95)';
+  ctx.fillText('L E V E L  ' + (level + 1), W / 2, H * 0.24);
+  ctx.shadowBlur = 10;
+  ctx.font = '300 14px ' + MONO;
+  ctx.fillStyle = 'rgba(255,235,200,0.8)';
+  ctx.fillText(levelFlashText || '漩 渦 增 強', W / 2, H * 0.24 + 32);
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+}
 
 function render() {
-  // ---- 第一層：拖尾層（只畫背景星塵，會累積出絲綢極光）----
-  // 每幀覆蓋半透明黑：讓舊的軌跡緩緩變暗，保留華麗拖尾
+  /* ---- 第一層：拖尾層（星雲＋向量場＋星塵，1× 解析度） ---- */
   tctx.globalCompositeOperation = 'source-over';
   tctx.globalAlpha = 1;
-  tctx.fillStyle = 'rgba(0,0,0,0.06)';
+  tctx.fillStyle = 'rgba(5,3,15,0.085)';   // 衰減稍快：拖尾短一點、暗空間多一點
   tctx.fillRect(0, 0, W, H);
-  // 背景星塵用加亮混合疊出柔和發光（因為只有會移動的星塵在這層，不會爆白）
+
   tctx.globalCompositeOperation = 'lighter';
+  // 星雲（緩慢漂移；加亮混合下有穩定的收斂亮度，不會爆白）
+  for (const n of nebulas) {
+    const nx = n.bx * W + Math.sin(flowTime * 0.5 + n.ph) * W * 0.04;
+    const ny = n.by * H + Math.cos(flowTime * 0.4 + n.ph * 1.7) * H * 0.04;
+    tctx.globalAlpha = 0.02;
+    tctx.drawImage(n.sprite, nx - n.size / 2, ny - n.size / 2, n.size, n.size);
+  }
+  drawVectorField();
   for (const p of particles) p.draw(tctx);
   tctx.globalCompositeOperation = 'source-over';
   tctx.globalAlpha = 1;
 
-  // ---- 第二層：可見層 ----
-  // 先把拖尾層以 1:1 裝置像素複製過來，再畫「每幀重來、不累積」的遊戲物件
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  /* ---- 第二層：可見層（含震屏位移） ---- */
+  const sx = (Math.random() * 2 - 1) * shake;
+  const sy = (Math.random() * 2 - 1) * shake;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.globalCompositeOperation = 'source-over';
   ctx.globalAlpha = 1;
-  ctx.drawImage(trail, 0, 0);
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);   // 回到邏輯座標畫物件
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(trail, sx, sy, W, H);           // 1× 拖尾層放大到全螢幕
+  ctx.setTransform(DPR, 0, 0, DPR, sx * DPR, sy * DPR);
 
-  // 漩渦：先挖黑洞（source-over 讓中心變暗），再疊發光螺旋（lighter）
-  if (state === 'playing') {
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.globalAlpha = 1;
+  const inWorld = state === 'playing' || state === 'dying';
+  if (inWorld) {
+    // 漩渦：先挖黑洞（source-over），再疊發光（lighter）
     for (const v of vortices) v.drawVoid();
     ctx.globalCompositeOperation = 'lighter';
     for (const v of vortices) v.drawArms();
   }
-
-  // 能量星（加亮發光）
   ctx.globalCompositeOperation = 'lighter';
-  for (const s of stars) s.draw();
-
-  // 特效粒子
-  for (const b of bursts) b.draw();
-
-  // 發光游標：內層亮白、外層淡藍的兩層光暈（遊戲中才顯示）
-  if (state === 'playing') {
-    ctx.globalAlpha = 1;
-    // 外層淡藍
-    const og = ctx.createRadialGradient(cursor.x, cursor.y, 0, cursor.x, cursor.y, CURSOR_R * 4);
-    og.addColorStop(0,   'rgba(140,190,255,0.5)');
-    og.addColorStop(1,   'rgba(140,190,255,0)');
-    ctx.fillStyle = og;
-    ctx.beginPath(); ctx.arc(cursor.x, cursor.y, CURSOR_R * 4, 0, TAU); ctx.fill();
-    // 內層亮白
-    const ig = ctx.createRadialGradient(cursor.x, cursor.y, 0, cursor.x, cursor.y, CURSOR_R);
-    ig.addColorStop(0,   'rgba(255,255,255,1)');
-    ig.addColorStop(0.6, 'rgba(220,235,255,0.9)');
-    ig.addColorStop(1,   'rgba(200,225,255,0)');
-    ctx.fillStyle = ig;
-    ctx.beginPath(); ctx.arc(cursor.x, cursor.y, CURSOR_R, 0, TAU); ctx.fill();
+  if (inWorld) {
+    for (const s of stars) s.draw();
+    if (comet) comet.draw();
   }
+  // 衝擊波圈
+  for (const sw of shockwaves) {
+    const k = clamp(sw.life / 0.9, 0, 1);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = `rgba(170,210,255,${k * 0.5})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.r, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = `rgba(120,170,255,${k * 0.25})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.r * 0.86, 0, TAU); ctx.stroke();
+  }
+  for (const r of rings) r.draw();
+  for (const b of bursts) b.draw();
+  ctx.globalAlpha = 1;
+  for (const t of popups) t.draw();
+
+  if (state === 'playing' || state === 'menu') drawCursor();
+  if (levelFlash > 0) drawLevelFlash();
 
   ctx.globalCompositeOperation = 'source-over';
   ctx.globalAlpha = 1;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 }
 
-// requestAnimationFrame 主迴圈
+
+/* =====================================================================
+   12) 主迴圈 / 縮放 / 事件 / 啟動
+   ===================================================================== */
 let lastT = performance.now();
 function loop(now) {
   let dt = (now - lastT) / 1000;
   lastT = now;
-  dt = clamp(dt, 0, 0.05);        // 限制單幀 dt，避免切到背景分頁再回來時大跳
+  dt = clamp(dt, 0, 0.05);
   update(dt);
   render();
   requestAnimationFrame(loop);
 }
 
-
-/* =====================================================================
-   視窗尺寸 / 事件 / 啟動
-   ===================================================================== */
 function resize() {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);   // 高解析度更清晰，但上限 2 保效能
+  DPR = Math.min(window.devicePixelRatio || 1, IS_TOUCH ? 1.5 : 2);   // 手機再壓一階 DPR
   const w = window.innerWidth, h = window.innerHeight;
 
-  // 背景粒子重新分佈
   if (particles.length) {
     if (prevW > 0 && prevH > 0) {
-      // 一般情況：等比例搬移，保持流場連續
-      const sx = w / prevW, sy = h / prevH;
-      for (const p of particles) { p.x *= sx; p.y *= sy; }
+      const kx = w / prevW, ky = h / prevH;
+      for (const p of particles) { p.x *= kx; p.y *= ky; }
     } else if (w > 0 && h > 0) {
-      // 從 0 尺寸首次取得真實大小（例如被嵌在一開始尺寸為 0 的容器）→ 重新散佈到整個畫面
       for (const p of particles) { p.x = Math.random() * w; p.y = Math.random() * h; }
     }
   }
 
-  DPR = dpr;
-  canvas.width = w * dpr;
-  canvas.height = h * dpr;
+  canvas.width = w * DPR;
+  canvas.height = h * DPR;
   canvas.style.width = w + 'px';
   canvas.style.height = h + 'px';
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);   // 之後都用邏輯座標作畫
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 
-  // 拖尾層同步尺寸（改尺寸會清空，補上深底色避免透明）
-  trail.width = w * dpr;
-  trail.height = h * dpr;
-  tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // 拖尾層：1× 邏輯解析度（Retina 上省 75% 填充率，放大後自帶柔光）
+  trail.width = Math.max(1, w);
+  trail.height = Math.max(1, h);
+  tctx.setTransform(1, 0, 0, 1, 0, 0);
   tctx.fillStyle = '#05030f';
   tctx.fillRect(0, 0, w, h);
 
   W = w; H = h; prevW = w; prevH = h;
 
-  // 遊戲物件維持在可見區域內
+  rebuildFlowGrid();
+  rebuildNebulas();
+
   for (const s of stars)    { s.x = clamp(s.x, 20, W - 20); s.y = clamp(s.y, 20, H - 20); }
-  for (const v of vortices) { v.x = clamp(v.x, v.r, W - v.r); v.y = clamp(v.y, v.r, H - v.r); }
+  for (const v of vortices) {
+    if (!v.entered) continue;   // 還在場外滑入的不硬拉進來
+    v.x = clamp(v.x, v.r, W - v.r); v.y = clamp(v.y, v.r, H - v.r);
+  }
 }
 
-// 滑鼠 / 觸控：追蹤位置
-function setPointer(clientX, clientY) { mouse.x = clientX; mouse.y = clientY; }
-window.addEventListener('mousemove', e => setPointer(e.clientX, e.clientY));
+function setPointer(cx, cy) { mouse.x = cx; mouse.y = cy; }
+window.addEventListener('mousemove', e => {
+  if (IS_TOUCH) return;   // 觸控裝置忽略合成滑鼠事件（避免游標瞬移打亂拖曳）
+  setPointer(e.clientX, e.clientY);
+});
+
+// 滑鼠點擊 = 脈衝波（按鈕與覆蓋層上的點擊除外）
+window.addEventListener('mousedown', e => {
+  ac();   // 順便解鎖音訊
+  if (IS_TOUCH) return;
+  if (e.target.closest('button') || e.target.closest('.overlay')) return;
+  pulse();
+});
+
+/* ---- 觸控操作 ----
+   單指「相對拖曳」：手指不必壓在捕手上（不擋視線），捕手跟著手指位移走。
+   快速輕點（<250ms 且幾乎沒移動）或第二指點擊 ＝ 脈衝波。 */
+const touchCtl = { id: null, lx: 0, ly: 0, t0: 0, moved: 0 };
+window.addEventListener('touchstart', e => {
+  ac();
+  if (e.target.closest('button') || e.target.closest('.overlay')) return;
+  if (e.touches.length >= 2) { pulse(); vib(20); return; }   // 第二指＝脈衝
+  const t = e.touches[0];
+  touchCtl.id = t.identifier;
+  touchCtl.lx = t.clientX; touchCtl.ly = t.clientY;
+  touchCtl.t0 = performance.now(); touchCtl.moved = 0;
+}, { passive: true });
 window.addEventListener('touchmove', e => {
-  if (e.touches[0]) setPointer(e.touches[0].clientX, e.touches[0].clientY);
+  for (const t of e.changedTouches) {
+    if (t.identifier !== touchCtl.id) continue;
+    const dx = t.clientX - touchCtl.lx, dy = t.clientY - touchCtl.ly;
+    touchCtl.lx = t.clientX; touchCtl.ly = t.clientY;
+    touchCtl.moved += Math.abs(dx) + Math.abs(dy);
+    mouse.x = clamp(mouse.x + dx * 1.15, 0, W);   // 1.15 倍靈敏度的相對位移
+    mouse.y = clamp(mouse.y + dy * 1.15, 0, H);
+  }
+}, { passive: true });
+window.addEventListener('touchend', e => {
+  for (const t of e.changedTouches) {
+    if (t.identifier !== touchCtl.id) continue;
+    touchCtl.id = null;
+    if (performance.now() - touchCtl.t0 < 250 && touchCtl.moved < 12) pulse();  // 輕點＝脈衝
+  }
 }, { passive: true });
 
-// 「再來一局」按鈕
+document.getElementById('start').addEventListener('click', startGame);
 document.getElementById('restart').addEventListener('click', resetGame);
 
-// 視窗縮放
+function toggleMute() {
+  muted = !muted;
+  muteBtn.textContent = muted ? '🔇' : '🔊';
+  try { localStorage.setItem('stardust_muted', muted ? '1' : '0'); } catch (e) {}
+}
+muteBtn.addEventListener('click', toggleMute);
+
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (state === 'menu') startGame();
+    else if (state === 'gameover') resetGame();
+  } else if (e.code === 'KeyM') {
+    toggleMute();
+  }
+});
+
 window.addEventListener('resize', resize);
 
 // ---- 初始化 ----
-resize();                                    // 先確定 W / H
-mouse.x = cursor.x = W / 2;                   // 游標起始在畫面中央
+// 觸控裝置：選單與提示文字換成觸控版說法
+if (IS_TOUCH) {
+  const items = document.querySelectorAll('.menu-list li');
+  if (items[0]) items[0].innerHTML = '<span class="mk gold">✦</span>單指拖曳（不必壓著角色），收集金色能量星';
+  if (items[2]) items[2].innerHTML = '<span class="mk blue">◉</span>快速輕點或第二指點擊＝脈衝波，推開漩渦';
+  const tip = document.querySelector('#menu .menu-tip');
+  if (tip) tip.textContent = '拖曳移動 · 輕點脈衝';
+  const sub = document.querySelector('#gameover .subtip');
+  if (sub) sub.textContent = '';
+}
+
+initNebulaSeeds();
+resize();
+mouse.x = cursor.x = W / 2;
 mouse.y = cursor.y = H / 2;
-for (let i = 0; i < BG_COUNT; i++) particles.push(new Particle());  // 建立 1500 顆背景星塵
-resetGame();                                 // 佈置初始能量星與漩渦
-
-// 幾秒後淡出開場提示
-setTimeout(() => { hintEl.style.opacity = '0'; }, 5000);
-
-requestAnimationFrame(loop);                 // 開始！
+for (let i = 0; i < DUST_COUNT; i++) particles.push(new Particle());
+muteBtn.textContent = muted ? '🔇' : '🔊';
+requestAnimationFrame(loop);
 </script>
-<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "9f081bf168be4e8cbfea582ba39c81f4"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>

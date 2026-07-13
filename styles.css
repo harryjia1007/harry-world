@@ -17,6 +17,7 @@
   --purple:#9D5CFF;
   --orange:#FF8A3D;
   --blue:#5CC8FF;
+  --spotify:#1DB954;
 
   --sans:'Noto Sans TC',-apple-system,BlinkMacSystemFont,sans-serif;
   --mono:'Space Mono',ui-monospace,monospace;
@@ -240,8 +241,10 @@ b{font-weight:700}
 .section-head{display:flex;align-items:center;gap:14px;margin-bottom:34px}
 .section-dot{width:10px;height:10px;background:var(--accent);flex:none}
 .section-dot.pink{background:var(--pink)}
+.section-dot.green{background:var(--spotify)}
 .section-title{font-family:var(--pixel);font-size:13px;color:var(--accent)}
 .section-title.pink{color:var(--pink);font-size:11px}
+.section-title.green{color:var(--spotify);font-size:11px}
 .section-line{flex:1;height:1px;background:var(--line)}
 .section-tag{font:11px var(--mono);color:rgba(255,255,255,.35)}
 
@@ -342,6 +345,37 @@ b{font-weight:700}
 @media (max-width:680px){.about-grid{grid-template-columns:1fr;gap:32px}.about-photo-wrap{max-width:260px}}
 
 .beyond{margin-top:70px}
+
+/* ---------- ON REPEAT（Spotify）---------- */
+.onrepeat{margin-top:70px}
+.now-playing{
+  display:flex;align-items:center;gap:14px;
+  background:linear-gradient(160deg,#132318,#0E0E0E);
+  border:1px solid rgba(29,185,84,.35);border-radius:14px;padding:14px 18px;
+  margin-bottom:16px;text-decoration:none;color:inherit;
+}
+.now-playing .np-art{width:46px;height:46px;border-radius:6px;flex:none;object-fit:cover;background:#1A1A1A}
+.now-playing .np-body{min-width:0}
+.now-playing .np-live{
+  display:inline-flex;align-items:center;gap:6px;
+  font:700 10px var(--mono);color:var(--spotify);letter-spacing:.1em;margin-bottom:4px;
+}
+.now-playing .np-live .np-dot{width:6px;height:6px;border-radius:50%;background:var(--spotify);animation:px-blink 1.3s steps(1) infinite}
+.now-playing .np-name{font:700 15px var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now-playing .np-artist{font:12px var(--mono);color:var(--faint)}
+
+.top-tracks{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.track-card{
+  display:flex;flex-direction:column;gap:8px;text-decoration:none;color:inherit;
+  background:linear-gradient(160deg,var(--card),var(--card-2));
+  border:1px solid var(--line);border-radius:12px;padding:10px;
+  transition:transform .2s ease,border-color .2s ease;
+}
+.track-card:hover{transform:translateY(-3px);border-color:rgba(29,185,84,.4)}
+.track-card .tc-art{width:100%;aspect-ratio:1;border-radius:6px;object-fit:cover;background:#1A1A1A}
+.track-card .tc-rank{font:700 10px var(--mono);color:var(--spotify)}
+.track-card .tc-name{font:700 13px var(--sans);color:var(--ink);line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.track-card .tc-artist{font:11px var(--mono);color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* 生活照扇形卡片堆疊（fan stack） */
 .strip.fanstack{display:block;overflow:visible;padding:14px 4px 6px}
 .fan-stage{

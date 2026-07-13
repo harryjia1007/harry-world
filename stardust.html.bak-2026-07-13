@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>星塵捕手 · Stardust Catcher｜Harry Chen Lab</title>
+<meta name="description" content="星塵捕手：移動滑鼠收集金色能量星、避開暗物質漩渦。純 HTML/Canvas 手寫的小遊戲，無框架、無外部相依。陳佳朋（Harry Chen）作品。" />
+<meta property="og:title" content="星塵捕手 · Stardust Catcher" />
+<meta property="og:description" content="一顆游標、一片會流動的星空。純 Canvas 手寫小遊戲，點開就能玩。" />
+<meta property="og:type" content="website" />
+<style>
+  /* ===================== 基本版面 ===================== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #05030f;          /* 深夜藍黑底色 */
+    cursor: none;                  /* 隱藏系統游標，改用畫布上自己畫的發光游標 */
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: none;
+  }
+
+  /* 全螢幕畫布 */
+  #game {
+    display: block;
+    position: fixed;
+    inset: 0;
+  }
+
+  /* ===================== 左上角分數 HUD ===================== */
+  #hud {
+    position: fixed;
+    top: 22px;
+    left: 28px;
+    z-index: 10;
+    color: #bcd6ff;
+    letter-spacing: 3px;
+    pointer-events: none;          /* 不擋滑鼠 */
+    text-shadow: 0 0 10px rgba(90,140,255,.35);
+  }
+  #hud .label {
+    font-size: 12px;
+    font-weight: 300;
+    opacity: .7;
+  }
+  #score-num {
+    display: inline-block;
+    font-size: 34px;
+    font-weight: 300;
+    line-height: 1;
+    color: #eaf4ff;
+    transform-origin: left center;  /* 跳動放大時從左側基準，避免文字位移 */
+    text-shadow:
+      0 0 12px rgba(140,190,255,.85),
+      0 0 28px rgba(90,140,255,.5);
+  }
+  #hud .best {
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 300;
+    opacity: .55;
+  }
+
+  /* ===================== 開場提示（幾秒後淡出） ===================== */
+  #hint {
+    position: fixed;
+    left: 50%;
+    bottom: 42px;
+    transform: translateX(-50%);
+    z-index: 10;
+    color: #cfe0ff;
+    font-size: 14px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    opacity: .85;
+    pointer-events: none;
+    text-shadow: 0 0 14px rgba(90,140,255,.5);
+    transition: opacity 1.2s ease;
+  }
+
+  /* ===================== 遊戲結束畫面 ===================== */
+  #gameover {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 26px;
+    text-align: center;
+    color: #eaf0ff;
+    background: radial-gradient(ellipse at center, rgba(20,6,40,.35), rgba(5,3,15,.72));
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;          /* 隱藏時不擋操作 */
+    transition: opacity .7s ease;
+    cursor: default;
+  }
+  #gameover.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #gameover .title {
+    font-size: 15px;
+    letter-spacing: 8px;
+    font-weight: 300;
+    color: #c9a6ff;
+    text-shadow: 0 0 16px rgba(160,90,255,.6);
+  }
+  #gameover .final {
+    font-size: 84px;
+    font-weight: 200;
+    line-height: 1;
+    color: #fff;
+    text-shadow:
+      0 0 22px rgba(255,210,120,.8),
+      0 0 50px rgba(255,170,70,.5);
+  }
+  #gameover .sub {
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    opacity: .7;
+  }
+  #restart {
+    margin-top: 6px;
+    padding: 14px 34px;
+    font-family: inherit;
+    font-size: 15px;
+    letter-spacing: 4px;
+    color: #eaf4ff;
+    background: rgba(120,150,255,.10);
+    border: 1px solid rgba(150,180,255,.55);
+    border-radius: 999px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: all .25s ease;
+    text-shadow: 0 0 10px rgba(120,180,255,.6);
+  }
+  #restart:hover {
+    background: rgba(140,170,255,.22);
+    border-color: rgba(190,210,255,.9);
+    box-shadow: 0 0 26px rgba(120,160,255,.5);
+    transform: translateY(-1px);
+  }
+
+  /* ===================== 右上角：回作品集 ===================== */
+  #homeLink {
+    position: fixed;
+    top: 24px;
+    right: 28px;
+    z-index: 30;                   /* 蓋過 gameover 遮罩，結束畫面也能離開 */
+    color: #bcd6ff;
+    font-size: 12px;
+    font-weight: 300;
+    letter-spacing: 3px;
+    text-decoration: none;
+    opacity: .55;
+    cursor: pointer;               /* body 隱藏了系統游標，連結上要還原 */
+    text-shadow: 0 0 10px rgba(90,140,255,.35);
+    transition: opacity .25s ease, text-shadow .25s ease;
+  }
+  #homeLink:hover {
+    opacity: 1;
+    text-shadow: 0 0 14px rgba(140,190,255,.8);
+  }
+</style>
+</head>
+<body>
+  <!-- 遊戲畫布 -->
+  <canvas id="game"></canvas>
+
+  <!-- 左上角分數 -->
+  <div id="hud">
+    <div class="label">STARDUST</div>
+    <span id="score-num">0</span>
+    <div class="best">最高 <span id="best-num">0</span></div>
+  </div>
+
+  <!-- 開場提示 -->
+  <div id="hint">移動滑鼠收集金色能量星 · 避開紫色暗物質漩渦</div>
+
+  <!-- 回作品集 -->
+  <a id="homeLink" href="/">✦ HARRYJIA.COM</a>
+
+  <!-- 結束畫面 -->
+  <div id="gameover">
+    <div class="title">GAME OVER</div>
+    <div class="final" id="final-score">0</div>
+    <div class="sub">本局收集的星塵</div>
+    <button id="restart">再 來 一 局</button>
+  </div>
+
+<script>
+/* =====================================================================
+   星塵捕手 Stardust Catcher
+   ---------------------------------------------------------------------
+   純 HTML / CSS / JavaScript，無任何框架、無外部相依（Simplex Noise 內嵌）。
+   結構：
+     1) SimplexNoise ── 內嵌的 3D 單純形雜訊（用來驅動流場）
+     2) 工具函式 ────── 亂數、限制範圍、發光貼圖產生器
+     3) 類別 ────────── Particle(背景星塵) / Star(能量星) / Vortex(漩渦) / Burst(特效粒子)
+     4) 遊戲狀態 ────── playing / gameover 兩種
+     5) 主迴圈 ──────── 更新流場 → 更新物件 → 繪製背景 → 繪製物件 → 繪製 UI
+   ===================================================================== */
+
+
+/* =====================================================================
+   1) SimplexNoise ── 內嵌版（改編自 Stefan Gustavson 的公有領域實作）
+   保留 new SimplexNoise() 的用法，等同你原本設計的意圖，但不需連 CDN。
+   noise3D(x,y,z) 回傳約 [-1, 1] 之間的平滑數值。
+   ===================================================================== */
+class SimplexNoise {
+  constructor(seed = Math.random()) {
+    const grad3 = [1,1,0,-1,1,0,1,-1,0,-1,-1,0,1,0,1,-1,0,1,1,0,-1,-1,0,-1,0,1,1,0,-1,1,0,1,-1,0,-1,-1];
+    this.grad3 = grad3;
+    // 用種子做一個簡單的可重現亂數，洗牌出置換表 permutation
+    const p = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) p[i] = i;
+    let n = Math.floor(seed * 2147483647) || 1;
+    const rand = () => { n = (n * 16807) % 2147483647; return (n - 1) / 2147483646; };
+    for (let i = 255; i > 0; i--) {
+      const r = Math.floor(rand() * (i + 1));
+      const t = p[i]; p[i] = p[r]; p[r] = t;
+    }
+    this.perm = new Uint8Array(512);
+    this.permMod12 = new Uint8Array(512);
+    for (let i = 0; i < 512; i++) {
+      this.perm[i] = p[i & 255];
+      this.permMod12[i] = this.perm[i] % 12;
+    }
+  }
+  noise3D(xin, yin, zin) {
+    const perm = this.perm, permMod12 = this.permMod12, grad3 = this.grad3;
+    const F3 = 1 / 3, G3 = 1 / 6;
+    let n0, n1, n2, n3;
+    const s = (xin + yin + zin) * F3;
+    const i = Math.floor(xin + s), j = Math.floor(yin + s), k = Math.floor(zin + s);
+    const t = (i + j + k) * G3;
+    const x0 = xin - (i - t), y0 = yin - (j - t), z0 = zin - (k - t);
+    let i1, j1, k1, i2, j2, k2;
+    if (x0 >= y0) {
+      if (y0 >= z0)      { i1=1;j1=0;k1=0; i2=1;j2=1;k2=0; }
+      else if (x0 >= z0) { i1=1;j1=0;k1=0; i2=1;j2=0;k2=1; }
+      else               { i1=0;j1=0;k1=1; i2=1;j2=0;k2=1; }
+    } else {
+      if (y0 < z0)       { i1=0;j1=0;k1=1; i2=0;j2=1;k2=1; }
+      else if (x0 < z0)  { i1=0;j1=1;k1=0; i2=0;j2=1;k2=1; }
+      else               { i1=0;j1=1;k1=0; i2=1;j2=1;k2=0; }
+    }
+    const x1 = x0-i1+G3,   y1 = y0-j1+G3,   z1 = z0-k1+G3;
+    const x2 = x0-i2+2*G3, y2 = y0-j2+2*G3, z2 = z0-k2+2*G3;
+    const x3 = x0-1+3*G3,  y3 = y0-1+3*G3,  z3 = z0-1+3*G3;
+    const ii = i & 255, jj = j & 255, kk = k & 255;
+    let t0 = 0.6 - x0*x0 - y0*y0 - z0*z0;
+    if (t0 < 0) n0 = 0; else { t0*=t0; const g=permMod12[ii+perm[jj+perm[kk]]]*3; n0=t0*t0*(grad3[g]*x0+grad3[g+1]*y0+grad3[g+2]*z0); }
+    let t1 = 0.6 - x1*x1 - y1*y1 - z1*z1;
+    if (t1 < 0) n1 = 0; else { t1*=t1; const g=permMod12[ii+i1+perm[jj+j1+perm[kk+k1]]]*3; n1=t1*t1*(grad3[g]*x1+grad3[g+1]*y1+grad3[g+2]*z1); }
+    let t2 = 0.6 - x2*x2 - y2*y2 - z2*z2;
+    if (t2 < 0) n2 = 0; else { t2*=t2; const g=permMod12[ii+i2+perm[jj+j2+perm[kk+k2]]]*3; n2=t2*t2*(grad3[g]*x2+grad3[g+1]*y2+grad3[g+2]*z2); }
+    let t3 = 0.6 - x3*x3 - y3*y3 - z3*z3;
+    if (t3 < 0) n3 = 0; else { t3*=t3; const g=permMod12[ii+1+perm[jj+1+perm[kk+1]]]*3; n3=t3*t3*(grad3[g]*x3+grad3[g+1]*y3+grad3[g+2]*z3); }
+    return 32 * (n0 + n1 + n2 + n3);
+  }
+}
+
+
+/* =====================================================================
+   2) 工具函式
+   ===================================================================== */
+const rand  = (a, b) => a + Math.random() * (b - a);          // [a,b) 浮點亂數
+const randI = (a, b) => Math.floor(rand(a, b + 1));           // [a,b] 整數亂數
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));   // 限制在範圍內
+const TAU = Math.PI * 2;
+
+/**
+ * 產生一張「發光圓點」貼圖（離屏 canvas）。
+ * 之所以先做成貼圖再重複貼上，是為了效能：1500 顆背景粒子若每顆都畫漸層會很慢，
+ * 用 drawImage 貼現成貼圖則非常快。
+ */
+function makeGlow(r, g, b, size = 32) {
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = size;
+  const c = cv.getContext('2d');
+  const half = size / 2;
+  const grad = c.createRadialGradient(half, half, 0, half, half, half);
+  grad.addColorStop(0,    `rgba(${r},${g},${b},1)`);
+  grad.addColorStop(0.25, `rgba(${r},${g},${b},0.55)`);
+  grad.addColorStop(1,    `rgba(${r},${g},${b},0)`);
+  c.fillStyle = grad;
+  c.fillRect(0, 0, size, size);
+  return cv;
+}
+
+// 冷色調色盤（背景星塵）：深藍、靛、紫、青綠、青
+const COOL = [
+  makeGlow(70, 110, 235),   // 藍
+  makeGlow(120, 90, 230),   // 紫
+  makeGlow(70, 70, 190),    // 靛
+  makeGlow(50, 170, 190),   // 青綠
+  makeGlow(80, 200, 210),   // 青
+  makeGlow(110, 130, 255),  // 藍紫
+];
+// 暖色調色盤（吃到能量星時的慶祝粒子）：金、橘、暖白
+const WARM = [
+  makeGlow(255, 210, 110),
+  makeGlow(255, 170, 90),
+  makeGlow(255, 240, 200),
+];
+// 漩渦爆炸時的碎片顏色（紫 / 洋紅 / 白）
+const SHARDS = [
+  makeGlow(170, 90, 255),
+  makeGlow(230, 90, 200),
+  makeGlow(230, 220, 255),
+];
+
+
+/* =====================================================================
+   全域畫布與尺寸
+   ===================================================================== */
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+// 離屏「拖尾層」：只有背景星塵畫在這，靠每幀覆蓋半透明黑累積出絲綢拖尾；
+// 遊戲物件（星、漩渦、游標、特效）則每幀重新畫在可見層上，不累積、不爆白。
+const trail = document.createElement('canvas');
+const tctx = trail.getContext('2d');
+
+let W = 0, H = 0;               // 邏輯尺寸（不含 devicePixelRatio 縮放）
+let prevW = 0, prevH = 0;       // 上一次尺寸，用來在縮放時等比例搬移粒子
+let DPR = 1;                    // 目前的裝置像素比（供 render 複製拖尾層時使用）
+
+const simplex = new SimplexNoise();  // ← 你原本設計的 new SimplexNoise()
+
+// 流場參數
+const FLOW_SCALE = 0.0016;   // 空間縮放：越小，紋理越大越柔順
+let flowTime = 0;            // 第三維（時間），讓流場緩慢演化成極光感
+
+
+/* =====================================================================
+   3) 類別定義
+   ===================================================================== */
+
+// ---- 背景星塵粒子（永遠存在，約 1500 顆） ----
+class Particle {
+  constructor() { this.reset(true); }
+  reset(anywhere) {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.sprite = COOL[randI(0, COOL.length - 1)];
+    this.size = rand(0.3, 1.1);       // 貼圖縮放（footprint 小一點才細緻）
+    this.alpha = rand(0.05, 0.16);    // 透明度（壓低，避免加亮混合累積成白霧）
+    this.speedMul = rand(0.6, 1.4);   // 個別速度差異，讓流動更自然
+  }
+  update(dt) {
+    // 依流場算出當下方向（每幀重新計算，避免速度累積失控）
+    const ang = simplex.noise3D(this.x * FLOW_SCALE, this.y * FLOW_SCALE, flowTime) * TAU;
+    let vx = Math.cos(ang) * BG_SPEED * this.speedMul;
+    let vy = Math.sin(ang) * BG_SPEED * this.speedMul;
+
+    // 游標吸引：距離游標 100px 內的星塵，會被輕輕吸過去並繞著跳舞
+    if (state === 'playing') {
+      const dx = cursor.x - this.x, dy = cursor.y - this.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < 100 * 100 && d2 > 1) {
+        const d = Math.sqrt(d2);
+        const f = (1 - d / 100) * 60;          // 越近吸力越強
+        vx += (dx / d) * f;
+        vy += (dy / d) * f;
+        vx += (-dy / d) * f * 0.6;             // 加一點切線分量 → 繞圈起舞
+        vy += (dx / d) * f * 0.6;
+      }
+      // 漩渦吸入：附近的星塵速度向量偏向漩渦中心，並帶旋轉，形成被吸入的視覺
+      for (const v of vortices) {
+        const vdx = v.x - this.x, vdy = v.y - this.y;
+        const vd2 = vdx * vdx + vdy * vdy;
+        const range = v.r * 5;
+        if (vd2 < range * range && vd2 > 1) {
+          const vd = Math.sqrt(vd2);
+          const f = (1 - vd / range) * 90;
+          vx += (vdx / vd) * f;                // 吸向中心
+          vy += (vdy / vd) * f;
+          vx += (-vdy / vd) * f * 1.1;         // 螺旋切線
+          vy += (vdx / vd) * f * 1.1;
+        }
+      }
+    }
+
+    this.x += vx * dt;
+    this.y += vy * dt;
+
+    // 邊界環繞：飄出畫面就從另一側回來，維持恆定 1500 顆
+    if (this.x < -20) this.x = W + 20;
+    else if (this.x > W + 20) this.x = -20;
+    if (this.y < -20) this.y = H + 20;
+    else if (this.y > H + 20) this.y = -20;
+  }
+  // 畫在傳入的繪圖脈絡上（背景星塵畫在「拖尾層」tctx，而非可見層）
+  draw(g) {
+    const s = this.sprite.width * this.size;
+    g.globalAlpha = this.alpha;
+    g.drawImage(this.sprite, this.x - s / 2, this.y - s / 2, s, s);
+  }
+}
+
+// ---- 能量星（金黃暖色，緩慢旋轉+脈動，碰到 +10 分） ----
+class Star {
+  constructor(x, y) {
+    this.x = x; this.y = y;
+    this.r = rand(8, 15);
+    this.rot = rand(0, TAU);
+    this.rotSpeed = rand(0.4, 1.3) * (Math.random() < 0.5 ? 1 : -1);
+    this.pulse = rand(0, TAU);
+    this.dead = false;
+  }
+  update(dt) {
+    this.rot += this.rotSpeed * dt;
+    this.pulse += dt * 2.5;
+  }
+  draw() {
+    const pr = this.r * (1 + 0.15 * Math.sin(this.pulse));   // 脈動半徑
+    ctx.save();
+    ctx.translate(this.x, this.y);
+
+    // 外層柔和光暈
+    ctx.globalAlpha = 0.9;
+    ctx.drawImage(WARM[0], -pr * 3, -pr * 3, pr * 6, pr * 6);
+
+    // 核心：中心亮白 → 外圈金黃 的徑向漸層
+    ctx.globalAlpha = 1;
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, pr);
+    g.addColorStop(0,   'rgba(255,255,255,1)');
+    g.addColorStop(0.4, 'rgba(255,225,140,0.95)');
+    g.addColorStop(1,   'rgba(255,180,60,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(0, 0, pr, 0, TAU);
+    ctx.fill();
+
+    // 旋轉光芒：用多條由中心向外、透明度不同的細光束模擬轉動
+    ctx.rotate(this.rot);
+    for (let i = 0; i < 6; i++) {
+      ctx.rotate(TAU / 6);
+      const len = pr * (2.4 + 0.4 * Math.sin(this.pulse + i));
+      const lg = ctx.createLinearGradient(0, 0, 0, -len);
+      lg.addColorStop(0, 'rgba(255,230,150,0.55)');
+      lg.addColorStop(1, 'rgba(255,200,90,0)');
+      ctx.strokeStyle = lg;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -len);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+// ---- 暗物質漩渦（深紫黑螺旋，會移動，碰到 = 遊戲結束） ----
+class Vortex {
+  constructor(x, y) {
+    this.x = x; this.y = y;
+    this.r = rand(18, 30);                 // 核心半徑
+    this.angle = rand(0, TAU);             // 螺旋自轉
+    this.spin = rand(0.6, 1.2) * (Math.random() < 0.5 ? 1 : -1);
+    const dir = rand(0, TAU);
+    this.heading = dir;                    // 移動方向
+    this.baseSpeed = rand(18, 34);         // 基礎移動速度（px/秒）
+  }
+  update(dt) {
+    this.angle += this.spin * dt;
+    // 用雜訊讓移動方向緩慢飄移，看起來像有機地遊蕩
+    this.heading += (simplex.noise3D(this.x * 0.002, this.y * 0.002, flowTime * 2) ) * dt * 1.5;
+    const spd = this.baseSpeed * speedMul;  // 難度越高越快
+    this.x += Math.cos(this.heading) * spd * dt;
+    this.y += Math.sin(this.heading) * spd * dt;
+    // 碰到邊界就反彈，避免漂出畫面
+    if (this.x < this.r)     { this.x = this.r;     this.heading = Math.PI - this.heading; }
+    if (this.x > W - this.r) { this.x = W - this.r; this.heading = Math.PI - this.heading; }
+    if (this.y < this.r)     { this.y = this.r;     this.heading = -this.heading; }
+    if (this.y > H - this.r) { this.y = H - this.r; this.heading = -this.heading; }
+  }
+  // 繪製分兩步：先挖出黑色空洞（source-over），再疊上發光的紫色螺旋（lighter）
+  drawVoid() {
+    const vr = this.r * 2.2;
+    const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, vr);
+    g.addColorStop(0,   'rgba(2,0,8,0.95)');
+    g.addColorStop(0.6, 'rgba(10,2,24,0.6)');
+    g.addColorStop(1,   'rgba(10,2,24,0)');
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, vr, 0, TAU);
+    ctx.fill();
+  }
+  drawArms() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    const arms = 4, steps = 26;
+    for (let a = 0; a < arms; a++) {
+      ctx.beginPath();
+      for (let t = 0; t <= steps; t++) {
+        const p = t / steps;
+        const rr = p * this.r * 2.1;
+        const ang = this.angle + a * (TAU / arms) + p * 3.4;  // 越外圈扭得越多
+        const px = Math.cos(ang) * rr;
+        const py = Math.sin(ang) * rr;
+        if (t === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.strokeStyle = 'rgba(150,60,225,0.5)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    // 中心一點暗紫核光
+    ctx.globalAlpha = 0.8;
+    ctx.drawImage(SHARDS[0], -this.r, -this.r, this.r * 2, this.r * 2);
+    ctx.restore();
+  }
+}
+
+// ---- 特效粒子：吃星慶祝 / 遊戲結束爆炸，通用一個類別 ----
+class Burst {
+  constructor(x, y, opt) {
+    this.x = x; this.y = y;
+    this.vx = opt.vx;
+    this.vy = opt.vy;
+    this.gravity = opt.gravity;        // 正值下墜、負值上飄
+    this.drag = opt.drag;              // 空氣阻力（每秒衰減）
+    this.sprite = opt.sprite;
+    this.size = opt.size;
+    this.followFlow = opt.followFlow;  // 是否受流場帶動
+    this.life = opt.life;
+    this.maxLife = opt.life;
+    this.dead = false;
+  }
+  update(dt) {
+    if (this.followFlow) {
+      const ang = simplex.noise3D(this.x * FLOW_SCALE, this.y * FLOW_SCALE, flowTime) * TAU;
+      this.vx += Math.cos(ang) * 40 * dt;
+      this.vy += Math.sin(ang) * 40 * dt;
+    }
+    this.vy += this.gravity * dt;
+    const d = Math.pow(this.drag, dt * 60);
+    this.vx *= d; this.vy *= d;
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+    this.life -= dt;
+    if (this.life <= 0) this.dead = true;
+  }
+  draw() {
+    const k = this.life / this.maxLife;                 // 隨壽命淡出
+    const s = this.sprite.width * this.size * 2 * (0.5 + k * 0.5);
+    ctx.globalAlpha = clamp(k, 0, 1) * 0.9;
+    ctx.drawImage(this.sprite, this.x - s / 2, this.y - s / 2, s, s);
+  }
+}
+
+
+/* =====================================================================
+   4) 遊戲狀態
+   ===================================================================== */
+const BG_COUNT   = 1500;   // 背景星塵數量
+const MAX_BURST  = 200;    // 特效粒子上限（超過就回收最舊的）
+let BG_SPEED     = 34;     // 背景流場基礎速度（px/秒）
+
+let particles = [];        // 背景星塵
+let stars     = [];        // 能量星
+let vortices  = [];        // 漩渦
+let bursts    = [];        // 特效粒子
+
+let state   = 'playing';   // 'playing' | 'gameover'
+let score   = 0;
+let best    = 0;
+let level   = 0;           // 每 100 分 +1
+let speedMul = 1;          // 漩渦速度倍率（隨難度上升）
+
+const cursor = { x: 0, y: 0 };          // 畫面上的發光游標（會平滑追向滑鼠）
+const mouse  = { x: 0, y: 0 };          // 滑鼠實際位置
+
+let starTimer = 0;         // 補星冷卻計時
+let scoreScale = 1;        // 分數跳動用的縮放值
+
+// DOM 參照
+const scoreNum  = document.getElementById('score-num');
+const bestNum   = document.getElementById('best-num');
+const hintEl    = document.getElementById('hint');
+const gameoverEl = document.getElementById('gameover');
+const finalScoreEl = document.getElementById('final-score');
+
+// 讀取本機最高分（file:// 下可能被瀏覽器擋，故用 try 包起來）
+try { best = parseInt(localStorage.getItem('stardust_best') || '0', 10) || 0; } catch (e) {}
+bestNum.textContent = best;
+
+
+/* ---- 產生一個「避開游標一定距離」的隨機座標 ---- */
+function randomPos(minDistFromCursor) {
+  for (let tries = 0; tries < 30; tries++) {
+    const x = rand(40, W - 40);
+    const y = rand(40, H - 40);
+    const dx = x - cursor.x, dy = y - cursor.y;
+    if (dx * dx + dy * dy >= minDistFromCursor * minDistFromCursor) return { x, y };
+  }
+  return { x: rand(40, W - 40), y: rand(40, H - 40) };
+}
+
+/* ---- 依難度計算漩渦「目標數量」（初始 2，每 100 分 +1，上限 6） ---- */
+function targetVortexCount() { return Math.min(6, 2 + level); }
+
+/* ---- 難度檢查：分數變動後呼叫 ---- */
+function updateDifficulty() {
+  const newLevel = Math.floor(score / 100);
+  if (newLevel !== level) {
+    level = newLevel;
+    speedMul = 1 + level * 0.18;                 // 漩渦越來越快
+    // 依需要補足漩渦（生成位置離游標至少 150px）
+    while (vortices.length < targetVortexCount()) {
+      const p = randomPos(150);
+      vortices.push(new Vortex(p.x, p.y));
+    }
+  }
+}
+
+/* ---- 補充能量星：數量低於 5 顆時補到 8~12 顆，難度越高補得越慢 ---- */
+function refillStars(dt) {
+  starTimer -= dt;
+  if (stars.length < 5 && starTimer <= 0) {
+    const target = randI(8, 12);
+    while (stars.length < target) {
+      const p = randomPos(100);                  // 避開游標周圍 100px
+      stars.push(new Star(p.x, p.y));
+    }
+    starTimer = 0.4 * (1 + level * 0.15);        // 難度越高，補星間隔略長 → 出現頻率略降
+  }
+}
+
+/* ---- 吃到能量星：加分 + 從該處爆出暖色慶祝粒子 ---- */
+function collectStar(s) {
+  s.dead = true;
+  score += 10;
+  scoreScale = 1.55;                             // 觸發分數跳動放大
+  scoreNum.textContent = score;
+  updateDifficulty();
+
+  const n = randI(20, 30);
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, TAU);
+    const spd = rand(20, 90);
+    bursts.push(new Burst(s.x, s.y, {
+      vx: Math.cos(a) * spd,
+      vy: Math.sin(a) * spd - rand(20, 60),      // 整體略帶向上飄
+      gravity: -12,                              // 微微上升（浮力）
+      drag: 0.94,
+      sprite: WARM[randI(0, WARM.length - 1)],
+      size: rand(0.4, 1.0),
+      followFlow: true,                          // 隨流場帶走
+      life: rand(1.2, 1.8),                      // 壽命約 1.5 秒
+    }));
+  }
+  trimBursts();
+}
+
+/* ---- 特效粒子超過上限時，回收最舊的 ---- */
+function trimBursts() {
+  if (bursts.length > MAX_BURST) bursts.splice(0, bursts.length - MAX_BURST);
+}
+
+/* ---- 遊戲結束：所有漩渦同時爆開，全螢幕粒子混亂噴發 ---- */
+function gameOver() {
+  state = 'gameover';
+  // 每個漩渦爆成一團向外飛濺、會下墜的碎片
+  for (const v of vortices) {
+    const n = randI(26, 40);
+    for (let i = 0; i < n; i++) {
+      const a = rand(0, TAU);
+      const spd = rand(120, 420);
+      bursts.push(new Burst(v.x, v.y, {
+        vx: Math.cos(a) * spd,
+        vy: Math.sin(a) * spd,
+        gravity: 220,                            // 正重力 → 粒子墜落
+        drag: 0.96,
+        sprite: SHARDS[randI(0, SHARDS.length - 1)],
+        size: rand(0.5, 1.3),
+        followFlow: false,
+        life: rand(1.5, 3.2),
+      }));
+    }
+  }
+  trimBursts();
+  vortices = [];
+  stars = [];
+
+  // 更新最高分並顯示結束畫面
+  if (score > best) {
+    best = score;
+    bestNum.textContent = best;
+    try { localStorage.setItem('stardust_best', String(best)); } catch (e) {}
+  }
+  finalScoreEl.textContent = score;
+  gameoverEl.classList.add('show');
+}
+
+/* ---- 重新開始 ---- */
+function resetGame() {
+  score = 0; level = 0; speedMul = 1;
+  scoreNum.textContent = '0';
+  stars = []; vortices = []; bursts = [];
+  starTimer = 0;
+  // 初始 8 顆能量星
+  for (let i = 0; i < 8; i++) {
+    const p = randomPos(100);
+    stars.push(new Star(p.x, p.y));
+  }
+  // 初始 2 個漩渦
+  for (let i = 0; i < 2; i++) {
+    const p = randomPos(150);
+    vortices.push(new Vortex(p.x, p.y));
+  }
+  gameoverEl.classList.remove('show');
+  state = 'playing';
+}
+
+
+/* =====================================================================
+   5) 主迴圈（更新與繪製分離）
+   ===================================================================== */
+function update(dt) {
+  flowTime += dt * 0.15;                          // 流場緩慢演化
+
+  // 背景星塵永遠更新（兩種狀態下都在流動）
+  for (const p of particles) p.update(dt);
+
+  // 特效粒子永遠更新
+  for (const b of bursts) b.update(dt);
+  bursts = bursts.filter(b => !b.dead);
+
+  // 游標平滑追向滑鼠（保有靈敏度，又有一點滑順拖尾感）
+  cursor.x += (mouse.x - cursor.x) * clamp(18 * dt, 0, 1);
+  cursor.y += (mouse.y - cursor.y) * clamp(18 * dt, 0, 1);
+
+  // 分數跳動：縮放值彈回 1
+  scoreScale += (1 - scoreScale) * clamp(12 * dt, 0, 1);
+  scoreNum.style.transform = `scale(${scoreScale})`;
+
+  if (state === 'playing') {
+    refillStars(dt);
+
+    for (const s of stars) s.update(dt);
+    for (const v of vortices) v.update(dt);
+
+    // 碰撞：游標 vs 能量星（圓形碰撞，距離 < 半徑和）
+    for (const s of stars) {
+      const dx = s.x - cursor.x, dy = s.y - cursor.y;
+      if (dx * dx + dy * dy < (s.r + CURSOR_R) * (s.r + CURSOR_R)) collectStar(s);
+    }
+    stars = stars.filter(s => !s.dead);
+
+    // 碰撞：游標 vs 漩渦（核心略小於視覺，判定稍寬容一點才公平）
+    for (const v of vortices) {
+      const dx = v.x - cursor.x, dy = v.y - cursor.y;
+      const hit = v.r * 0.85 + CURSOR_R;
+      if (dx * dx + dy * dy < hit * hit) { gameOver(); break; }
+    }
+  }
+}
+
+const CURSOR_R = 12;   // 游標半徑
+
+function render() {
+  // ---- 第一層：拖尾層（只畫背景星塵，會累積出絲綢極光）----
+  // 每幀覆蓋半透明黑：讓舊的軌跡緩緩變暗，保留華麗拖尾
+  tctx.globalCompositeOperation = 'source-over';
+  tctx.globalAlpha = 1;
+  tctx.fillStyle = 'rgba(0,0,0,0.06)';
+  tctx.fillRect(0, 0, W, H);
+  // 背景星塵用加亮混合疊出柔和發光（因為只有會移動的星塵在這層，不會爆白）
+  tctx.globalCompositeOperation = 'lighter';
+  for (const p of particles) p.draw(tctx);
+  tctx.globalCompositeOperation = 'source-over';
+  tctx.globalAlpha = 1;
+
+  // ---- 第二層：可見層 ----
+  // 先把拖尾層以 1:1 裝置像素複製過來，再畫「每幀重來、不累積」的遊戲物件
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+  ctx.drawImage(trail, 0, 0);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);   // 回到邏輯座標畫物件
+
+  // 漩渦：先挖黑洞（source-over 讓中心變暗），再疊發光螺旋（lighter）
+  if (state === 'playing') {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    for (const v of vortices) v.drawVoid();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const v of vortices) v.drawArms();
+  }
+
+  // 能量星（加亮發光）
+  ctx.globalCompositeOperation = 'lighter';
+  for (const s of stars) s.draw();
+
+  // 特效粒子
+  for (const b of bursts) b.draw();
+
+  // 發光游標：內層亮白、外層淡藍的兩層光暈（遊戲中才顯示）
+  if (state === 'playing') {
+    ctx.globalAlpha = 1;
+    // 外層淡藍
+    const og = ctx.createRadialGradient(cursor.x, cursor.y, 0, cursor.x, cursor.y, CURSOR_R * 4);
+    og.addColorStop(0,   'rgba(140,190,255,0.5)');
+    og.addColorStop(1,   'rgba(140,190,255,0)');
+    ctx.fillStyle = og;
+    ctx.beginPath(); ctx.arc(cursor.x, cursor.y, CURSOR_R * 4, 0, TAU); ctx.fill();
+    // 內層亮白
+    const ig = ctx.createRadialGradient(cursor.x, cursor.y, 0, cursor.x, cursor.y, CURSOR_R);
+    ig.addColorStop(0,   'rgba(255,255,255,1)');
+    ig.addColorStop(0.6, 'rgba(220,235,255,0.9)');
+    ig.addColorStop(1,   'rgba(200,225,255,0)');
+    ctx.fillStyle = ig;
+    ctx.beginPath(); ctx.arc(cursor.x, cursor.y, CURSOR_R, 0, TAU); ctx.fill();
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+}
+
+// requestAnimationFrame 主迴圈
+let lastT = performance.now();
+function loop(now) {
+  let dt = (now - lastT) / 1000;
+  lastT = now;
+  dt = clamp(dt, 0, 0.05);        // 限制單幀 dt，避免切到背景分頁再回來時大跳
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+
+/* =====================================================================
+   視窗尺寸 / 事件 / 啟動
+   ===================================================================== */
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);   // 高解析度更清晰，但上限 2 保效能
+  const w = window.innerWidth, h = window.innerHeight;
+
+  // 背景粒子重新分佈
+  if (particles.length) {
+    if (prevW > 0 && prevH > 0) {
+      // 一般情況：等比例搬移，保持流場連續
+      const sx = w / prevW, sy = h / prevH;
+      for (const p of particles) { p.x *= sx; p.y *= sy; }
+    } else if (w > 0 && h > 0) {
+      // 從 0 尺寸首次取得真實大小（例如被嵌在一開始尺寸為 0 的容器）→ 重新散佈到整個畫面
+      for (const p of particles) { p.x = Math.random() * w; p.y = Math.random() * h; }
+    }
+  }
+
+  DPR = dpr;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);   // 之後都用邏輯座標作畫
+
+  // 拖尾層同步尺寸（改尺寸會清空，補上深底色避免透明）
+  trail.width = w * dpr;
+  trail.height = h * dpr;
+  tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  tctx.fillStyle = '#05030f';
+  tctx.fillRect(0, 0, w, h);
+
+  W = w; H = h; prevW = w; prevH = h;
+
+  // 遊戲物件維持在可見區域內
+  for (const s of stars)    { s.x = clamp(s.x, 20, W - 20); s.y = clamp(s.y, 20, H - 20); }
+  for (const v of vortices) { v.x = clamp(v.x, v.r, W - v.r); v.y = clamp(v.y, v.r, H - v.r); }
+}
+
+// 滑鼠 / 觸控：追蹤位置
+function setPointer(clientX, clientY) { mouse.x = clientX; mouse.y = clientY; }
+window.addEventListener('mousemove', e => setPointer(e.clientX, e.clientY));
+window.addEventListener('touchmove', e => {
+  if (e.touches[0]) setPointer(e.touches[0].clientX, e.touches[0].clientY);
+}, { passive: true });
+
+// 「再來一局」按鈕
+document.getElementById('restart').addEventListener('click', resetGame);
+
+// 視窗縮放
+window.addEventListener('resize', resize);
+
+// ---- 初始化 ----
+resize();                                    // 先確定 W / H
+mouse.x = cursor.x = W / 2;                   // 游標起始在畫面中央
+mouse.y = cursor.y = H / 2;
+for (let i = 0; i < BG_COUNT; i++) particles.push(new Particle());  // 建立 1500 顆背景星塵
+resetGame();                                 // 佈置初始能量星與漩渦
+
+// 幾秒後淡出開場提示
+setTimeout(() => { hintEl.style.opacity = '0'; }, 5000);
+
+requestAnimationFrame(loop);                 // 開始！
+</script>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "9f081bf168be4e8cbfea582ba39c81f4"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
