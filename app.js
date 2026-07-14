@@ -60,12 +60,13 @@ const CONTACTS = [
   { label: 'INSTAGRAM', sub: '@jia.1oo7', href: 'https://www.instagram.com/jia.1oo7' },
   { label: 'LINKEDIN', sub: '專業經歷', href: 'https://www.linkedin.com/in/chia-peng-chen-60981531b/' },
 ];
+/* cap 先留空，之後要補圖說就直接填字串進去，會自動出現 */
 const STRIP = [
-  { slot: 'strip-1', cap: '01 ✦ life' },
-  { slot: 'strip-2', cap: '02 ✦ stage' },
-  { slot: 'strip-3', cap: '03 ✦ japan' },
-  { slot: 'strip-4', cap: '04 ✦ builds' },
-  { slot: 'strip-5', cap: '05 ✦ etc' },
+  { slot: 'strip-1', cap: '' },
+  { slot: 'strip-2', cap: '' },
+  { slot: 'strip-3', cap: '' },
+  { slot: 'strip-4', cap: '' },
+  { slot: 'strip-5', cap: '' },
 ];
 
 /* 圖片欄位：放 images/<slot>.jpg 就會自動顯示，沒放維持佔位圖 */
@@ -164,9 +165,11 @@ function renderFanStack() {
   const cards = STRIP.map((s, i) => {
     const card = el('div', 'strip-card fan-card');
     card.appendChild(imgSlot(s.slot));
-    const cap = el('div', 'strip-cap');
-    cap.textContent = s.cap;
-    card.appendChild(cap);
+    if (s.cap) {                     // 沒填圖說就不畫那個條，之後補了自動出現
+      const cap = el('div', 'strip-cap');
+      cap.textContent = s.cap;
+      card.appendChild(cap);
+    }
     card.addEventListener('click', () => { if (i !== active) set(i); });
     stage.appendChild(card);
     return card;
@@ -174,7 +177,7 @@ function renderFanStack() {
 
   const dotEls = STRIP.map((s, i) => {
     const d = el('button', 'fan-dot');
-    d.setAttribute('aria-label', s.cap);
+    d.setAttribute('aria-label', s.cap || `照片 ${i + 1}`);
     d.addEventListener('click', () => set(i));
     dots.appendChild(d);
     return d;
@@ -224,6 +227,16 @@ function renderFanStack() {
 
   layout();
   window.addEventListener('resize', layout);
+
+  // ABOUT 分頁一開始是 display:none，這時量到的寬度是 0，
+  // 卡片會全部疊在同一個位置。用 ResizeObserver 盯著舞台，
+  // 一旦分頁切過來、量出真正的寬度，立刻重新攤開。
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(() => { if (stage.clientWidth > 0) layout(); });
+    ro.observe(stage);
+  }
+  // 分頁一切到 ABOUT 就同一時間立刻重排一次，不等 ResizeObserver 那個 tick
+  document.addEventListener('tabshown', (e) => { if (e.detail.tab === 'about') layout(); });
 }
 
 function renderFooter() {
@@ -243,6 +256,7 @@ function initTabs() {
     btns.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
     Object.entries(panels).forEach(([k, p]) => { p.hidden = k !== tab; });
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.dispatchEvent(new CustomEvent('tabshown', { detail: { tab } }));
   }
 
   btns.forEach(b => b.addEventListener('click', () => activate(b.dataset.tab)));
