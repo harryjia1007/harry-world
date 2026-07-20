@@ -43,7 +43,13 @@ body{
   line-height:1.6;
   overflow-x:hidden;
   cursor:none;
+
+  /* 每個分頁一個主色，切分頁時整站重點色跟著換，
+     讓使用者一眼就知道畫面換了（預設＝WORK） */
+  --tab-accent:var(--accent);
 }
+body.tab-journey{--tab-accent:var(--pink)}
+body.tab-about{--tab-accent:var(--purple)}
 a{color:inherit}
 b{font-weight:700}
 .accent{color:var(--accent)}
@@ -71,7 +77,9 @@ b{font-weight:700}
 @keyframes scan-drift{from{transform:translateY(0)}to{transform:translateY(4px)}}
 
 .prog-bar{
-  position:fixed;top:0;left:0;height:3px;width:0%;background:var(--accent);
+  position:fixed;top:0;left:0;height:3px;width:0%;background:var(--tab-accent);
+  /* 注意：不要對 background 下 transition。背景色來自 var(--tab-accent)，
+     未註冊的自訂屬性無法內插，加了 transition 顏色會卡在舊值不更新。 */
   z-index:60;pointer-events:none;transition:width .05s linear;
 }
 
@@ -127,10 +135,13 @@ b{font-weight:700}
 }
 .tab-btn:hover:not(.active){color:#F4F4EF;background:rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
 .tab-btn.active{
-  background:linear-gradient(180deg, rgba(255,255,255,.32), rgba(255,255,255,0) 55%), var(--accent);
+  background:linear-gradient(180deg, rgba(255,255,255,.32), rgba(255,255,255,0) 55%), var(--tab-accent);
   color:#0A0A0A;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.6), 0 4px 14px rgba(0,0,0,.35);
 }
+/* 剛按下的分頁鈕彈一下，按下去有回應 */
+.tab-btn.pop{animation:tab-pop .36s cubic-bezier(.2,1.7,.4,1) 1}
+@keyframes tab-pop{0%{transform:scale(1)}38%{transform:scale(1.16)}100%{transform:scale(1)}}
 
 /* ---------- HERO ---------- */
 .hero{
@@ -175,6 +186,31 @@ b{font-weight:700}
 .wordmark-main span:nth-child(9):hover{color:var(--orange)}
 .wordmark-main span:nth-child(10):hover{color:var(--purple)}
 .wm-sp{display:inline-block;width:.55em}
+
+/* 切換分頁時：主標故障跳動一下（最明顯的「畫面換了」訊號） */
+.wordmark-wrap.jolt .wordmark-main{animation:wm-jolt .42s steps(2) 1}
+.wordmark-wrap.jolt .glitch-a{animation:wm-burst-a .42s steps(2) 1}
+.wordmark-wrap.jolt .glitch-b{animation:wm-burst-b .42s steps(2) 1}
+@keyframes wm-jolt{
+  0%{transform:translate(0,0)}
+  20%{transform:translate(-7px,2px)}
+  45%{transform:translate(6px,-2px)}
+  70%{transform:translate(-3px,1px)}
+  100%{transform:translate(0,0)}
+}
+@keyframes wm-burst-a{
+  0%,100%{opacity:0;transform:translate(0,0)}
+  20%{opacity:.85;transform:translate(-12px,3px)}
+  55%{opacity:.55;transform:translate(9px,-3px)}
+  80%{opacity:.3;transform:translate(-4px,0)}
+}
+@keyframes wm-burst-b{
+  0%,100%{opacity:0;transform:translate(0,0)}
+  28%{opacity:.8;transform:translate(11px,-3px)}
+  60%{opacity:.5;transform:translate(-8px,2px)}
+  85%{opacity:.28;transform:translate(3px,0)}
+}
+
 @keyframes glitch-a{
   0%,92%,100%{transform:translate(0,0);opacity:0}
   93%{transform:translate(-3px,1px);opacity:.7}
@@ -239,10 +275,10 @@ b{font-weight:700}
 .tab-panel{animation:panel-in .35s ease both}
 @keyframes panel-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .section-head{display:flex;align-items:center;gap:14px;margin-bottom:34px}
-.section-dot{width:10px;height:10px;background:var(--accent);flex:none}
+.section-dot{width:10px;height:10px;background:var(--tab-accent);flex:none}
 .section-dot.pink{background:var(--pink)}
 .section-dot.green{background:var(--spotify)}
-.section-title{font-family:var(--pixel);font-size:13px;color:var(--accent)}
+.section-title{font-family:var(--pixel);font-size:13px;color:var(--tab-accent)}
 .section-title.pink{color:var(--pink);font-size:11px}
 .section-title.green{color:var(--spotify);font-size:11px}
 .section-line{flex:1;height:1px;background:var(--line)}

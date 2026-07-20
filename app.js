@@ -252,11 +252,26 @@ function initTabs() {
   const btns = document.querySelectorAll('.tab-btn');
   const panels = { work: $('#panel-work'), journey: $('#panel-journey'), about: $('#panel-about') };
 
+  const wrap = $('.wordmark-wrap');
+  let first = true;
+
   function activate(tab) {
     btns.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
     Object.entries(panels).forEach(([k, p]) => { p.hidden = k !== tab; });
+
+    // 整站重點色跟著分頁換（nav 膠囊、進度條、區塊標題）
+    document.body.classList.remove('tab-work', 'tab-journey', 'tab-about');
+    document.body.classList.add('tab-' + tab);
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
     document.dispatchEvent(new CustomEvent('tabshown', { detail: { tab } }));
+
+    if (first) { first = false; return; }   // 首次載入不用跳動
+
+    // 主標故障跳動 + 被按的分頁鈕彈一下
+    if (wrap) { wrap.classList.remove('jolt'); void wrap.offsetWidth; wrap.classList.add('jolt'); }
+    const btn = [...btns].find(b => b.dataset.tab === tab);
+    if (btn) { btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop'); }
   }
 
   btns.forEach(b => b.addEventListener('click', () => activate(b.dataset.tab)));
@@ -321,7 +336,20 @@ function initDither() {
   // Bayer 4×4 門檻矩陣（0..1）
   const B = [0,8,2,10, 12,4,14,6, 3,11,1,9, 15,7,13,5].map(v => (v + .5) / 16);
   const SCALE = 7;                 // 每 7px 一個網點（像素感）
-  const R = 157, G = 92, Bb = 255; // #9D5CFF 紫，配合站上像素點綴色
+
+  // 每個分頁一個底紋顏色，切換分頁時平滑過渡過去，
+  // 讓使用者一眼看出「畫面真的換了」。
+  const TAB_RGB = {
+    work:    [214, 255,  63],   // --accent 螢光黃綠
+    journey: [255,  92, 168],   // --pink
+    about:   [157,  92, 255],   // --purple（原本的顏色）
+  };
+  let cur = TAB_RGB.work.slice();     // 目前實際畫出來的顏色
+  let aim = TAB_RGB.work.slice();     // 目標顏色
+  document.addEventListener('tabshown', (e) => {
+    const next = TAB_RGB[e.detail.tab];
+    if (next) aim = next.slice();
+  });
 
   let w = 0, h = 0, img = null;
   function resize() {
@@ -342,6 +370,9 @@ function initDither() {
   function frame() {
     speed += (target - speed) * 0.05;
     t += 0.012 * speed;
+    // 顏色朝目標色漸變（約 0.6 秒完成，不會突兀）
+    for (let k = 0; k < 3; k++) cur[k] += (aim[k] - cur[k]) * 0.06;
+    const R = cur[0] | 0, G = cur[1] | 0, Bb = cur[2] | 0;
     const d = img.data;
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
@@ -357,7 +388,11 @@ function initDither() {
     ctx.putImageData(img, 0, 0);
     if (!still && !document.hidden) requestAnimationFrame(frame);
   }
-  if (still) { frame(); return; }               // 減少動態：只畫一張靜態
+  if (still) {                                  // 減少動態：只畫靜態，換分頁時直接換色重畫
+    frame();
+    document.addEventListener('tabshown', () => { cur = aim.slice(); frame(); });
+    return;
+  }
   document.addEventListener('visibilitychange', () => { if (!document.hidden) requestAnimationFrame(frame); });
   requestAnimationFrame(frame);
 }
