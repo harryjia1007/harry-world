@@ -558,6 +558,8 @@ function sfxDeath()  { tone(150, 0.9,  { vol: 0.26, slide: 0.15 }); noiseBurstSf
 function sfxLevel()  { [523.25, 659.25, 783.99].forEach((f, i) => tone(f, 0.16, { delay: i * 0.09, vol: 0.09 })); }
 function sfxComet()  { [659.25, 783.99, 987.77, 1318.5].forEach((f, i) => tone(f, 0.15, { delay: i * 0.07, vol: 0.1 })); }
 function sfxWindup() { tone(180, 0.5, { vol: 0.06, slide: 2.2 }); }                                  // 衝刺蓄力：上滑警告音
+function sfxLaserWarn() { tone(300, 0.4, { vol: 0.05, slide: 1.6 }); }
+function sfxLaser()  { noiseBurstSfx(0.5, 0.14, 0, 2600); tone(140, 0.5, { vol: 0.16, slide: 0.5 }); }
 function sfxDash()   { noiseBurstSfx(0.22, 0.1, 0, 1400); tone(520, 0.18, { vol: 0.07, slide: 0.4 }); }  // 衝刺：短促呼嘯
 
 
@@ -574,7 +576,7 @@ const GRAZE_BAND   = 34;     // 擦邊區厚度（px）
 
 let state = 'menu';          // 'menu' | 'playing' | 'dying' | 'gameover'
 let score = 0, best = 0, level = 0, speedMul = 1;
-let combo = 0, comboTimer = 0, mult = 1;
+let combo = 0, comboTimer = 0, mult = 1, comboWindow = COMBO_WINDOW;
 let maxMult = 1, starsCollected = 0, runTime = 0;
 let pulseCd = 0, pulseReady = true, readyFlash = 0;
 let shake = 0, dyingT = 0, levelFlash = 0, levelFlashText = '', hintTimer = 0;
@@ -582,7 +584,8 @@ let grazeTick = 0, starTimer = 0, scoreScale = 1;
 let cometTimer = 12, comet = null;
 
 let particles = [], stars = [], vortices = [], bursts = [];
-let shockwaves = [], rings = [], popups = [];
+let shockwaves = [], rings = [], popups = [], lasers = [];
+let laserTimer = 0, laserVolley = 0, laserVolleyT = 0;   // 雷射關的節奏控制
 let nebulas = [], nebulaSeeds = [];
 
 const cursor = { x: 0, y: 0 };
@@ -764,6 +767,10 @@ class Vortex {
     this.dashTimer = rand(6, 12);
     this.dvx = 0; this.dvy = 0;
     this.aimX = 1; this.aimY = 0;    // 衝刺瞄準方向（蓄力前段追蹤玩家，最後 0.3 秒鎖定）
+    // 「善變」個性：不定時忽快忽慢、忽然轉向，讓移動難以預測
+    this.moodT = rand(1.5, 4);       // 下次變換心情的倒數
+    this.speedMood = 1;              // 當前速度倍率（0.45 慢 ~ 1.7 衝）
+    this.turnBias = 0;               // 當前額外轉向（正/負＝順/逆時針繞行）
     this.minD = 1e9;                 // 衝刺期間與玩家的最近距離（閃避獎勵用）
     this.orbs = [];                  // 軌道粒子
     const n = randI(4, 6);
@@ -833,8 +840,19 @@ class Vortex {
       }
     }
 
+    // ---- 善變：不定時切換速度與轉向意圖（等級越高變化越頻繁、越極端）----
+    if (state === 'playing') {
+      this.moodT -= dt;
+      if (this.moodT <= 0) {
+        const spread = Math.min(0.75, 0.35 + level * 0.06);   // 隨難度加大速度落差
+        this.speedMood = 1 + rand(-spread, spread * 1.1);      // 忽慢忽快
+        this.turnBias = rand(-1, 1) * (0.5 + level * 0.12);    // 忽然改繞行方向
+        this.moodT = Math.max(0.8, rand(1.6, 3.6) - level * 0.12);
+      }
+    }
     // ---- 巡航轉向 ----
     this.heading += simplex.noise3D(this.x * 0.002, this.y * 0.002, flowTime * 2) * dt * 1.2;
+    this.heading += this.turnBias * dt;   // 善變的側向偏轉
     if (state === 'playing') {
       // 包抄：瞄準游標「旁邊」的個人偏移點（定期換位）→ 群體會從四面八方圍上來，不會擠成一團
       this.flankT -= dt;
@@ -849,7 +867,7 @@ class Vortex {
     }
 
     // ---- 移動 ----
-    let spd = this.baseSpeed * speedMul * this.hunt;
+    let spd = this.baseSpeed * speedMul * this.hunt * this.speedMood;
     if (state === 'playing' && dc < 320) spd *= 1 + (1 - dc / 320) * 0.85;   // 貼近玩家時加速：真正的追擊壓力
     if (this.mode === 'windup') spd *= 0.2;
     else if (this.mode === 'recover') spd *= 0.45;
@@ -1080,6 +1098,84 @@ class Comet {
   }
 }
 
+// ---- 軌道雷射（每 3 關的「雷射關」出現）----
+// 三段式：預警細線（可通過）→ 蓄力變亮 → 開火（致命）→ 消散。
+// 一律水平或垂直、位置固定，玩家永遠有安全空間可躲。
+class Laser {
+  constructor(vertical, pos, warnTime) {
+    this.vertical = vertical;   // true=垂直光柱，false=水平光柱
+    this.pos = pos;             // 垂直＝x 座標；水平＝y 座標
+    this.phase = 'warn';        // warn → fire → fade
+    this.t = warnTime;          // 預警時間（隨難度縮短，但有下限）
+    this.warnTotal = warnTime;
+    this.fireTime = 0.75;       // 開火持續時間
+    this.dead = false;
+  }
+  halfWidth() { return this.phase === 'fire' ? 26 : 3; }
+  update(dt) {
+    this.t -= dt;
+    if (this.t <= 0) {
+      if (this.phase === 'warn') { this.phase = 'fire'; this.t = this.fireTime; sfxLaser(); shake = Math.max(shake, 7); vib([25, 40, 25]); }
+      else if (this.phase === 'fire') { this.phase = 'fade'; this.t = 0.35; }
+      else this.dead = true;
+    }
+  }
+  // 只有 fire 階段才會傷人
+  hits(x, y) {
+    if (this.phase !== 'fire') return false;
+    const d = this.vertical ? Math.abs(x - this.pos) : Math.abs(y - this.pos);
+    return d < this.halfWidth() + CURSOR_R * 0.5;
+  }
+  draw() {
+    const V = this.vertical;
+    const L = V ? H : W;
+    let core, glow, w;
+    if (this.phase === 'warn') {
+      const k = 1 - this.t / this.warnTotal;           // 越接近開火越亮
+      const blink = 0.35 + 0.65 * Math.abs(Math.sin(k * 22));
+      core = `rgba(255,90,130,${0.25 + k * 0.5 * blink})`;
+      glow = `rgba(255,90,130,${0.06 + k * 0.16})`;
+      w = 2 + k * 4;
+    } else if (this.phase === 'fire') {
+      core = 'rgba(255,150,180,0.75)';
+      glow = 'rgba(255,80,120,0.18)';
+      w = this.halfWidth() * 2;
+    } else {
+      const k = clamp(this.t / 0.35, 0, 1);
+      core = `rgba(255,180,200,${k * 0.5})`;
+      glow = `rgba(255,80,120,${k * 0.2})`;
+      w = this.halfWidth() * 2 * k;
+    }
+    const line = () => {
+      ctx.beginPath();
+      if (V) { ctx.moveTo(this.pos, 0); ctx.lineTo(this.pos, L); } else { ctx.moveTo(0, this.pos); ctx.lineTo(L, this.pos); }
+      ctx.stroke();
+    };
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    // 外暈用「垂直於光束的漸層」柔和收邊（直接粗描邊會變成硬邊色塊，與畫面質感不符）
+    const gw = w * 2.6;
+    const g = V
+      ? ctx.createLinearGradient(this.pos - gw, 0, this.pos + gw, 0)
+      : ctx.createLinearGradient(0, this.pos - gw, 0, this.pos + gw);
+    const gm = glow.match(/[\d.]+/g);
+    const rgb = `${gm[0]},${gm[1]},${gm[2]}`, ga = parseFloat(gm[3]);
+    g.addColorStop(0,    `rgba(${rgb},0)`);
+    g.addColorStop(0.38, `rgba(${rgb},${ga * 0.5})`);
+    g.addColorStop(0.5,  `rgba(${rgb},${ga})`);
+    g.addColorStop(0.62, `rgba(${rgb},${ga * 0.5})`);
+    g.addColorStop(1,    `rgba(${rgb},0)`);
+    ctx.strokeStyle = g; ctx.lineWidth = gw * 2; line();
+    // 核心：實際致命寬度，邊界清楚讓玩家判斷得出來
+    ctx.strokeStyle = core; ctx.lineWidth = w; line();
+    // 開火時再加一條細白熱線，強調中心
+    if (this.phase === 'fire') {
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = Math.max(2, w * 0.16); line();
+    }
+    ctx.restore();
+  }
+}
+
 // ---- 浮動得分文字 ----
 class TextPop {
   constructor(x, y, text, color, big) {
@@ -1144,7 +1240,10 @@ function rebuildNebulas() {
 /* =====================================================================
    9) 遊戲邏輯
    ===================================================================== */
-function multFor(c) { return c >= 15 ? 5 : c >= 10 ? 4 : c >= 6 ? 3 : c >= 3 ? 2 : 1; }
+// 連擊倍率：每 3 連擊 +1 倍，「無上限」——時間壓力（縮短的連擊視窗）才是天花板
+function multFor(c) { return 1 + Math.floor(c / 3); }
+// 連擊視窗隨倍率縮短：越高倍越難維持（3.0s → 最低 1.3s）
+function comboWindowFor(m) { return Math.max(1.3, COMBO_WINDOW - (m - 1) * 0.22); }
 // 衝刺速度：隨等級成長；手機螢幕小，衝刺降速 25% 保持公平
 function dashSpeed() { return Math.min(640, 380 + level * 28) * (IS_TOUCH ? 0.75 : 1); }
 function formatTime(t) {
@@ -1196,11 +1295,18 @@ function spawnVortexEdge() {
 
 // 每一級的升級說明（顯示在 LEVEL 閃字下方）
 function levelDesc(lv) {
-  if (lv === 2) return '漩渦學會衝刺！小心紅色警告環';
+  if (lv === 2) return '漩渦學會衝刺 · 軌道雷射啟動！';
+  if (isLaserLevel()) return '⚠ 雷射關 · 漩渦更多更善變';
   const parts = [];
-  if (2 + lv <= 8) parts.push('漩渦 +1');
-  parts.push(lv >= 6 ? '更快 · 衝刺更頻繁 · 星星更稀少' : '更快更兇');
+  if (vortexTargetFor(lv) > vortexTargetFor(lv - 1)) parts.push('漩渦 +1');
+  parts.push(lv >= 7 ? '更快 · 更善變 · 星星更稀少' : '更快更兇');
   return parts.join(' · ');
+}
+
+// 敵人數量：持續成長但趨緩收斂（10→12 關後幾乎不再增加），避免最後畫面塞滿無路可走
+function vortexTargetFor(lv) {
+  if (lv <= 6) return 2 + lv;                       // 前期：每關 +1（2→8）
+  return Math.min(12, 8 + Math.floor((lv - 6) / 2)); // 後期：每 2 關 +1，上限 12
 }
 
 function updateDifficulty() {
@@ -1208,15 +1314,41 @@ function updateDifficulty() {
   if (nl > level) {
     level = nl;
     levelNum.textContent = level + 1;
-    speedMul = Math.min(1 + level * 0.16, 3.0);          // 速度上限 3 倍（原 2.1）
-    const target = Math.min(2 + level, 8);               // 漩渦上限 8 個（原 6）
+    // 速度：前期爬升快、後期趨緩（用開根號曲線），上限 2.6 倍保可玩性
+    speedMul = Math.min(1 + Math.sqrt(level) * 0.30, 2.6);
+    const target = vortexTargetFor(level);
     while (vortices.length < target) spawnVortexEdge();
     levelFlash = 1.6;
     levelFlashText = levelDesc(level);
+    if (isLaserLevel()) laserTimer = 3.5;   // 剛升級先喘 3.5 秒再開火
     sfxLevel();
     vib([20, 40, 20]);
     rebuildNebulas();
   }
+}
+
+// 雷射關：從 LEVEL 3 起，每 3 關（第 3、6、9…關）出現軌道雷射
+function isLaserLevel() { return level >= 2 && (level - 2) % 3 === 0; }
+
+// 一次齊射：1~2 道（很後期最多 3 道），刻意留出安全空間
+function fireLaserVolley() {
+  const n = level >= 11 ? 3 : level >= 5 ? 2 : 1;
+  // 預警時間隨難度縮短，但不低於 1.1 秒（保證看得到、閃得掉）
+  const warn = Math.max(1.1, 2.0 - level * 0.07);
+  const used = [];
+  for (let i = 0; i < n; i++) {
+    const vertical = Math.random() < 0.5;
+    let pos = 0, ok = false;
+    for (let t = 0; t < 12 && !ok; t++) {
+      pos = vertical ? rand(W * 0.12, W * 0.88) : rand(H * 0.12, H * 0.88);
+      // 同向雷射彼此至少隔 220px，避免夾殺無路可逃
+      ok = !used.some(u => u.vertical === vertical && Math.abs(u.pos - pos) < 220);
+    }
+    used.push({ vertical, pos });
+    lasers.push(new Laser(vertical, pos, warn));
+  }
+  sfxLaserWarn();
+  showHint('⚠ 雷射預警 — 離開紅線！', 2.2);
 }
 
 function refillStars(dt) {
@@ -1271,7 +1403,8 @@ function collectStar(s) {
   s.dead = true;
   starsCollected++;
   combo++;
-  comboTimer = COMBO_WINDOW;
+  comboWindow = comboWindowFor(multFor(combo));   // 倍率越高視窗越短
+  comboTimer = comboWindow;
   mult = multFor(combo);
   if (mult > maxMult) maxMult = mult;
   if (mult >= 2) { comboEl.classList.remove('hidden'); comboX.textContent = '×' + mult; }
@@ -1385,7 +1518,7 @@ function finishGameOver() {
     }
   }
   trimBursts();
-  vortices = []; stars = []; comet = null; shockwaves = [];
+  vortices = []; stars = []; comet = null; shockwaves = []; lasers = [];
 
   if (score > best) {
     best = score;
@@ -1404,13 +1537,14 @@ function finishGameOver() {
 
 function resetGame() {
   score = 0; level = 0; speedMul = 1;
-  combo = 0; comboTimer = 0; mult = 1;
+  combo = 0; comboTimer = 0; mult = 1; comboWindow = COMBO_WINDOW;
   maxMult = 1; starsCollected = 0; runTime = 0;
   pulseCd = 0; pulseReady = true; readyFlash = 0;
   shake = 0; levelFlash = 0; grazeTick = 0;
   cometTimer = rand(10, 15); comet = null;
   stars = []; vortices = []; bursts = [];
-  shockwaves = []; rings = []; popups = [];
+  shockwaves = []; rings = []; popups = []; lasers = [];
+  laserTimer = 0; laserVolley = 0; laserVolleyT = 0;
   cursorTrail.length = 0;
   starTimer = 0; scoreScale = 1;
   scoreNum.textContent = '0';
@@ -1476,7 +1610,7 @@ function update(dt) {
         combo = 0; mult = 1;
         comboEl.classList.add('hidden');
       } else {
-        comboBarI.style.width = (comboTimer / COMBO_WINDOW * 100) + '%';
+        comboBarI.style.width = (comboTimer / comboWindow * 100) + '%';
       }
     }
     // 脈衝冷卻
@@ -1485,6 +1619,23 @@ function update(dt) {
       if (pulseCd <= 0) { pulseReady = true; readyFlash = 1; }
     }
     refillStars(dt);
+
+    // ---- 雷射關：每隔一段時間來一次齊射 ----
+    if (isLaserLevel()) {
+      laserTimer -= dt;
+      if (laserTimer <= 0) {
+        fireLaserVolley();
+        // 齊射間隔隨難度縮短，但保底 4.5 秒喘息
+        laserTimer = Math.max(4.5, 9 - level * 0.35);
+      }
+    }
+    for (const lz of lasers) lz.update(dt);
+    lasers = lasers.filter(l => !l.dead);
+    // 雷射命中＝死亡（只有開火階段致命）
+    for (const lz of lasers) {
+      if (lz.hits(cursor.x, cursor.y)) { startDeath(vortices[0] || { flash: 0, x: cursor.x, y: cursor.y }); break; }
+    }
+
     // 彗星
     if (comet) {
       comet.update(dt);
@@ -1656,7 +1807,7 @@ function drawCursor() {
   }
   // 連擊倒數環（半徑 26，金色）
   if (combo > 0) {
-    const f = comboTimer / COMBO_WINDOW;
+    const f = comboTimer / comboWindow;
     ctx.strokeStyle = 'rgba(255,200,100,0.55)';
     ctx.lineWidth = 2.5;
     ctx.beginPath();
@@ -1735,6 +1886,7 @@ function render() {
     ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.r * 0.86, 0, TAU); ctx.stroke();
   }
+  for (const lz of lasers) lz.draw();
   for (const r of rings) r.draw();
   for (const b of bursts) b.draw();
   ctx.globalAlpha = 1;
