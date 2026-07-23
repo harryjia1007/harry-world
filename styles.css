@@ -169,8 +169,11 @@ b{font-weight:700}
   font-family:var(--pixel);font-size:clamp(30px,8.8vw,150px);line-height:1.06;
   margin:0;letter-spacing:-.01em;white-space:nowrap;
 }
-.glitch-a{position:absolute;inset:0;color:var(--pink);pointer-events:none;z-index:1;animation:glitch-a 6s steps(1) infinite}
-.glitch-b{position:absolute;inset:0;color:var(--accent);pointer-events:none;z-index:1;animation:glitch-b 7.3s steps(1) infinite}
+/* opacity:0 底值一定要留：這兩層平時隱形是靠動畫關鍵影格。
+   切分頁的一次性 .jolt 動畫（wm-burst）播完後沒有 forwards，
+   opacity 會回到預設值 1，殘影（CHEN）就會卡在畫面上。 */
+.glitch-a{position:absolute;inset:0;opacity:0;color:var(--pink);pointer-events:none;z-index:1;animation:glitch-a 6s steps(1) infinite}
+.glitch-b{position:absolute;inset:0;opacity:0;color:var(--accent);pointer-events:none;z-index:1;animation:glitch-b 7.3s steps(1) infinite}
 .wordmark-main{
   position:relative;z-index:2;color:var(--ink);
   text-shadow:5px 5px 0 rgba(255,255,255,.07);

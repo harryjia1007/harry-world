@@ -269,9 +269,19 @@ function initTabs() {
     if (first) { first = false; return; }   // 首次載入不用跳動
 
     // 主標故障跳動 + 被按的分頁鈕彈一下
-    if (wrap) { wrap.classList.remove('jolt'); void wrap.offsetWidth; wrap.classList.add('jolt'); }
+    // 動畫播完一定要把 class 拿掉：一次性動畫會蓋掉原本的無限循環動畫，
+    // 不移除的話故障層會停在最後一格 → 變成永久殘影。
+    if (wrap) {
+      wrap.classList.remove('jolt'); void wrap.offsetWidth; wrap.classList.add('jolt');
+      clearTimeout(wrap._joltT);
+      wrap._joltT = setTimeout(() => wrap.classList.remove('jolt'), 460);
+    }
     const btn = [...btns].find(b => b.dataset.tab === tab);
-    if (btn) { btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop'); }
+    if (btn) {
+      btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop');
+      clearTimeout(btn._popT);
+      btn._popT = setTimeout(() => btn.classList.remove('pop'), 400);
+    }
   }
 
   btns.forEach(b => b.addEventListener('click', () => activate(b.dataset.tab)));
