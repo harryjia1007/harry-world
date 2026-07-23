@@ -30,7 +30,11 @@
 }
 
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
+/* overflow-x:clip 掛在 html 上，硬裁掉任何橫向溢出（例如手機上扇形照片
+   最外側那張卡片會超出畫面右緣）。body 的 overflow-x:hidden 擋不住文件層級
+   的溢出，導致自動輪播時文件寬度忽大忽小 → 整頁橫向抖動。clip 不會像 hidden
+   建立捲動容器，不影響垂直捲動與 position:sticky。 */
+html{scroll-behavior:smooth;overflow-x:clip}
 body{
   background:var(--bg);
   background-image:
@@ -253,6 +257,9 @@ b{font-weight:700}
 .hero-id-en{font:10px var(--mono);color:var(--faint);letter-spacing:.16em}
 .hero-line1{font:13px/2.1 var(--mono);color:var(--muted);letter-spacing:.08em}
 .hero-line2{font:12px/2.1 var(--mono);color:rgba(237,237,232,.42);letter-spacing:.08em}
+/* 兩個學校子句各自不換行，手機上就會在「系」跟「PREV」之間整段斷行，
+   不會把「臺北市立成功高中」拆成「…高」跟孤零零一個「中」。 */
+.hero-line2 .nw{white-space:nowrap}
 .caret{display:inline-block;width:8px;height:14px;background:var(--accent);margin-left:8px;vertical-align:-2px;animation:caret-blink 1.1s steps(1) infinite}
 .hero-stats{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 22px;margin-top:16px}
 .hero-stats span{font:11px var(--mono);color:rgba(255,255,255,.5);letter-spacing:.08em;white-space:nowrap}
@@ -498,6 +505,18 @@ b{font-weight:700}
   transition:transform .2s ease, box-shadow .2s ease;
 }
 .top-btn:hover{transform:translate(-2px,-4px);box-shadow:7px 8px 0 rgba(10,10,10,.35)}
+
+/* 頁尾手機版：兩欄改直向堆疊、全部靠左對齊，避免右對齊的長連結浮在中間、
+   看起來沒靠邊又鬆散。左右留 20px 一致邊距。 */
+@media (max-width:640px){
+  .footer-inner{padding:40px 20px 24px}
+  .footer-grid{flex-direction:column;gap:30px}
+  .currently-list{min-width:0}
+  .footer-contacts{min-width:0;text-align:left}
+  .contact-list{align-items:flex-start}
+  .contact-list a{flex-wrap:wrap;min-height:0}
+  .footer-bottom{margin-top:36px;padding-top:22px}
+}
 
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
