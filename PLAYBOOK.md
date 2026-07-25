@@ -24,3 +24,12 @@ Cloudflare（網域＋Workers）＝harryjia1007 的帳號；GitHub repo＝harryj
 - 2026-07｜本機預覽｜Claude 的預覽伺服器沙盒讀不到 `Desktop/專案` 路徑（連 ASCII symlink 也不行）→ 要預覽就 rsync 整個資料夾到 scratchpad 再 serve；或叫 Harry 直接雙擊 index.html
 - 2026-07｜文案修改｜Harry 自改文案流程見 `文案修改指南.md`（app.js 頂部 DATA 區 + 一行 wrangler deploy）
 - 2026-07-13｜本機預覽｜Claude 內建瀏覽器對本站捲動後截圖全黑、且會把部署前的 404 快取住｜驗證改用 read_page/curl/img.naturalWidth 等文字手段，別依賴截圖
+
+## 流量統計（2026-07-25 建置，已實測）
+- 儀表板：`https://harryjia.com/_stats?k=XBeVPj0ED96eApPtiSfTXZvI`（加書籤即可；沒帶金鑰一律回 404、不會被搜尋引擎收錄）
+- 想看更多天：網址後面加 `&days=30`（最多 90）
+- 架構：紀錄在 Worker 伺服器端（訪客端零程式碼、不受廣告攔截器影響）→ Cloudflare KV
+- **關鍵設定**：`wrangler.toml` 的 `[assets] run_worker_first = true`。少了它，靜態頁面會直接由資產伺服器回應、**完全不經過 Worker**，統計永遠是 0（實際踩過）
+- 坑：測試務必用 GET（`curl -s`）；`curl -I` 送的是 HEAD，程式碼刻意不計入
+- 坑：Cloudflare 邊緣快取會讓你以為程式沒生效，驗證時加 `?cb=隨機` 或 `-H "Cache-Control: no-cache"`
+- 隱私：不用 Cookie、不存 IP、不跨站追蹤；不重複訪客用每日加鹽單向雜湊（隔日無法對應同一人）→ 法規上免同意橫幅

@@ -9,3 +9,10 @@ routes = [
 [assets]
 directory = "."
 binding = "ASSETS"
+# 預設靜態檔案會直接由資產伺服器回應、不經過 Worker，統計就收不到資料。
+# 開啟後所有請求先進 Worker（worker.js 只記 HTML 頁面，其餘照常轉給 ASSETS）。
+run_worker_first = true
+
+[[kv_namespaces]]
+binding = "STATS"
+id = "4acd0d6cba004a6ab65f4eb0acc2c577"
