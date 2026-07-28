@@ -457,6 +457,146 @@ function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 }
 
+/* ---------------- 互動波浪線條字（頁尾上方那條）----------------
+   一整片水平線條，用文字當「亮度遮罩」把某些線往上抬，遠看就拼出字。
+   滑鼠 / 手指靠近會把線推開，放開再彈回（彈簧）。
+   改寫自參考碼，並修掉：① 觸控座標 bug ② 不吃外部字型 ③ 離開畫面暫停
+   ④ 尊重「減少動態」⑤ 限制在這個區塊、不影響捲動。 */
+const WAVE_TEXT = 'HARRY CHEN';   // ★ 想換字改這裡（例如 '陳佳朋'、'HARRY'）
+const WAVE_COLOR = '#ffdfc4';     // ★ 線條顏色（暖米白）
+
+function initWaveBand() {
+  const canvas = $('#waveCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const band = $('#waveBand');
+
+  const mouse = { x: -9999, y: -9999 };
+  let lines = [];
+  let W = 0, H = 0, dpr = 1;
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // 用文字做亮度遮罩：把 WAVE_TEXT 畫在小 canvas 上，讀每格亮度決定線要抬多高
+  function buildLines() {
+    const linesCount = 60;
+    const isMobile = W < 768;
+    const hPad = isMobile ? W * 0.04 : W * 0.13;
+    const vPad = H * 0.2;
+    const cellW = isMobile ? 7 : 5;
+    const gridW = Math.max(1, W - hPad * 2);
+    const gridH = Math.max(1, H - vPad * 2);
+    const lineGap = gridH / linesCount;
+    const cols = Math.max(1, Math.floor(gridW / cellW));
+
+    // 文字遮罩 canvas，比例對齊網格區域，避免文字被拉扁
+    const tW = 420;
+    const tH = Math.max(60, Math.round(tW * (gridH / gridW)));
+    const t = document.createElement('canvas');
+    t.width = tW; t.height = tH;
+    const tc = t.getContext('2d');
+    tc.fillStyle = '#000'; tc.fillRect(0, 0, tW, tH);
+    tc.fillStyle = '#fff';
+    tc.textBaseline = 'middle';
+    tc.textAlign = 'center';
+    // 用很粗的字重把字塞滿寬度（不依賴外部字型）
+    let fs = tH * 0.9;
+    tc.font = `900 ${fs}px "Arial Black","Helvetica Neue",Arial,sans-serif`;
+    const target = tW * 0.9;
+    const w0 = tc.measureText(WAVE_TEXT).width;
+    if (w0 > 0) { fs = fs * (target / w0); tc.font = `900 ${fs}px "Arial Black","Helvetica Neue",Arial,sans-serif`; }
+    tc.fillText(WAVE_TEXT, tW / 2, tH / 2);
+    const data = tc.getImageData(0, 0, tW, tH).data;
+
+    const maxLift = Math.min(30, lineGap * 6);
+    lines = [];
+    for (let i = 0; i < linesCount; i++) {
+      const y = vPad + i * lineGap;
+      const row = [];
+      for (let j = 0; j < cols; j++) {
+        const x = hPad + j * cellW;
+        const tx = Math.floor((j / cols) * tW);
+        const ty = Math.floor((i / linesCount) * tH);
+        const brightness = data[(ty * tW + tx) * 4] || 0;
+        const finalY = y - (brightness / 255) * maxLift;
+        row.push({ x, y: finalY, baseX: x, baseY: finalY });
+      }
+      lines.push(row);
+    }
+  }
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    W = canvas.offsetWidth; H = canvas.offsetHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    buildLines();
+    draw();   // 先畫一張靜態幀：避免首載空白閃爍；減少動態時這就是最終畫面
+  }
+
+  function update() {
+    const radius = 100, maxSpeed = 10;
+    for (const row of lines) {
+      for (const p of row) {
+        const dx = p.x - mouse.x, dy = p.y - mouse.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < radius) {
+          const a = Math.atan2(dy, dx);
+          const force = (radius - dist) / radius;
+          p.x += Math.cos(a) * force * maxSpeed;
+          p.y += Math.sin(a) * force * maxSpeed;
+        }
+        p.x += (p.baseX - p.x) * 0.1;   // 彈回原位
+        p.y += (p.baseY - p.y) * 0.1;
+      }
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = WAVE_COLOR;
+    ctx.lineWidth = 0.6;
+    for (const row of lines) {
+      ctx.beginPath();
+      ctx.moveTo(row[0].x, row[0].y);
+      for (let i = 1; i < row.length; i++) {
+        const prev = row[i - 1], cur = row[i];
+        ctx.quadraticCurveTo(prev.x, prev.y, (prev.x + cur.x) / 2, (prev.y + cur.y) / 2);
+      }
+      ctx.stroke();
+    }
+  }
+
+  let raf = null;
+  function loop() { update(); draw(); raf = requestAnimationFrame(loop); }
+  function start() { if (!raf && !still) loop(); }
+  function stop() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+
+  const setFromEvent = (cx, cy) => {
+    const r = canvas.getBoundingClientRect();
+    mouse.x = cx - r.left; mouse.y = cy - r.top;
+  };
+  window.addEventListener('mousemove', (e) => setFromEvent(e.clientX, e.clientY));
+  window.addEventListener('touchmove', (e) => {   // ★ 修 bug：觸控要用 e.touches[0]
+    if (e.touches && e.touches[0]) setFromEvent(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  const leave = () => { mouse.x = -9999; mouse.y = -9999; };
+  window.addEventListener('mouseleave', leave);
+  window.addEventListener('touchend', leave);
+  window.addEventListener('resize', resize);
+
+  resize();
+
+  // 只有這條帶進到畫面裡才跑動畫，離開就暫停（省電，手機尤其）
+  if ('IntersectionObserver' in window && !still) {
+    new IntersectionObserver((entries) => {
+      entries[0].isIntersecting ? start() : stop();
+    }, { threshold: 0.01 }).observe(band);
+  } else {
+    start();
+  }
+}
+
 /* ---------------- 啟動 ---------------- */
 function init() {
   renderWork();
@@ -468,6 +608,7 @@ function init() {
   initScrollProgress();
   initDither();
   initSpotify();
+  initWaveBand();
 
   $('#topBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 }

@@ -467,6 +467,29 @@ b{font-weight:700}
 .img-placeholder i{font-size:22px}
 .polaroid .img-placeholder,.strip-card .img-placeholder{background:repeating-linear-gradient(45deg, rgba(0,0,0,.04) 0 2px, transparent 2px 10px), #DDDDD6;color:rgba(0,0,0,.22)}
 
+/* ---------- 互動波浪線條字帶 ---------- */
+.wave-band{
+  position:relative;
+  width:100%;
+  height:clamp(240px,34vw,420px);
+  background:#0B0B0B;
+  border-top:1px solid var(--line);
+  overflow:hidden;
+}
+.wave-canvas{
+  position:absolute;inset:0;width:100%;height:100%;display:block;
+  touch-action:pan-y;        /* 讓垂直捲動照常，只有效果吃指標位置 */
+}
+.wave-hint{
+  position:absolute;left:50%;bottom:16px;transform:translateX(-50%);
+  font:11px var(--mono);color:rgba(255,223,196,.4);letter-spacing:.2em;
+  pointer-events:none;animation:px-blink 4s steps(1) infinite;
+}
+@media (max-width:640px){
+  .wave-band{height:clamp(180px,52vw,260px)}
+  .wave-hint{bottom:12px;font-size:10px}
+}
+
 /* ---------- FOOTER ---------- */
 .site-footer{
   position:relative;background-color:var(--accent);color:#0A0A0A;
