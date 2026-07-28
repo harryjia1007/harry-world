@@ -6,20 +6,67 @@
    金鑰（Spotify、統計密碼）存在 Cloudflare Secrets，不會進 GitHub。
    ============================================================ */
 
+/* ---------------- 安全標頭（防篡改 / 防點擊劫持 / 防 XSS） ----------------
+   內容安全政策（CSP）用白名單，只放行本站與這幾個明確來源。就算有人設法把
+   腳本塞進頁面，瀏覽器也直接擋掉。主站不放行 inline script（最關鍵那條）；
+   少數自成一體、把邏輯寫在 <script> 裡的舊頁面（遊戲/落地頁/私人儀表板）
+   才單獨放寬 script-src。 */
+function buildCSP(allowInlineScript) {
+  return [
+    "default-src 'self'",
+    `script-src 'self' https://static.cloudflareinsights.com${allowInlineScript ? " 'unsafe-inline'" : ''}`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
+    "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:",
+    "img-src 'self' data: blob: https://i.scdn.co https://*.scdn.co",
+    "connect-src 'self' https://cloudflareinsights.com",
+    "frame-ancestors 'none'",   // 不准被別人用 iframe 包起來假冒
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+    "upgrade-insecure-requests",
+  ].join('; ');
+}
+const CSP_STRICT = buildCSP(false);
+const CSP_LEGACY = buildCSP(true);
+// 這些頁面的程式寫在 inline <script> 裡，需要放寬；新頁面請一律把程式放外部 .js
+const LEGACY_INLINE_PAGES = new Set(['/notchglass.html', '/stardust.html', '/stardust-privacy.html', '/_stats']);
+
+const SECURITY_HEADERS = {
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'DENY',
+  'referrer-policy': 'strict-origin-when-cross-origin',
+  'permissions-policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+  'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+};
+
+function withSecurity(res, pathname) {
+  const r = new Response(res.body, res);
+  for (const [k, v] of Object.entries(SECURITY_HEADERS)) r.headers.set(k, v);
+  r.headers.set('content-security-policy', LEGACY_INLINE_PAGES.has(pathname) ? CSP_LEGACY : CSP_STRICT);
+  return r;
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    if (url.pathname === '/api/spotify') return handleSpotify(env);
-    if (url.pathname === '/api/e')       return handleEvent(request, env, ctx);
-    if (url.pathname === '/_stats')      return handleStats(request, env);
-
-    // 統計「頁面瀏覽」：只記 HTML 頁面，不記圖片/JS/CSS，避免灌水
-    const res = await env.ASSETS.fetch(request);
-    if (isPageRequest(url, request, res)) {
-      ctx.waitUntil(recordView(request, env, url));
+    // 純靜態站，只接受讀取類方法；其他一律擋
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method) && url.pathname !== '/api/e') {
+      return withSecurity(new Response('Method Not Allowed', { status: 405, headers: { allow: 'GET, HEAD, OPTIONS' } }), url.pathname);
     }
-    return res;
+
+    let res;
+    if (url.pathname === '/api/spotify')      res = await handleSpotify(env);
+    else if (url.pathname === '/api/e')       res = await handleEvent(request, env, ctx);
+    else if (url.pathname === '/_stats')      res = await handleStats(request, env);
+    else {
+      // 統計「頁面瀏覽」：只記 HTML 頁面，不記圖片/JS/CSS，避免灌水
+      res = await env.ASSETS.fetch(request);
+      if (isPageRequest(url, request, res)) {
+        ctx.waitUntil(recordView(request, env, url));
+      }
+    }
+    return withSecurity(res, url.pathname);
   },
 };
 

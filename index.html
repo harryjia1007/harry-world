@@ -4,11 +4,53 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>陳佳朋 Harry Chen — AI Builder｜Portfolio</title>
-  <meta name="description" content="Harry Chen（陳佳朋）的個人作品集：AI 工具、macOS 小工具與正在路上的新作品。深色像素風格。">
+  <meta name="description" content="Harry Chen（陳佳朋）的個人作品集：AI 工具、macOS 小工具與正在路上的新作品。把想法，做成真的有人會用的產品。">
+  <link rel="canonical" href="https://harryjia.com/">
+  <meta name="theme-color" content="#0A0A0A">
 
-  <meta property="og:title" content="陳佳朋 Harry Chen — AI Builder Portfolio">
-  <meta property="og:description" content="把生活裡的小麻煩，做成真的有人會用的產品。">
+  <!-- favicon（內嵌 SVG，不需額外檔案）：lime 底黑色 H -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23D6FF3F'/%3E%3Ctext x='50' y='74' font-family='Arial,Helvetica,sans-serif' font-size='70' font-weight='900' text-anchor='middle' fill='%230A0A0A'%3EH%3C/text%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230A0A0A'/%3E%3Crect x='18' y='18' width='64' height='64' rx='14' fill='%23D6FF3F'/%3E%3Ctext x='50' y='70' font-family='Arial,Helvetica,sans-serif' font-size='46' font-weight='900' text-anchor='middle' fill='%230A0A0A'%3EH%3C/text%3E%3C/svg%3E">
+
+  <!-- Open Graph / 社群分享預覽 -->
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Harry Chen · harryjia.com">
+  <meta property="og:url" content="https://harryjia.com/">
+  <meta property="og:title" content="陳佳朋 Harry Chen — AI Builder Portfolio">
+  <meta property="og:description" content="把想法，做成真的東西。從 macOS 小工具到 AI 系統，全國 15 個入選 AI 案例之一。">
+  <meta property="og:image" content="https://harryjia.com/images/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Harry Chen — AI Builder">
+  <meta property="og:locale" content="zh_TW">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="陳佳朋 Harry Chen — AI Builder Portfolio">
+  <meta name="twitter:description" content="把想法，做成真的東西。全國 15 個入選 AI 案例之一。">
+  <meta name="twitter:image" content="https://harryjia.com/images/og.jpg">
+
+  <!-- 結構化資料：讓 Google 更懂「陳佳朋是誰」 -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "陳佳朋",
+    "alternateName": "Harry Chen",
+    "url": "https://harryjia.com/",
+    "image": "https://harryjia.com/images/og.jpg",
+    "jobTitle": "AI Builder",
+    "email": "harryjia1007@gmail.com",
+    "description": "獨立開發者、AI Builder。從 macOS 小工具到 AI 系統，把生活裡的小麻煩做成真的有人會用的產品。",
+    "alumniOf": "臺北市立成功高中",
+    "affiliation": { "@type": "CollegeOrUniversity", "name": "中原大學 電機工程學系" },
+    "sameAs": [
+      "https://github.com/harryjia1007",
+      "https://www.instagram.com/jia.1oo7",
+      "https://www.linkedin.com/in/chia-peng-chen-60981531b/"
+    ]
+  }
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,10 +88,13 @@
     <button class="tab-btn" data-tab="about">ABOUT</button>
   </nav>
 
+  <!-- 語言切換 -->
+  <button class="lang-toggle" id="langToggle" aria-label="Switch language / 切換語言">EN</button>
+
   <main>
     <!-- HERO -->
     <section class="hero">
-      <div class="hero-kicker">✦ 勇敢的人先享受世界。</div>
+      <div class="hero-kicker" id="heroKicker">✦ 勇敢的人先享受世界。</div>
 
       <div class="wordmark-wrap">
         <div class="wordmark glitch-a" aria-hidden="true">HARRY CHEN</div>
@@ -71,13 +116,14 @@
           <span class="hero-id-name">陳佳朋</span>
           <span class="hero-id-en">CHEN&nbsp;CHIA-PENG</span>
         </div>
-        <div class="hero-line1">把生活裡的小麻煩，做成 <span class="accent">真的有人會用的產品</span></div>
-        <div class="hero-line2"><span class="nw">NOW <span class="accent strong">@ 中原大學 電機工程學系</span></span> · <span class="nw">PREV @ 臺北市立成功高中</span><span class="caret"></span></div>
+        <div class="hero-line1" id="heroLine1">把生活裡的小麻煩，做成 <span class="accent">真的有人會用的產品</span></div>
+        <div class="hero-line2" id="heroLine2"><span class="nw">NOW <span class="accent strong">@ 中原大學 電機工程學系</span></span> · <span class="nw">PREV @ 臺北市立成功高中</span><span class="caret"></span></div>
         <div class="hero-stats">
-          <span>[ 2+ 獨立產品 ]</span>
-          <span>[ 全國 15 個入選 AI 案例之一 ]</span>
-          <span>[ 圓夢基金 30 人正取・最年輕 ]</span>
+          <span id="heroStat1">[ 2+ 獨立產品 ]</span>
+          <span id="heroStat2">[ 全國 15 個入選 AI 案例之一 ]</span>
+          <span id="heroStat3">[ 圓夢基金 30 人正取・最年輕 ]</span>
         </div>
+        <a class="hero-cta" id="heroCta" href="mailto:harryjia1007@gmail.com">一起做點東西 <i class="fa-solid fa-arrow-right"></i></a>
       </div>
 
       <div class="hero-scroll">
@@ -92,6 +138,12 @@
         <span class="marquee-item">AI BUILDER <b>✦</b> 陳佳朋 CHEN CHIA-PENG <b>✦</b> MACOS UTILITIES <b>✦</b> 把小麻煩變成產品 <b>✦</b> TAIPEI <b>✦</b> SHIP REAL THINGS <b>✦</b>&nbsp;</span>
         <span class="marquee-item">AI BUILDER <b>✦</b> 陳佳朋 CHEN CHIA-PENG <b>✦</b> MACOS UTILITIES <b>✦</b> 把小麻煩變成產品 <b>✦</b> TAIPEI <b>✦</b> SHIP REAL THINGS <b>✦</b>&nbsp;</span>
       </div>
+    </div>
+
+    <!-- 曝光 / 合作過（社會證明） -->
+    <div class="featured">
+      <span class="featured-label" id="featuredLabel">曝光 / 合作過</span>
+      <div class="featured-list" id="featuredList"></div>
     </div>
 
     <!-- WORK -->
@@ -131,16 +183,16 @@
           <span class="px-bit g"></span>
           <div class="polaroid">
             <div class="img-slot" data-slot="about">
-              <img alt="陳佳朋" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+              <img alt="陳佳朋 Harry Chen" loading="lazy">
               <div class="img-placeholder"><i class="fa-solid fa-camera"></i></div>
             </div>
             <div class="polaroid-cap">harry_陳佳朋.jpg ✦</div>
           </div>
         </div>
         <div class="about-copy">
-          <div class="about-hello">嗨，我是<span class="accent">陳佳朋</span>（Harry Chen）。</div>
-          <p class="about-p1">臺北市立成功高中畢業，即將進<b class="accent">中原大學 電機工程學系</b>。比起頭銜，更在意「<b>做出真的有人在用的東西</b>」。</p>
-          <p class="about-p2">從 macOS 小工具到 AI 系統，喜歡把生活裡的小麻煩變成一個會動的產品。這個網站會跟著我一起長大——每做一個新東西，就多一個作品。</p>
+          <div class="about-hello" id="aboutHello">嗨，我是<span class="accent">陳佳朋</span>（Harry Chen）。</div>
+          <p class="about-p1" id="aboutP1">臺北市立成功高中畢業，即將進<b class="accent">中原大學 電機工程學系</b>。比起頭銜，更在意「<b>做出真的有人在用的東西</b>」。</p>
+          <p class="about-p2" id="aboutP2">從 macOS 小工具到 AI 系統，喜歡把生活裡的小麻煩變成一個會動的產品。這個網站會跟著我一起長大——每做一個新東西，就多一個作品。</p>
           <div class="chips" id="aboutChips"></div>
         </div>
       </div>
@@ -170,7 +222,7 @@
   <!-- 互動波浪線條字（滑鼠 / 手指滑過會把線條推開）-->
   <section class="wave-band" id="waveBand" aria-label="HARRY CHEN">
     <canvas class="wave-canvas" id="waveCanvas" aria-hidden="true"></canvas>
-    <span class="wave-hint">✦ 滑滑看</span>
+    <span class="wave-hint" id="waveHint">✦ 滑滑看</span>
   </section>
 
   <!-- FOOTER -->
