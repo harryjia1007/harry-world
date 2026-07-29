@@ -6,10 +6,55 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #0b0b0c; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-    #__bundler_loading { position: fixed; bottom: 20px; right: 20px; font: 13px/1.4 -apple-system, BlinkMacSystemFont, sans-serif; color: #666; background: #fff; padding: 8px 14px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.12); z-index: 10000; }
-    #__bundler_thumbnail { position: fixed; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #0b0b0c; z-index: 9999; }
-    #__bundler_thumbnail svg { width: 100%; height: 100%; object-fit: contain; }
-    #__bundler_placeholder { color: #999; font-size: 14px; }
+
+    /* bundler 的狀態文字：保留在 DOM 給程式用，但藏起來（用我們自己的品牌載入畫面取代） */
+    #__bundler_loading { position: fixed; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; z-index: -1; }
+
+    /* ===== NotchGlass 品牌載入畫面（取代原本的「Unpacking...」）===== */
+    #__bundler_thumbnail {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px;
+      background:
+        radial-gradient(120% 80% at 50% -10%, rgba(124,192,250,0.10), transparent 55%),
+        radial-gradient(100% 70% at 50% 110%, rgba(143,125,250,0.10), transparent 55%),
+        #0b0b0c;
+      animation: nbFadeIn .4s ease both;
+    }
+    #__bundler_thumbnail svg { display: none; }   /* 隱藏原本的小 SVG 預覽 */
+
+    /* 從畫面頂端降下來的「瀏海」，玻璃反光掃過 */
+    .nb-notch {
+      position: relative; width: 132px; height: 34px;
+      background: #050506; border-radius: 0 0 18px 18px;
+      box-shadow: 0 6px 20px rgba(0,0,0,.5), inset 0 -1px 0 rgba(255,255,255,.06);
+      overflow: hidden; margin-top: -6px;
+      animation: nbDrop .7s cubic-bezier(.22,1,.36,1) both, nbBob 3.4s ease-in-out .7s infinite;
+    }
+    .nb-notch::after {            /* 玻璃反光掃過 */
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.22) 48%, transparent 66%);
+      transform: translateX(-120%);
+      animation: nbShine 2.2s ease-in-out infinite;
+    }
+    .nb-dots { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 7px; }
+    .nb-dots i { display: block; border-radius: 2px; }
+    .nb-dots i:nth-child(1) { width: 9px; height: 9px; border-radius: 50%; background: #7cc0fa; animation: nbPulse 1.4s ease-in-out infinite; }
+    .nb-dots i:nth-child(2) { width: 4px; height: 16px; background: #8f7dfa; animation: nbPulse 1.4s ease-in-out .15s infinite; }
+    .nb-dots i:nth-child(3) { width: 4px; height: 11px; background: #8f7dfa; animation: nbPulse 1.4s ease-in-out .3s infinite; }
+
+    .nb-word { font: 800 20px/1 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; letter-spacing: .01em; color: #f4f4f4; opacity: 0; animation: nbFadeUp .5s ease .35s both; }
+    .nb-bar { width: 150px; height: 3px; border-radius: 3px; background: rgba(255,255,255,.08); overflow: hidden; opacity: 0; animation: nbFadeUp .5s ease .5s both; }
+    .nb-bar span { display: block; width: 40%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #7cc0fa, #8f7dfa); animation: nbSlide 1.3s cubic-bezier(.65,0,.35,1) infinite; }
+    #__bundler_placeholder { color: #666; font-size: 13px; }
+
+    @keyframes nbFadeIn { from { opacity: 0 } to { opacity: 1 } }
+    @keyframes nbDrop { from { transform: translateY(-40px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+    @keyframes nbBob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(4px) } }
+    @keyframes nbShine { 0% { transform: translateX(-120%) } 55%,100% { transform: translateX(120%) } }
+    @keyframes nbPulse { 0%,100% { opacity: .55; transform: scaleY(.8) } 50% { opacity: 1; transform: scaleY(1) } }
+    @keyframes nbFadeUp { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: translateY(0) } }
+    @keyframes nbSlide { 0% { transform: translateX(-120%) } 100% { transform: translateX(370%) } }
+    @media (prefers-reduced-motion: reduce) { .nb-notch, .nb-notch::after, .nb-dots i, .nb-bar span, .nb-word, .nb-bar { animation: none } .nb-bar span { width: 100% } }
   </style>
   <noscript>
     <style>#__bundler_loading { display: none; }</style>
@@ -19,7 +64,11 @@
   </noscript>
 </head>
 <body>
-  <div id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" sc-camel-view-box="0 0 200 200"><rect width="200" height="200" fill="#0b0b0c"></rect><rect x="62" y="86" width="76" height="22" rx="11" fill="#1a1a1f"></rect><rect x="72" y="93" width="9" height="9" rx="2.5" fill="#7cc0fa"></rect><rect x="112" y="91" width="4" height="12" rx="2" fill="#8f7dfa"></rect><rect x="119" y="88" width="4" height="18" rx="2" fill="#8f7dfa"></rect><rect x="126" y="93" width="4" height="9" rx="2" fill="#8f7dfa"></rect></svg></div>
+  <div id="__bundler_thumbnail">
+    <div class="nb-notch"><div class="nb-dots"><i></i><i></i><i></i></div></div>
+    <div class="nb-word">NotchGlass</div>
+    <div class="nb-bar"><span></span></div>
+  </div>
   <div id="__bundler_loading">Unpacking...</div>
 
   <script>
