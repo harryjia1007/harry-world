@@ -12,11 +12,13 @@
    少數自成一體、把邏輯寫在 <script> 裡的舊頁面（遊戲/落地頁/私人儀表板）
    才單獨放寬 script-src。 */
 function buildCSP(allowInlineScript) {
+  // 舊的 Claude Design 打包頁（notchglass 等）會把 JS/字型解成 blob: URL 再載入，
+  // 所以放寬版的 script/font 要允許 blob:；主站維持最嚴格、不含 blob:。
   return [
     "default-src 'self'",
-    `script-src 'self' https://static.cloudflareinsights.com${allowInlineScript ? " 'unsafe-inline'" : ''}`,
+    `script-src 'self' https://static.cloudflareinsights.com${allowInlineScript ? " 'unsafe-inline' 'unsafe-eval' blob:" : ''}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
-    "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:",
+    `font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:${allowInlineScript ? ' blob:' : ''}`,
     "img-src 'self' data: blob: https://i.scdn.co https://*.scdn.co",
     "connect-src 'self' https://cloudflareinsights.com",
     "frame-ancestors 'none'",   // 不准被別人用 iframe 包起來假冒
@@ -28,8 +30,13 @@ function buildCSP(allowInlineScript) {
 }
 const CSP_STRICT = buildCSP(false);
 const CSP_LEGACY = buildCSP(true);
-// 這些頁面的程式寫在 inline <script> 裡，需要放寬；新頁面請一律把程式放外部 .js
-const LEGACY_INLINE_PAGES = new Set(['/notchglass.html', '/stardust.html', '/stardust-privacy.html', '/_stats']);
+// 這些頁面的程式寫在 inline <script> 裡，需要放寬；新頁面請一律把程式放外部 .js。
+// 注意：資產伺服器會把 /x.html 轉址成 /x（漂亮網址），所以這裡存「去掉 .html」的形式，
+// 比對前也把 pathname 的 .html 去掉，兩種寫法都命中。
+const LEGACY_INLINE_PAGES = new Set(['/notchglass', '/stardust', '/stardust-privacy', '/_stats']);
+function isLegacyPage(pathname) {
+  return LEGACY_INLINE_PAGES.has(pathname.replace(/\.html$/, ''));
+}
 
 const SECURITY_HEADERS = {
   'x-content-type-options': 'nosniff',
@@ -42,7 +49,7 @@ const SECURITY_HEADERS = {
 function withSecurity(res, pathname) {
   const r = new Response(res.body, res);
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) r.headers.set(k, v);
-  r.headers.set('content-security-policy', LEGACY_INLINE_PAGES.has(pathname) ? CSP_LEGACY : CSP_STRICT);
+  r.headers.set('content-security-policy', isLegacyPage(pathname) ? CSP_LEGACY : CSP_STRICT);
   return r;
 }
 
