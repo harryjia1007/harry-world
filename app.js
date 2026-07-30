@@ -700,7 +700,7 @@ function init() {
   initTabs();
   initCursor();
   initScrollProgress();
-  initDither();
+  // initDither();  // 精簡：拿掉會動的背景抖動網點（畫面最大雜源），只留淡格線
   initSpotify();
   initWaveBand();
 
