@@ -13,6 +13,8 @@ harry-world/
 ├── index.html    ← 網頁骨架（幾乎不用動）
 ├── styles.css    ← 所有樣式、顏色、字型、動畫（想改風格看這裡）
 ├── app.js        ← 內容資料 + 互動邏輯（想改文字看這裡）★最常改的
+├── privacy.html  ← 全站隱私與網站分析說明
+├── projects/taiwan-moto-auction/ ← 合成資料機車拍賣情報作品頁
 ├── images/       ← 放照片的地方，檔名規則見 images/README.md
 └── README.md     ← 這份說明
 ```

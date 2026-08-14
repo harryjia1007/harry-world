@@ -1,12 +1,12 @@
 # PLAYBOOK — harry-world（harryjia.com）
-更新：2026-07-04（來源：自動記憶，**未逐條實測**——第一次操作時驗證並把本行改成「實測」）
+更新：2026-08-15（Cloudflare 登入、dry-run、本機互動與響應式版面均已實測）
 
 ## 一句話
 Harry 的個人網站（深色像素風 portfolio），Cloudflare Workers 託管，自有網域 harryjia.com。
 
 ## 建置/執行
 純靜態三檔：`index.html` / `styles.css` / `app.js`。文字內容集中在 app.js 的 `DATA()`，`tr('中','En')` 成對。本機預覽直接開 index.html。
-子頁面：`notchglass.html`（產品頁）、`stardust.html`（星塵捕手小遊戲，2026-07-13 從 專案/星塵捕手 收割上架；對外網址 harryjia.com/stardust）。作品卡封面放 `images/work-<slot>.jpg` 會自動顯示。
+子頁面：`notchglass.html`（產品頁）、`stardust.html`（星塵捕手小遊戲）、`projects/taiwan-moto-auction/`（臺灣機車拍賣情報合成資料互動展示）、`privacy.html`（全站隱私與分析說明）。作品卡封面通常放 `images/work-<slot>.jpg`；機車情報封面使用自有 SVG。
 
 ## 部署/發佈（重要：git push 不會觸發部署）
 1. `cd /Users/harry/Desktop/專案/harry-world && npx wrangler deploy`（約 10 秒；wrangler 已 OAuth 登入。2026-07-13 修正：資料夾已搬進 專案/，舊路徑失效）
@@ -33,3 +33,11 @@ Cloudflare（網域＋Workers）＝harryjia1007 的帳號；GitHub repo＝harryj
 - 坑：測試務必用 GET（`curl -s`）；`curl -I` 送的是 HEAD，程式碼刻意不計入
 - 坑：Cloudflare 邊緣快取會讓你以為程式沒生效，驗證時加 `?cb=隨機` 或 `-H "Cache-Control: no-cache"`
 - 隱私：不用 Cookie、不存 IP、不跨站追蹤；不重複訪客用每日加鹽單向雜湊（隔日無法對應同一人）→ 法規上免同意橫幅
+- 公開告知：首頁 footer 連到 `/privacy`。新增或變更分析服務時，必須同步更新該頁；不要只更新 Worker 註解。
+
+## 臺灣機車拍賣情報作品頁
+- 對外網址：`https://harryjia.com/projects/taiwan-moto-auction`
+- 只允許合成資料與自有示意圖。不得放入真實案件、車牌、案號、官方附件、官方照片、Supabase URL／金鑰或私人 API。
+- 互動資料位於 `projects/taiwan-moto-auction/app.js`，頁面不連線資料庫或政府網站。
+- 資料與免責：`projects/taiwan-moto-auction/legal.html`；全站分析：`privacy.html`。
+- 發布前至少執行 `node --check projects/taiwan-moto-auction/app.js`、敏感資料掃描、桌機與手機實測。

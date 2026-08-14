@@ -36,6 +36,14 @@ const WORKS = [
              'One cursor, a flowing starfield. Collect golden energy stars, dodge dark-matter vortices — hand-written HTML/Canvas, no framework, no dependencies. Just open and play.'),
     impact: null, stack: ['Canvas 2D', 'Simplex Noise', 'Vanilla JS'],
     link: 'stardust.html', cta: tr('直接開玩', 'Play now') },
+  { slot: 'work-taiwan-moto', image: 'images/work-taiwan-moto.svg', year: '2026', kind: tr('資料產品', 'Data Product'), status: tr('互動展示', 'Interactive Demo'), badge: '#D6FF3F',
+    name: tr('臺灣機車拍賣情報', 'Taiwan Moto Auction Intelligence'),
+    desc: tr('把分散的政府機車拍賣資訊整理成可篩選、可比較、重視證據與資料邊界的決策介面。公開頁只使用合成案例。',
+             'A decision interface for fragmented public motorcycle auctions, built around filtering, evidence, and responsible data boundaries. The public page uses synthetic cases only.'),
+    impact: tr('公開展示與私人情報層完全分離；未知不等於否定，截止也不等於成交。',
+               'The public showcase is isolated from the private intelligence layer; unknown is not no, and ended is not sold.'),
+    stack: ['Next.js', 'Python', 'PostgreSQL', 'Supabase'],
+    link: 'projects/taiwan-moto-auction/', cta: tr('操作互動展示', 'Explore the demo') },
   { slot: 'work-next', year: '——', kind: tr('施工中', 'Cooking'), status: 'SOON', badge: '#9D5CFF',
     name: tr('更多正在路上', 'More on the way'),
     desc: tr('新的展品還在做，之後會陸續補進來。', 'New builds are in progress — they’ll show up here soon.'),
@@ -117,7 +125,7 @@ const STRIP = [
 ];
 
 /* 圖片欄位：放 images/<slot>.jpg 就會自動顯示，沒放維持佔位圖 */
-function imgSlot(slot) {
+function imgSlot(slot, source) {
   const wrap = el('div', 'img-slot');
   wrap.dataset.slot = slot;
   wrap.innerHTML =
@@ -129,7 +137,7 @@ function imgSlot(slot) {
     img.style.display = 'none';
     wrap.querySelector('.img-placeholder').style.display = 'flex';
   });
-  img.src = `images/${slot}.jpg`;
+  img.src = source || `images/${slot}.jpg`;
   return wrap;
 }
 
@@ -156,7 +164,7 @@ function renderWork() {
         ${w.link ? `<a class="work-cta" href="${w.link}" style="--cta:${w.badge}">${w.cta || '查看'} <i class="fa-solid fa-arrow-right"></i></a>` : ''}
       </div>`;
     const shot = card.querySelector('.work-shot');
-    shot.appendChild(imgSlot(w.slot));
+    shot.appendChild(imgSlot(w.slot, w.image));
     shot.innerHTML += `<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>`;
     // 有專頁的作品：整張封面也可點
     if (w.link) {
