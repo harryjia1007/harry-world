@@ -8,7 +8,7 @@ const statusLabels={DISCOVERED:'已發現',ANNOUNCED:'已公告',SCHEDULED:'進�
 const state={view:'all',keyword:'',vehicleClass:'',cc:'',hasPhotos:false,rows:[]};
 const $=s=>document.querySelector(s);const $$=s=>[...document.querySelectorAll(s)];
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-function safeOfficialUrl(value){try{const u=new URL(value);return u.protocol==='https:'&&u.hostname.endsWith('.gov.taipei')?u.href:null}catch{return null}}
+function safeOfficialUrl(value){try{const u=new URL(value);const allowed=u.hostname==='shwoo.gov.taipei'||u.hostname==='aomp109.judicial.gov.tw';return u.protocol==='https:'&&allowed?u.href:null}catch{return null}}
 function formatPrice(v){return v==null?'官方未提供':`NT$ ${Number(v).toLocaleString('zh-TW')}`}
 function formatDate(v){if(!v)return'日期未確認';return new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(v))}
 function isEnded(item){return ['SOLD','UNSOLD','WITHDRAWN','CANCELLED','EXPIRED'].includes(item.auction_status)||(item.ends_at&&new Date(item.ends_at)<new Date())}
