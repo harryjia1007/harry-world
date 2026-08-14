@@ -10,14 +10,12 @@
 </head>
 <body>
   <a class="skip-link" href="#market">跳到案件列表</a>
-  <header class="site-header"><a class="brand" href="/">HARRY CHEN <span>個人作品</span></a><nav><a href="#market">找機車</a><a href="#coverage">資料來源</a><a href="./legal.html">資料與免責</a><a class="back" href="/">返回作品集</a></nav></header>
+  <header class="site-header"><a class="brand" href="./">臺灣機車拍賣情報</a><nav><a href="#market">找機車</a><a href="#coverage">資料來源</a><a href="./legal.html">資料說明</a><a class="back" href="/">返回作品集</a></nav></header>
   <main>
-    <div class="shell"><aside class="disclosure live" role="status"><span class="live-dot"></span><div><strong>正式資料版・官方來源同步</strong><p>案件資料來自發布機關；更新可能有延遲，投標前仍須開啟「查看官方公告」確認最新內容。</p></div><span id="syncStatus">讀取中</span></aside>
-      <section class="hero"><div class="hero-copy"><p class="eyebrow">臺灣機車拍賣情報</p><h1>找得到車，<br>也看得懂風險。</h1><p class="lead">集中查看真實拍賣車輛的車牌、照片、價格、日期、投標資格與領牌狀態；每筆都保留官方原始連結。</p><div class="hero-actions"><a class="button" href="#market">查看正式案件 →</a><a href="./legal.html">資料使用與更正</a></div></div><div class="pipeline"><p class="pipeline-label">官方資料處理流程</p><ol><li><span>01</span>官方來源定期發現</li><li><span>02</span>發布校驗與來源追蹤</li><li><span>03</span>欄位規則化與查核</li><li><span>04</span>連回官方公告確認</li></ol><p class="pipeline-note">自動來源包含臺北惜物網與法務部集中拍賣；司法院案件採官方 PDF 人工核對。沒有官方證據的欄位一律標示未確認。</p></div></section>
-    </div>
+    <section class="page-intro"><div class="shell"><div><p class="eyebrow">官方機車拍賣彙整</p><h1>機車拍賣案件</h1><p>查看車牌、照片、價格、日期、投標資格與領牌狀態。</p></div><div class="sync-pill" role="status"><span class="live-dot"></span><span id="syncStatus">讀取中</span></div></div></section>
 
     <section class="market" id="market"><div class="shell">
-      <div class="section-heading"><div><p class="eyebrow">正式案件</p><h2>目前有哪些機車可以看</h2></div><p>先看進行中，再用關鍵字、日期、級別與排氣量縮小範圍。</p></div>
+      <div class="section-heading"><div><h2>找機車</h2></div><p>依狀態、關鍵字、級別、排氣量與照片篩選。</p></div>
       <div class="tabs" role="tablist"><button data-view="active">進行中</button><button data-view="within30">30 天內</button><button data-view="ended">已結束</button><button data-view="all">全部</button></div>
       <form class="filters" id="filters">
         <label class="search-field"><span>搜尋</span><input id="keyword" type="search" placeholder="車牌、品牌、型號、機關、案件名稱"></label>
@@ -30,10 +28,9 @@
       <div class="card-grid" id="results"></div><div class="empty" id="empty" hidden><h3>目前沒有符合條件的正式案件</h3><p>可切換到「已結束」或清除部分條件。</p></div>
     </div></section>
 
-    <section class="architecture" id="coverage"><div class="shell"><div class="section-heading"><div><p class="eyebrow">資料來源範圍</p><h2>不把「規劃中」寫成已上線</h2></div><p id="sourceCounts">正在統計正式案件</p></div><div class="principles"><article><span>自動同步</span><h3>臺北惜物網、法務部集中拍賣</h3><p>每日四次同步公開案件、照片、附件與拍賣條件；每筆連回發布機關官方頁面。</p></article><article><span>人工核對</span><h3>司法院與行政執行署</h3><p>司法院核對官方 PDF；行政執行署由人工完成官方驗證碼後匯入明細。本站不繞過存取限制，也不公開複製官方 PDF。</p></article><article><span>資料原則</span><h3>未知就明確寫未知</h3><p>不從車牌推測出廠月份，不把不能測試寫成不能發動，也不把已截止或第三方標示直接寫成成交。</p></article></div></div></section>
-    <section class="commercial" id="commercial"><div class="shell"><div class="section-heading"><div><p class="eyebrow">廣告政策</p><h2>廣告與案件排序分離</h2></div></div><div class="ad-readiness"><article class="ad-placeholder"><span>目前尚未啟用</span><strong>廣告版位預留</strong><p>目前沒有第三方廣告程式。未來啟用時，付費內容會清楚標示且不得影響案件排序。</p></article><article class="commercial-policy"><p class="eyebrow">內容與商業分離</p><h3>合作不等於背書</h3><ul><li>不得購買案件排名或風險標示</li><li>拒絕代標、保證得標與誤導性車況宣稱</li><li>刊登前完成隱私與廣告法規檢查</li></ul><a class="button" href="mailto:harryjia1007@gmail.com?subject=%E6%A9%9F%E8%BB%8A%E6%8B%8D%E8%B3%A3%E6%83%85%E5%A0%B1%E5%BB%A3%E5%91%8A%E5%90%88%E4%BD%9C">洽談合作 →</a></article></div></div></section>
-    <aside class="final-disclaimer"><div class="shell"><strong>重要免責聲明</strong><p>本站是非政府的資訊彙整作品，不是拍賣、估價、監理或投標代理服務。資料可能延遲、缺漏或被官方修改；出價、資格、領牌、費用與現況一律以最新官方公告及現場查驗為準。</p><a href="./legal.html">完整說明 →</a></div></aside>
+    <section class="source-summary" id="coverage"><div class="shell"><div><h2>資料來源</h2><p id="sourceCounts">正在統計正式案件</p></div><p>每筆案件都可連回官方公告；未取得官方資料的欄位會顯示「未確認」。</p><a href="./legal.html">查看資料說明</a></div></section>
+    <aside class="notice"><div class="shell"><strong>投標前請查看官方公告。</strong><span>本站為非政府資訊彙整，資料可能延遲或異動。</span></div></aside>
   </main>
-  <footer><div class="shell footer-inner"><div><strong>臺灣機車拍賣情報</strong><p>Harry Chen 個人作品・非政府官方服務</p></div><nav><a href="./legal.html">資料與免責</a><a href="mailto:harryjia1007@gmail.com">更正／下架</a><a href="/">返回作品集</a></nav></div></footer>
+  <footer><div class="shell footer-inner"><div><strong>臺灣機車拍賣情報</strong><p>非政府官方服務</p></div><nav><a href="./legal.html">資料說明</a><a href="mailto:harryjia1007@gmail.com">更正／下架</a><a href="/">返回作品集</a></nav></div></footer>
   <script src="./app.js" defer></script>
 </body></html>
