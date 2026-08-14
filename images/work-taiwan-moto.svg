@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
   <title id="title">臺灣機車拍賣情報示意封面</title>
-  <desc id="desc">米白色資料介面中排列三張合成機車拍賣卡片，沒有真實案件或官方照片。</desc>
+  <desc id="desc">米白色資料介面展示正式官方機車拍賣資料、來源連結與篩選功能。</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f4f0e7"/><stop offset="1" stop-color="#ded6c6"/></linearGradient>
     <filter id="shadow"><feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#17231f" flood-opacity=".16"/></filter>
@@ -11,25 +11,25 @@
   <rect x="80" y="148" width="1440" height="34" fill="#17231f"/>
   <circle cx="134" cy="126" r="12" fill="#a65a32"/><circle cx="172" cy="126" r="12" fill="#d8d0c0"/><circle cx="210" cy="126" r="12" fill="#1f5b49"/>
   <text x="270" y="140" fill="#fbf9f4" font-family="ui-monospace,monospace" font-size="34" font-weight="700" letter-spacing="4">TAIWAN MOTO AUCTION INTELLIGENCE</text>
-  <text x="128" y="258" fill="#a65a32" font-family="ui-monospace,monospace" font-size="22" font-weight="700" letter-spacing="3">SYNTHETIC PORTFOLIO DEMO</text>
-  <text x="128" y="330" fill="#17231f" font-family="system-ui,sans-serif" font-size="56" font-weight="800">先看能不能買，再決定值不值得追。</text>
+  <text x="128" y="258" fill="#a65a32" font-family="ui-monospace,monospace" font-size="22" font-weight="700" letter-spacing="3">LIVE OFFICIAL DATA</text>
+  <text x="128" y="330" fill="#17231f" font-family="system-ui,sans-serif" font-size="56" font-weight="800">找得到車，也看得懂風險。</text>
   <g transform="translate(128 392)">
     <rect width="390" height="400" rx="18" fill="#edf1ec" stroke="#17231f" stroke-width="3"/>
-    <rect width="390" height="155" rx="16" fill="#1f5b49"/><text x="28" y="55" fill="#fff" font-family="system-ui" font-size="22" font-weight="700">合成示意影像</text><text x="28" y="92" fill="#cfe0d9" font-family="system-ui" font-size="16">非官方照片</text>
-    <text x="28" y="205" fill="#66716c" font-family="system-ui" font-size="17">政府標售來源示意 · 臺北市</text><text x="28" y="254" fill="#17231f" font-family="system-ui" font-size="28" font-weight="800">都會通勤機車 A</text>
-    <text x="28" y="306" fill="#17231f" font-family="system-ui" font-size="18">一般民眾可投標</text><text x="28" y="344" fill="#17231f" font-family="system-ui" font-size="18">125 c.c. · 5 天後</text>
+    <rect width="390" height="155" rx="16" fill="#1f5b49"/><text x="28" y="55" fill="#fff" font-family="system-ui" font-size="22" font-weight="700">官方案件照片</text><text x="28" y="92" fill="#cfe0d9" font-family="system-ui" font-size="16">可左右切換</text>
+    <text x="28" y="205" fill="#66716c" font-family="system-ui" font-size="17">臺北惜物網 · 官方來源</text><text x="28" y="254" fill="#17231f" font-family="system-ui" font-size="28" font-weight="800">真實案件資料</text>
+    <text x="28" y="306" fill="#17231f" font-family="system-ui" font-size="18">車牌 · 資格 · 領牌狀態</text><text x="28" y="344" fill="#17231f" font-family="system-ui" font-size="18">價格 · 日期 · 機關</text>
   </g>
   <g transform="translate(568 392)">
     <rect width="390" height="400" rx="18" fill="#f4ebe4" stroke="#17231f" stroke-width="3"/>
-    <rect width="390" height="155" rx="16" fill="#a65a32"/><text x="28" y="55" fill="#fff" font-family="system-ui" font-size="22" font-weight="700">合成示意影像</text><text x="28" y="92" fill="#f1d8ca" font-family="system-ui" font-size="16">非官方照片</text>
-    <text x="28" y="205" fill="#66716c" font-family="system-ui" font-size="17">司法拍賣來源示意 · 臺中市</text><text x="28" y="254" fill="#17231f" font-family="system-ui" font-size="28" font-weight="800">大型重型機車 B</text>
-    <text x="28" y="306" fill="#17231f" font-family="system-ui" font-size="18">投標資格未確認</text><text x="28" y="344" fill="#17231f" font-family="system-ui" font-size="18">550 c.c. · 12 天後</text>
+    <rect width="390" height="155" rx="16" fill="#a65a32"/><text x="28" y="55" fill="#fff" font-family="system-ui" font-size="22" font-weight="700">找車篩選</text><text x="28" y="92" fill="#f1d8ca" font-family="system-ui" font-size="16">狀態 · 級別 · 排氣量</text>
+    <text x="28" y="205" fill="#66716c" font-family="system-ui" font-size="17">進行中 · 30 天內 · 已結束</text><text x="28" y="254" fill="#17231f" font-family="system-ui" font-size="28" font-weight="800">條件一目了然</text>
+    <text x="28" y="306" fill="#17231f" font-family="system-ui" font-size="18">可搜尋車牌與機關</text><text x="28" y="344" fill="#17231f" font-family="system-ui" font-size="18">網址保留篩選狀態</text>
   </g>
   <g transform="translate(1008 392)">
     <rect width="390" height="400" rx="18" fill="#e9eff1" stroke="#17231f" stroke-width="3"/>
-    <rect width="390" height="155" rx="16" fill="#426b76"/><text x="28" y="55" fill="#fff" font-family="system-ui" font-size="22" font-weight="700">合成示意影像</text><text x="28" y="92" fill="#d8e8ec" font-family="system-ui" font-size="16">非官方照片</text>
-    <text x="28" y="205" fill="#66716c" font-family="system-ui" font-size="17">公有財產標售示意 · 高雄市</text><text x="28" y="254" fill="#17231f" font-family="system-ui" font-size="28" font-weight="800">電動機車 C</text>
-    <text x="28" y="306" fill="#17231f" font-family="system-ui" font-size="18">一般民眾可投標</text><text x="28" y="344" fill="#17231f" font-family="system-ui" font-size="18">排氣量未提供 · 26 天後</text>
+    <rect width="390" height="155" rx="16" fill="#426b76"/><text x="28" y="55" fill="#fff" font-family="system-ui" font-size="22" font-weight="700">官方公告連結</text><text x="28" y="92" fill="#d8e8ec" font-family="system-ui" font-size="16">來源可追溯</text>
+    <text x="28" y="205" fill="#66716c" font-family="system-ui" font-size="17">未知不等於否定</text><text x="28" y="254" fill="#17231f" font-family="system-ui" font-size="28" font-weight="800">不猜、不誤導</text>
+    <text x="28" y="306" fill="#17231f" font-family="system-ui" font-size="18">截止不等於成交</text><text x="28" y="344" fill="#17231f" font-family="system-ui" font-size="18">投標前回官方確認</text>
   </g>
-  <rect x="128" y="836" width="1270" height="54" rx="27" fill="#17231f"/><text x="763" y="872" text-anchor="middle" fill="#fbf9f4" font-family="ui-monospace,monospace" font-size="19" font-weight="700" letter-spacing="2">全部內容皆為合成展示資料 · SYNTHETIC DATA ONLY</text>
+  <rect x="128" y="836" width="1270" height="54" rx="27" fill="#17231f"/><text x="763" y="872" text-anchor="middle" fill="#fbf9f4" font-family="ui-monospace,monospace" font-size="19" font-weight="700" letter-spacing="2">正式資料串接 · 每筆連回官方來源</text>
 </svg>

@@ -1,114 +1,39 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="臺灣機車拍賣情報互動作品展示：以合成資料示範拍賣條件、車種、排氣量與證據導向的找車介面。">
-  <meta name="robots" content="index,follow,max-image-preview:large">
-  <meta property="og:title" content="臺灣機車拍賣情報｜Harry Chen">
-  <meta property="og:description" content="先看能不能買，再決定值不值得追。公開頁全部使用合成展示資料。">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://harryjia.com/projects/taiwan-moto-auction">
-  <meta property="og:image" content="https://harryjia.com/images/work-taiwan-moto.svg">
-  <meta name="theme-color" content="#f4f0e7">
-  <title>臺灣機車拍賣情報｜Harry Chen</title>
-  <link rel="canonical" href="https://harryjia.com/projects/taiwan-moto-auction">
-  <link rel="stylesheet" href="./styles.css">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="臺灣機車拍賣情報：彙整官方公開機車標售案件、車牌、價格、拍賣日期、機關與原始公告。">
+  <meta name="robots" content="index,follow,max-image-preview:large"><meta name="theme-color" content="#f4f0e7">
+  <meta property="og:title" content="臺灣機車拍賣情報｜Harry Chen"><meta property="og:description" content="從官方來源同步的真實機車標售資料，快速查看資格、車牌、價格、照片與公告。">
+  <meta property="og:type" content="website"><meta property="og:url" content="https://harryjia.com/projects/taiwan-moto-auction">
+  <title>臺灣機車拍賣情報｜Harry Chen</title><link rel="canonical" href="https://harryjia.com/projects/taiwan-moto-auction"><link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <a class="skip-link" href="#market">跳到互動展示</a>
-  <header class="site-header">
-    <a class="brand" href="/" aria-label="回到 Harry Chen 個人網站">HARRY CHEN <span>PROJECT</span></a>
-    <nav aria-label="頁面導覽">
-      <a href="#market">互動展示</a>
-      <a href="#architecture">專案架構</a>
-      <a href="#commercial">廣告合作</a>
-      <a href="./legal.html">資料與免責</a>
-      <a class="back" href="/">返回作品集</a>
-    </nav>
-  </header>
-
+  <a class="skip-link" href="#market">跳到案件列表</a>
+  <header class="site-header"><a class="brand" href="/">HARRY CHEN <span>PROJECT</span></a><nav><a href="#market">找機車</a><a href="#coverage">資料來源</a><a href="./legal.html">資料與免責</a><a class="back" href="/">返回作品集</a></nav></header>
   <main>
-    <div class="shell">
-      <aside class="disclosure" role="note">
-        <span class="shield" aria-hidden="true">✓</span>
-        <div><strong>展示資料，不是拍賣公告</strong><p>本公開頁全部為合成情境，不對應真實案件、車牌或自然人；實際投標必須回到各機關最新官方公告確認。</p></div>
-      </aside>
-
-      <section class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow">TAIWAN MOTO AUCTION INTELLIGENCE</p>
-          <h1>先看能不能買，<br>再決定值不值得追。</h1>
-          <p class="lead">把分散的機車拍賣條件整理成可搜尋、可比較、可追溯的決策介面。正式案件、證據、圖片與收藏維持私人存取。</p>
-          <div class="hero-actions"><a class="button" href="#market">開始操作展示 <span aria-hidden="true">→</span></a><a href="./legal.html">閱讀資料邊界</a></div>
-        </div>
-        <div class="pipeline" aria-label="資料處理流程">
-          <p class="pipeline-label">EVIDENCE-FIRST PIPELINE</p>
-          <ol><li><span>01</span>來源政策預檢</li><li><span>02</span>私有原始保存</li><li><span>03</span>保守正規化</li><li><span>04</span>欄位證據回查</li></ol>
-          <p class="pipeline-note">公開作品層只載入本頁內建的合成資料</p>
-        </div>
-      </section>
+    <div class="shell"><aside class="disclosure live" role="status"><span class="live-dot"></span><div><strong>正式資料版・官方來源同步</strong><p>案件資料來自發布機關；更新可能有延遲，投標前仍須開啟「查看官方公告」確認最新內容。</p></div><span id="syncStatus">讀取中</span></aside>
+      <section class="hero"><div class="hero-copy"><p class="eyebrow">TAIWAN MOTO AUCTION INTELLIGENCE</p><h1>找得到車，<br>也看得懂風險。</h1><p class="lead">集中查看真實拍賣車輛的車牌、照片、價格、日期、投標資格與領牌狀態；每筆都保留官方原始連結。</p><div class="hero-actions"><a class="button" href="#market">查看正式案件 →</a><a href="./legal.html">資料使用與更正</a></div></div><div class="pipeline"><p class="pipeline-label">LIVE OFFICIAL DATA</p><ol><li><span>01</span>官方來源定期發現</li><li><span>02</span>原始內容私有留存</li><li><span>03</span>欄位規則化與查核</li><li><span>04</span>連回官方公告確認</li></ol><p class="pipeline-note">目前正式自動來源：臺北惜物網；其他來源依授權狀態逐步加入。</p></div></section>
     </div>
 
-    <section class="market" id="market">
-      <div class="shell">
-        <div class="section-heading"><div><p class="eyebrow">INTERACTIVE DEMO</p><h2>用真正找車的方式操作</h2></div><p>先選狀態，再用法定級別與排氣量縮小範圍。</p></div>
+    <section class="market" id="market"><div class="shell">
+      <div class="section-heading"><div><p class="eyebrow">LIVE MARKETPLACE</p><h2>目前有哪些機車可以看</h2></div><p>先看進行中，再用關鍵字、日期、級別與排氣量縮小範圍。</p></div>
+      <div class="tabs" role="tablist"><button data-view="active">進行中</button><button data-view="within30">30 天內</button><button data-view="ended">已結束</button><button data-view="all">全部</button></div>
+      <form class="filters" id="filters">
+        <label class="search-field"><span>搜尋</span><input id="keyword" type="search" placeholder="車牌、品牌、型號、機關、案件名稱"></label>
+        <label><span>法定級別</span><select id="vehicleClass"><option value="">全部級別</option><option value="ORDINARY_LIGHT">普通輕型</option><option value="ORDINARY_HEAVY">普通重型</option><option value="LARGE_HEAVY">大型重型</option><option value="ELECTRIC_MOTORCYCLE">電動機車</option><option value="HEAVY_UNSPECIFIED">重型（級別未明）</option><option value="UNKNOWN">級別未確認</option></select></label>
+        <label><span>排氣量</span><select id="cc"><option value="">全部排氣量</option><option value="le-50">50 c.c. 以下</option><option value="51-125">51–125 c.c.</option><option value="126-250">126–250 c.c.</option><option value="251-550">251–550 c.c.</option><option value="gt-550">551 c.c. 以上</option><option value="unknown">官方未提供</option></select></label>
+        <label class="check"><input id="hasPhotos" type="checkbox">只看有照片</label><button class="button filter-button" type="submit">套用</button>
+      </form>
+      <div class="current-view"><div><span>目前瀏覽</span><strong id="summary">正式資料讀取中</strong></div><button id="clearFilters" type="button">清除條件</button></div><div class="chips" id="chips"></div>
+      <div class="loading" id="loading"><span></span>正在讀取正式案件…</div><div class="error" id="error" hidden><h3>正式資料暫時無法載入</h3><p>沒有以假資料替代。請稍後重試，或直接前往官方來源。</p><button class="button" id="retry" type="button">重新讀取</button></div>
+      <div class="card-grid" id="results"></div><div class="empty" id="empty" hidden><h3>目前沒有符合條件的正式案件</h3><p>可切換到「已結束」或清除部分條件。</p></div>
+    </div></section>
 
-        <div class="tabs" role="tablist" aria-label="案件狀態">
-          <button type="button" data-view="active" role="tab">進行中</button>
-          <button type="button" data-view="within30" role="tab">30 天內</button>
-          <button type="button" data-view="ended" role="tab">已結束</button>
-          <span title="真實收藏只存在私人系統">♡ 收藏（私人）</span>
-        </div>
-
-        <form class="filters" id="filters">
-          <label><span>拍賣時間</span><select id="within" name="within"><option value="">不限</option><option value="3">3 天內</option><option value="7">7 天內</option><option value="14">14 天內</option><option value="30">30 天內</option></select></label>
-          <label><span>法定級別</span><select id="vehicleClass" name="vehicleClass"><option value="">全部級別</option><option value="ORDINARY_LIGHT">普通輕型</option><option value="ORDINARY_HEAVY">普通重型</option><option value="LARGE_HEAVY">大型重型</option><option value="ELECTRIC_MOTORCYCLE">電動機車</option><option value="HEAVY_UNSPECIFIED">重型（級別未明）</option><option value="UNKNOWN">級別未確認</option></select></label>
-          <fieldset><legend>排氣量（可複選）</legend><div class="cc-options">
-            <label><input type="checkbox" name="cc" value="le-50">50 以下</label><label><input type="checkbox" name="cc" value="51-125">51–125</label><label><input type="checkbox" name="cc" value="126-250">126–250</label><label><input type="checkbox" name="cc" value="251-550">251–550</label><label><input type="checkbox" name="cc" value="gt-550">551 以上</label><label><input type="checkbox" name="cc" value="unknown">未提供</label>
-          </div></fieldset>
-          <button class="button filter-button" type="submit">套用條件</button>
-        </form>
-
-        <div class="current-view" aria-live="polite"><div><span>目前瀏覽</span><strong id="summary">進行中</strong></div><button id="clearFilters" type="button">清除全部</button></div>
-        <div class="chips" id="chips" aria-label="已套用條件"></div>
-        <div class="card-grid" id="results"></div>
-        <div class="empty" id="empty" hidden><h3>沒有符合條件的合成案例</h3><p>請移除部分排氣量或級別條件。</p></div>
-      </div>
-    </section>
-
-    <section class="commercial" id="commercial">
-      <div class="shell">
-        <div class="section-heading"><div><p class="eyebrow">ADVERTISING · PARTNERSHIP</p><h2>廣告可以出現，但不能左右找車結果</h2></div><p>先預留乾淨版位；取得廣告帳號、完成隱私更新與人工驗收後才載入第三方程式。</p></div>
-        <div class="ad-readiness">
-          <article class="ad-placeholder" aria-label="預留廣告版位，目前沒有投放廣告">
-            <span>ADVERTISEMENT SLOT · INACTIVE</span>
-            <strong>廣告版位預留</strong>
-            <p>目前沒有廣告追蹤碼、Cookie 或第三方廣告內容，因此不會拖慢展示頁。</p>
-          </article>
-          <article class="commercial-policy">
-            <p class="eyebrow">EDITORIAL FIREWALL</p>
-            <h3>合作內容與案件排序分離</h3>
-            <ul><li>所有付費內容明確標示「廣告」或「合作」</li><li>廣告主不能購買案件排名、篩選結果或風險標示</li><li>刊登不代表本站保證商品、服務或投標結果</li><li>拒絕代標、保證得標及來源不明的貸款廣告</li></ul>
-            <a class="button" href="mailto:harryjia1007@gmail.com?subject=%E8%87%BA%E7%81%A3%E6%A9%9F%E8%BB%8A%E6%8B%8D%E8%B3%A3%E6%83%85%E5%A0%B1%E3%83%BB%E5%BB%A3%E5%91%8A%E5%90%88%E4%BD%9C">洽談廣告合作 <span aria-hidden="true">→</span></a>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="architecture" id="architecture">
-      <div class="shell"><div class="section-heading"><div><p class="eyebrow">DESIGN PRINCIPLES</p><h2>資訊多，不代表可以亂猜</h2></div></div>
-        <div class="principles"><article><span>01</span><h3>未知不是否定</h3><p>未知、否定、衝突與無法測試分開保存；排氣量也不會被拿來推定法定級別。</p></article><article><span>02</span><h3>證據可以回查</h3><p>私人正式站保留原始快照、checksum 與欄位證據，公開作品頁不散布政府附件。</p></article><article><span>03</span><h3>來源不允許就停手</h3><p>遇到 robots、CAPTCHA、登入或授權不明時 fail closed，不以涵蓋率犧牲合規。</p></article></div>
-        <div class="boundary"><div><p class="eyebrow">PUBLIC</p><h3>你現在看到的</h3><ul><li>合成卡片與示意價格</li><li>篩選與決策資訊架構</li><li>無登入、無私人 API</li></ul></div><div><p class="eyebrow">PRIVATE</p><h3>不會公開的</h3><ul><li>真實案件、車牌與識別資料</li><li>官方照片、附件與證據全文</li><li>收藏、來源健康與原始快照</li></ul></div></div>
-      </div>
-    </section>
-
-    <aside class="final-disclaimer" role="note">
-      <div class="shell"><strong>重要免責聲明</strong><p>本站為 Harry Chen 的個人資料產品作品，並非政府機關、法院、拍賣平台、估價或投標代理服務。展示資訊可能延遲、缺漏或變更，不構成法律、財務、車況、監理或投標建議；採取行動前請查閱最新官方公告並自行確認標的、資格、費用與風險。外部網站內容由其營運者負責。</p><a href="./legal.html">閱讀完整資料使用與免責說明 →</a></div>
-    </aside>
+    <section class="architecture" id="coverage"><div class="shell"><div class="section-heading"><div><p class="eyebrow">SOURCE COVERAGE</p><h2>不把「規劃中」寫成已上線</h2></div></div><div class="principles"><article><span>ACTIVE</span><h3>臺北惜物網</h3><p>正式唯讀同步案件、照片、拍賣條件與結果；每筆連回官方頁面。</p></article><article><span>MANUAL / REVIEW</span><h3>法院與行政執行</h3><p>只處理人工確認的官方連結或取得授權的資料，不繞過 CAPTCHA 或禁止自動存取。</p></article><article><span>DATA RULE</span><h3>未知就明確寫未知</h3><p>不從車牌推測出廠月份，不把不能測試寫成不能發動，也不把頁面消失寫成成交。</p></article></div></div></section>
+    <section class="commercial" id="commercial"><div class="shell"><div class="section-heading"><div><p class="eyebrow">ADVERTISING</p><h2>廣告與案件排序分離</h2></div></div><div class="ad-readiness"><article class="ad-placeholder"><span>ADVERTISEMENT SLOT · INACTIVE</span><strong>廣告版位預留</strong><p>目前沒有第三方廣告程式。未來啟用時，付費內容會清楚標示且不得影響案件排序。</p></article><article class="commercial-policy"><p class="eyebrow">EDITORIAL FIREWALL</p><h3>合作不等於背書</h3><ul><li>不得購買案件排名或風險標示</li><li>拒絕代標、保證得標與誤導性車況宣稱</li><li>刊登前完成隱私與廣告法規檢查</li></ul><a class="button" href="mailto:harryjia1007@gmail.com?subject=%E6%A9%9F%E8%BB%8A%E6%8B%8D%E8%B3%A3%E6%83%85%E5%A0%B1%E5%BB%A3%E5%91%8A%E5%90%88%E4%BD%9C">洽談合作 →</a></article></div></div></section>
+    <aside class="final-disclaimer"><div class="shell"><strong>重要免責聲明</strong><p>本站是非政府的資訊彙整作品，不是拍賣、估價、監理或投標代理服務。資料可能延遲、缺漏或被官方修改；出價、資格、領牌、費用與現況一律以最新官方公告及現場查驗為準。</p><a href="./legal.html">完整說明 →</a></div></aside>
   </main>
-
-  <footer><div class="shell footer-inner"><div><strong>臺灣機車拍賣情報</strong><p>Harry Chen 個人作品・非政府官方服務</p></div><nav><a href="./legal.html">資料使用與免責</a><a href="/privacy.html">全站隱私</a><a href="mailto:harryjia1007@gmail.com">更正／下架聯絡</a><a href="/">返回作品集</a></nav></div></footer>
+  <footer><div class="shell footer-inner"><div><strong>臺灣機車拍賣情報</strong><p>Harry Chen 個人作品・非政府官方服務</p></div><nav><a href="./legal.html">資料與免責</a><a href="mailto:harryjia1007@gmail.com">更正／下架</a><a href="/">返回作品集</a></nav></div></footer>
   <script src="./app.js" defer></script>
-</body>
-</html>
+</body></html>
