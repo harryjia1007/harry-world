@@ -12,25 +12,25 @@
   <a class="skip-link" href="#market">跳到案件列表</a>
   <header class="site-header"><a class="brand" href="./">臺灣機車拍賣情報</a><nav><a href="#market">找機車</a><a href="#coverage">資料來源</a><a href="./legal.html">資料說明</a><a class="back" href="/">返回作品集</a></nav></header>
   <main>
-    <section class="page-intro"><div class="shell"><div><p class="eyebrow">官方機車拍賣彙整</p><h1>機車拍賣案件</h1><p>查看車牌、照片、價格、日期、投標資格與領牌狀態。</p></div><div class="sync-pill" role="status"><span class="live-dot"></span><span id="syncStatus">讀取中</span></div></div></section>
-
+    <section class="page-intro"><div class="shell"><div><p class="eyebrow">官方機車拍賣彙整</p><h1>目前有哪些機車可以看</h1><p>先看進行中，再依截止日期、級別與排氣量縮小範圍。</p></div><div class="sync-pill" role="status"><span class="live-dot"></span><span id="syncStatus">讀取中</span></div></div></section>
+    <section class="alert-bar" id="alerts" hidden><div class="shell" id="alertText"></div></section>
     <section class="market" id="market"><div class="shell">
-      <div class="section-heading"><div><h2>找機車</h2></div><p>依狀態、關鍵字、級別、排氣量與照片篩選。</p></div>
-      <div class="tabs" role="tablist"><button data-view="active">進行中</button><button data-view="within30">30 天內</button><button data-view="ended">已結束</button><button data-view="all">全部</button></div>
+      <div class="tabs" role="tablist" aria-label="案件狀態"><button data-view="active">進行中</button><button data-view="within30">30 天內</button><button data-view="ended">已結束</button><button data-view="favorites">我的收藏 <span id="favoriteCount">0</span></button><button data-view="all">全部</button></div>
       <form class="filters" id="filters">
         <label class="search-field"><span>搜尋</span><input id="keyword" type="search" placeholder="車牌、品牌、型號、機關、案件名稱"></label>
         <label><span>法定級別</span><select id="vehicleClass"><option value="">全部級別</option><option value="ORDINARY_LIGHT">普通輕型</option><option value="ORDINARY_HEAVY">普通重型</option><option value="LARGE_HEAVY">大型重型</option><option value="ELECTRIC_MOTORCYCLE">電動機車</option><option value="HEAVY_UNSPECIFIED">重型（級別未明）</option><option value="UNKNOWN">級別未確認</option></select></label>
-        <label><span>排氣量</span><select id="cc"><option value="">全部排氣量</option><option value="le-50">50 c.c. 以下</option><option value="51-125">51–125 c.c.</option><option value="126-250">126–250 c.c.</option><option value="251-550">251–550 c.c.</option><option value="gt-550">551 c.c. 以上</option><option value="unknown">官方未提供</option></select></label>
+        <label><span>排氣量</span><select id="cc"><option value="">全部排氣量</option></select></label>
         <label class="check"><input id="hasPhotos" type="checkbox">只看有照片</label><button class="button filter-button" type="submit">套用</button>
       </form>
       <div class="current-view"><div><span>目前瀏覽</span><strong id="summary">正式資料讀取中</strong></div><button id="clearFilters" type="button">清除條件</button></div><div class="chips" id="chips"></div>
       <div class="loading" id="loading"><span></span>正在讀取正式案件…</div><div class="error" id="error" hidden><h3>正式資料暫時無法載入</h3><p>沒有以假資料替代。請稍後重試，或直接前往官方來源。</p><button class="button" id="retry" type="button">重新讀取</button></div>
-      <div class="card-grid" id="results"></div><div class="empty" id="empty" hidden><h3>目前沒有符合條件的正式案件</h3><p>可切換到「已結束」或清除部分條件。</p></div>
+      <div class="card-grid" id="results"></div><div class="empty" id="empty" hidden><h3>目前沒有符合條件的正式案件</h3><p id="emptyHint">可切換狀態或清除部分條件。</p></div>
     </div></section>
-
-    <section class="source-summary" id="coverage"><div class="shell"><div><h2>資料來源</h2><p id="sourceCounts">正在統計正式案件</p></div><p>每筆案件都可連回官方公告；未取得官方資料的欄位會顯示「未確認」。</p><a href="./legal.html">查看資料說明</a></div></section>
+    <section class="source-summary" id="coverage"><div class="shell"><div><h2>資料來源</h2><p id="sourceCounts">正在統計正式案件</p></div><p>每筆案件都可連回官方公告；未取得官方資料的欄位會明確標示未確認。</p><a href="./legal.html">查看資料說明</a></div></section>
     <aside class="notice"><div class="shell"><strong>投標前請查看官方公告。</strong><span>本站為非政府資訊彙整，資料可能延遲或異動。</span></div></aside>
   </main>
+  <div class="compare-tray" id="compareTray" hidden><span>已選 <strong id="compareCount">0</strong> 台</span><button id="openCompare" type="button">開始比較</button><button id="clearCompare" type="button">清除</button></div>
+  <dialog id="compareDialog"><div class="dialog-head"><h2>機車比較</h2><button id="closeCompare" type="button" aria-label="關閉">×</button></div><div class="compare-table-wrap" id="compareContent"></div></dialog>
   <footer><div class="shell footer-inner"><div><strong>臺灣機車拍賣情報</strong><p>非政府官方服務</p></div><nav><a href="./legal.html">資料說明</a><a href="mailto:harryjia1007@gmail.com">更正／下架</a><a href="/">返回作品集</a></nav></div></footer>
-  <script src="./app.js" defer></script>
+  <script src="./shared.js" defer></script><script src="./app.js" defer></script>
 </body></html>

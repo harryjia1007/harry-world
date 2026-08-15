@@ -19,7 +19,7 @@ function buildCSP(allowInlineScript) {
     `script-src 'self' https://static.cloudflareinsights.com${allowInlineScript ? " 'unsafe-inline' 'unsafe-eval' blob:" : ''}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
     `font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:${allowInlineScript ? ' blob:' : ''}`,
-    "img-src 'self' data: blob: https://i.scdn.co https://*.scdn.co https://shwoo.gov.taipei",
+    "img-src 'self' data: blob: https://i.scdn.co https://*.scdn.co https://shwoo.gov.taipei https://auction.moj.gov.tw",
     "connect-src 'self' https://cloudflareinsights.com https://hdxlhxqlkdipqkwisjyd.supabase.co",
     "frame-ancestors 'none'",   // 不准被別人用 iframe 包起來假冒
     "base-uri 'self'",
