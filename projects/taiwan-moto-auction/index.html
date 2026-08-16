@@ -2,24 +2,26 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="臺灣機車拍賣情報：彙整官方公開機車標售案件、車牌、價格、拍賣日期、機關與原始公告。">
+  <meta name="description" content="臺灣汽機車拍賣情報：彙整官方公開汽車與機車標售案件、車牌、價格、拍賣日期、機關與原始公告。">
   <meta name="robots" content="index,follow,max-image-preview:large"><meta name="theme-color" content="#f4f0e7">
-  <meta property="og:title" content="臺灣機車拍賣情報｜Harry Chen"><meta property="og:description" content="從官方來源同步的真實機車標售資料，快速查看資格、車牌、價格、照片與公告。">
+  <meta property="og:title" content="臺灣汽機車拍賣情報｜Harry Chen"><meta property="og:description" content="從官方來源同步的真實汽機車標售資料，快速查看資格、車牌、價格、照片與公告。">
   <meta property="og:type" content="website"><meta property="og:url" content="https://harryjia.com/projects/taiwan-moto-auction">
-  <title>臺灣機車拍賣情報｜Harry Chen</title><link rel="canonical" href="https://harryjia.com/projects/taiwan-moto-auction"><link rel="stylesheet" href="./styles.css">
+  <title>臺灣汽機車拍賣情報｜Harry Chen</title><link rel="canonical" href="https://harryjia.com/projects/taiwan-moto-auction"><link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <a class="skip-link" href="#market">跳到案件列表</a>
-  <header class="site-header"><a class="brand" href="./">臺灣機車拍賣情報</a><nav><a href="#market">找機車</a><a href="#coverage">資料來源</a><a href="./legal.html">資料說明</a><a class="back" href="/">返回作品集</a></nav></header>
+  <header class="site-header"><a class="brand" href="./">臺灣汽機車拍賣情報</a><nav><a href="#market">找車</a><a href="#coverage">資料來源</a><a href="./legal.html">資料說明</a><a class="back" href="/">返回作品集</a></nav></header>
   <main>
-    <section class="page-intro"><div class="shell"><div><p class="eyebrow">官方機車拍賣彙整</p><h1>目前有哪些機車可以看</h1><p>先看進行中，再依截止日期、級別與排氣量縮小範圍。</p></div><div class="sync-pill" role="status"><span class="live-dot"></span><span id="syncStatus">讀取中</span></div></div></section>
+    <section class="page-intro"><div class="shell"><div><p class="eyebrow">官方汽機車拍賣彙整</p><h1>目前有哪些車可以看</h1><p>先選汽車或機車，再依截止日期、車種與規格縮小範圍。</p></div><div class="sync-pill" role="status"><span class="live-dot"></span><span id="syncStatus">讀取中</span></div></div></section>
     <section class="alert-bar" id="alerts" hidden><div class="shell" id="alertText"></div></section>
     <section class="market" id="market"><div class="shell">
       <div class="tabs" role="tablist" aria-label="案件狀態"><button data-view="active">進行中</button><button data-view="within30">30 天內</button><button data-view="ended">已結束</button><button data-view="favorites">我的收藏 <span id="favoriteCount">0</span></button><button data-view="all">全部</button></div>
+      <div class="vehicle-tabs" role="tablist" aria-label="車輛種類"><button data-vehicle="all">全部車輛 <span id="allVehicleCount">0</span></button><button data-vehicle="MOTORCYCLE">機車 <span id="motorcycleCount">0</span></button><button data-vehicle="CAR">汽車 <span id="carCount">0</span></button><button data-vehicle="MIXED">混合批次 <span id="mixedCount">0</span></button></div>
       <form class="filters" id="filters">
         <label class="search-field"><span>搜尋</span><input id="keyword" type="search" placeholder="車牌、品牌、型號、機關、案件名稱"></label>
-        <label><span>法定級別</span><select id="vehicleClass"><option value="">全部級別</option><option value="ORDINARY_LIGHT">普通輕型</option><option value="ORDINARY_HEAVY">普通重型</option><option value="LARGE_HEAVY">大型重型</option><option value="ELECTRIC_MOTORCYCLE">電動機車</option><option value="HEAVY_UNSPECIFIED">重型（級別未明）</option><option value="UNKNOWN">級別未確認</option></select></label>
-        <label><span>排氣量</span><select id="cc"><option value="">全部排氣量</option></select></label>
+        <label id="motorcycleClassField"><span>機車級別</span><select id="vehicleClass"><option value="">全部機車級別</option><option value="ORDINARY_LIGHT">普通輕型</option><option value="ORDINARY_HEAVY">普通重型</option><option value="LARGE_HEAVY">大型重型</option><option value="ELECTRIC_MOTORCYCLE">電動機車</option><option value="HEAVY_UNSPECIFIED">重型（級別未明）</option><option value="UNKNOWN">級別未確認</option></select></label>
+        <label id="ccField"><span>機車排氣量</span><select id="cc"><option value="">全部排氣量</option></select></label>
+        <label id="carCategoryField"><span>汽車類別</span><select id="carCategory"><option value="">全部汽車類別</option><option value="PASSENGER">小客車／轎車</option><option value="SUV">休旅車</option><option value="VAN">廂型／客貨車</option><option value="TRUCK">貨車</option><option value="BUS">大客車／遊覽車</option><option value="OTHER">其他汽車</option><option value="UNKNOWN">類別未確認</option></select></label>
         <label class="check"><input id="hasPhotos" type="checkbox">只看有照片</label><button class="button filter-button" type="submit">套用</button>
       </form>
       <div class="current-view"><div><span>目前瀏覽</span><strong id="summary">正式資料讀取中</strong></div><button id="clearFilters" type="button">清除條件</button></div><div class="chips" id="chips"></div>
@@ -30,7 +32,7 @@
     <aside class="notice"><div class="shell"><strong>投標前請查看官方公告。</strong><span>本站為非政府資訊彙整，資料可能延遲或異動。</span></div></aside>
   </main>
   <div class="compare-tray" id="compareTray" hidden><span>已選 <strong id="compareCount">0</strong> 台</span><button id="openCompare" type="button">開始比較</button><button id="clearCompare" type="button">清除</button></div>
-  <dialog id="compareDialog"><div class="dialog-head"><h2>機車比較</h2><button id="closeCompare" type="button" aria-label="關閉">×</button></div><div class="compare-table-wrap" id="compareContent"></div></dialog>
-  <footer><div class="shell footer-inner"><div><strong>臺灣機車拍賣情報</strong><p>非政府官方服務</p></div><nav><a href="./legal.html">資料說明</a><a href="mailto:harryjia1007@gmail.com">更正／下架</a><a href="/">返回作品集</a></nav></div></footer>
+  <dialog id="compareDialog"><div class="dialog-head"><h2>車輛比較</h2><button id="closeCompare" type="button" aria-label="關閉">×</button></div><div class="compare-table-wrap" id="compareContent"></div></dialog>
+  <footer><div class="shell footer-inner"><div><strong>臺灣汽機車拍賣情報</strong><p>非政府官方服務</p></div><nav><a href="./legal.html">資料說明</a><a href="mailto:harryjia1007@gmail.com">更正／下架</a><a href="/">返回作品集</a></nav></div></footer>
   <script src="./shared.js" defer></script><script src="./app.js" defer></script>
 </body></html>

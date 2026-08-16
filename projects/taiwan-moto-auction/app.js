@@ -1,7 +1,7 @@
 const M = window.Moto;
 const DAY = 86400000;
 const statusLabels = { DISCOVERED: '已發現', ANNOUNCED: '已公告', SCHEDULED: '進行中', SOLD: '已得標', UNSOLD: '未得標', WITHDRAWN: '已撤回', CANCELLED: '已取消', EXPIRED: '已截止', UNKNOWN: '結果待官方確認' };
-const state = { view: 'active', keyword: '', vehicleClass: '', cc: '', hasPhotos: false, rows: [] };
+const state = { view: 'active', vehicleType: 'all', keyword: '', vehicleClass: '', carCategory: '', cc: '', hasPhotos: false, rows: [] };
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
@@ -16,15 +16,18 @@ function filtered() {
   const query = state.keyword.toLocaleLowerCase('zh-TW').replace(/\s/g, '');
   const favoriteIds = favorites();
   return state.rows.filter((item) => {
+    const type = M.vehicleType(item);
     const ended = M.isEnded(item);
     const scheduled = !ended && (item.auction_status === 'SCHEDULED' || Boolean(item.ends_at && new Date(item.ends_at).getTime() >= now));
     if (state.view === 'active' && !scheduled) return false;
     if (state.view === 'ended' && !ended) return false;
     if (state.view === 'within30' && (ended || !item.ends_at || new Date(item.ends_at).getTime() > now + 30 * DAY)) return false;
     if (state.view === 'favorites' && !favoriteIds.includes(item.id)) return false;
+    if (state.vehicleType !== 'all' && type !== state.vehicleType) return false;
     if (query && !Object.values(item).filter((value) => typeof value === 'string').join(' ').toLocaleLowerCase('zh-TW').replace(/\s/g, '').includes(query)) return false;
-    if (state.vehicleClass && item.vehicle_category !== state.vehicleClass) return false;
-    if (state.cc && !ccMatch(item.displacement_cc, state.cc)) return false;
+    if (state.vehicleClass && (type !== 'MOTORCYCLE' || item.vehicle_category !== state.vehicleClass)) return false;
+    if (state.carCategory && (type !== 'CAR' || item.car_category !== state.carCategory)) return false;
+    if (state.cc && (type !== 'MOTORCYCLE' || !ccMatch(item.displacement_cc, state.cc))) return false;
     if (state.hasPhotos && !(Array.isArray(item.photo_urls) && item.photo_urls.some(M.safePhotoUrl))) return false;
     return true;
   }).sort((a, b) => {
@@ -46,9 +49,15 @@ function card(item) {
   const isCompared = compared().includes(item.id);
   const price = item.sold_price ?? item.current_price ?? item.reserve_price;
   const article = document.createElement('article');
+  const type = M.vehicleType(item);
+  const categoryFacts = type === 'MOTORCYCLE'
+    ? `${fact('機車級別', M.classLabels[item.vehicle_category] || '級別未確認')}${fact('排氣量', item.displacement_cc == null ? '官方未提供' : `${item.displacement_cc} c.c.`)}`
+    : type === 'CAR'
+      ? `${fact('汽車類別', M.carCategoryLabels[item.car_category] || '類別未確認')}${fact('引擎排氣量', item.displacement_cc == null ? '官方未提供' : `${item.displacement_cc} c.c.`)}`
+      : `${fact('車輛類型', M.vehicleTypeLabels[type])}${fact('批次數量', item.lot_size > 1 ? `${item.lot_size} 輛` : '官方未提供')}`;
   article.className = `card${Array.isArray(item.photo_urls) && item.photo_urls.length ? '' : ' card-without-photo'}`;
   article.dataset.id = item.id;
-  article.innerHTML = `<button class="favorite-button${isFavorite ? ' selected' : ''}" type="button" aria-label="${isFavorite ? '取消收藏' : '加入收藏'}" aria-pressed="${isFavorite}">♥</button>${photoMarkup(item)}<div class="card-body"><div class="source"><i></i>${M.escapeHtml(item.source_name)}<span class="status ${M.isEnded(item) ? 'ended' : 'active-status'}">${M.escapeHtml(statusLabels[item.auction_status] || '狀態未確認')}</span></div><h3><a href="./detail.html?id=${encodeURIComponent(item.id)}">${M.escapeHtml(M.title(item))}</a></h3><p class="official-title">${M.escapeHtml(item.official_title)}</p><div class="gates"><div class="gate"><span>誰能投標</span><strong>${M.escapeHtml(M.eligibilityLabels[item.eligibility] || '未確認')}</strong></div><div class="gate"><span>能否領牌</span><strong>${M.escapeHtml(M.registrationLabels[item.registration_status] || '未確認')}</strong></div></div><dl class="facts">${fact('車牌', item.plate_number || '官方未提供／已逾公開期')}${fact('法定級別', M.classLabels[item.vehicle_category] || '級別未確認')}${fact('排氣量', item.displacement_cc == null ? '官方未提供' : `${item.displacement_cc} c.c.`)}${fact('價格', M.money(price))}${fact('拍賣截止', M.dateTime(item.ends_at))}${fact('拍賣機關', item.organization_name)}${fact('地點', item.location || '官方未提供')}</dl>${item.condition_summary ? `<p class="condition">${M.escapeHtml(item.condition_summary)}</p>` : ''}<div class="card-actions"><a class="detail-link" href="./detail.html?id=${encodeURIComponent(item.id)}">查看完整資料</a><button class="compare-button${isCompared ? ' selected' : ''}" type="button" aria-pressed="${isCompared}">${isCompared ? '已加入比較' : '加入比較'}</button><span>完整度 ${Number(item.completeness || 0)}%</span></div></div>`;
+  article.innerHTML = `<button class="favorite-button${isFavorite ? ' selected' : ''}" type="button" aria-label="${isFavorite ? '取消收藏' : '加入收藏'}" aria-pressed="${isFavorite}">♥</button>${photoMarkup(item)}<div class="card-body"><div class="source"><i></i>${M.escapeHtml(item.source_name)}<span class="vehicle-badge">${M.escapeHtml(M.vehicleTypeLabels[type])}</span><span class="status ${M.isEnded(item) ? 'ended' : 'active-status'}">${M.escapeHtml(statusLabels[item.auction_status] || '狀態未確認')}</span></div><h3><a href="./detail.html?id=${encodeURIComponent(item.id)}">${M.escapeHtml(M.title(item))}</a></h3><p class="official-title">${M.escapeHtml(item.official_title)}</p><div class="gates"><div class="gate"><span>誰能投標</span><strong>${M.escapeHtml(M.eligibilityLabels[item.eligibility] || '未確認')}</strong></div><div class="gate"><span>能否領牌</span><strong>${M.escapeHtml(M.registrationLabels[item.registration_status] || '未確認')}</strong></div></div><dl class="facts">${fact('車牌', item.plate_number || '官方未提供／已逾公開期')}${categoryFacts}${fact('價格', M.money(price))}${fact('拍賣截止', M.dateTime(item.ends_at))}${fact('拍賣機關', item.organization_name)}${fact('地點', item.location || '官方未提供')}</dl>${type === 'MIXED' ? '<p class="condition">本案為汽機車混合批次；未能對應到單一車輛的規格不會推定。</p>' : item.condition_summary ? `<p class="condition">${M.escapeHtml(item.condition_summary)}</p>` : ''}<div class="card-actions"><a class="detail-link" href="./detail.html?id=${encodeURIComponent(item.id)}">查看完整資料</a><button class="compare-button${isCompared ? ' selected' : ''}" type="button" aria-pressed="${isCompared}">${isCompared ? '已加入比較' : '加入比較'}</button><span>完整度 ${Number(item.completeness || 0)}%</span></div></div>`;
   wireCard(article);
   return article;
 }
@@ -90,7 +99,8 @@ function wireCard(article) {
 function renderCcOptions() {
   const selected = state.cc;
   const select = $('#cc');
-  select.replaceChildren(new Option('全部排氣量', ''), ...M.ccBands.map((band) => new Option(`${band.label}（${state.rows.filter((row) => band.test(row.displacement_cc == null ? null : Number(row.displacement_cc))).length}）`, band.value)));
+  const motorcycles = state.rows.filter((row) => M.vehicleType(row) === 'MOTORCYCLE');
+  select.replaceChildren(new Option('全部排氣量', ''), ...M.ccBands.map((band) => new Option(`${band.label}（${motorcycles.filter((row) => band.test(row.displacement_cc == null ? null : Number(row.displacement_cc))).length}）`, band.value)));
   select.value = selected;
 }
 function render() {
@@ -100,15 +110,26 @@ function render() {
   $('#emptyHint').textContent = state.view === 'favorites' ? '按案件右上角的愛心，就會收藏在這台裝置。' : '可切換案件狀態或清除部分條件。';
   const labels = { active: '進行中', within30: '未來 30 天', ended: '已結束', favorites: '我的收藏', all: '全部正式案件' };
   const ccLabel = M.ccBands.find((band) => band.value === state.cc)?.label;
-  const parts = [labels[state.view], state.keyword ? `搜尋「${state.keyword}」` : null, state.vehicleClass ? M.classLabels[state.vehicleClass] : null, ccLabel, state.hasPhotos ? '有照片' : null, `共 ${items.length} 筆`].filter(Boolean);
+  const typeLabel = state.vehicleType === 'all' ? '全部車輛' : M.vehicleTypeLabels[state.vehicleType];
+  const parts = [labels[state.view], typeLabel, state.keyword ? `搜尋「${state.keyword}」` : null, state.vehicleClass ? M.classLabels[state.vehicleClass] : null, state.carCategory ? M.carCategoryLabels[state.carCategory] : null, ccLabel, state.hasPhotos ? '有照片' : null, `共 ${items.length} 筆`].filter(Boolean);
   $('#summary').textContent = parts.join('・');
   $('#chips').replaceChildren(...parts.slice(0, -1).map((text) => { const chip = document.createElement('span'); chip.className = 'chip'; chip.textContent = text; return chip; }));
   $('#favoriteCount').textContent = favorites().length;
   $$('.tabs button').forEach((button) => { const on = button.dataset.view === state.view; button.classList.toggle('active', on); button.setAttribute('aria-selected', String(on)); });
+  $$('.vehicle-tabs button').forEach((button) => { const on = button.dataset.vehicle === state.vehicleType; button.classList.toggle('active', on); button.setAttribute('aria-selected', String(on)); });
+  $('#allVehicleCount').textContent = state.rows.length;
+  $('#motorcycleCount').textContent = state.rows.filter((row) => M.vehicleType(row) === 'MOTORCYCLE').length;
+  $('#carCount').textContent = state.rows.filter((row) => M.vehicleType(row) === 'CAR').length;
+  $('#mixedCount').textContent = state.rows.filter((row) => M.vehicleType(row) === 'MIXED').length;
+  $('#motorcycleClassField').hidden = state.vehicleType !== 'MOTORCYCLE';
+  $('#ccField').hidden = state.vehicleType !== 'MOTORCYCLE';
+  $('#carCategoryField').hidden = state.vehicleType !== 'CAR';
   const params = new URLSearchParams();
   if (state.view !== 'all') params.set('view', state.view);
+  if (state.vehicleType !== 'all') params.set('vehicle', state.vehicleType.toLowerCase());
   if (state.keyword) params.set('q', state.keyword);
   if (state.vehicleClass) params.set('class', state.vehicleClass);
+  if (state.carCategory) params.set('car', state.carCategory);
   if (state.cc) params.set('cc', state.cc);
   if (state.hasPhotos) params.set('photos', '1');
   history.replaceState(null, '', `${location.pathname}${params.size ? `?${params}` : ''}`);
@@ -124,7 +145,9 @@ function renderComparison() {
   const rows = compared().map((id) => state.rows.find((row) => row.id === id)).filter(Boolean);
   const fields = [
     ['案件', (row) => M.title(row)], ['來源', (row) => row.source_name], ['車牌', (row) => row.plate_number || '未提供'],
-    ['級別', (row) => M.classLabels[row.vehicle_category] || '未確認'], ['排氣量', (row) => row.displacement_cc ? `${row.displacement_cc} c.c.` : '未提供'],
+    ['車輛類型', (row) => M.vehicleTypeLabels[M.vehicleType(row)]],
+    ['車輛分類', (row) => M.vehicleType(row) === 'CAR' ? (M.carCategoryLabels[row.car_category] || '未確認') : M.vehicleType(row) === 'MOTORCYCLE' ? (M.classLabels[row.vehicle_category] || '未確認') : '混合批次'],
+    ['引擎排氣量', (row) => row.displacement_cc ? `${row.displacement_cc} c.c.` : '未提供'],
     ['價格', (row) => M.money(row.sold_price ?? row.current_price ?? row.reserve_price)], ['截止', (row) => M.dateTime(row.ends_at)],
     ['投標資格', (row) => M.eligibilityLabels[row.eligibility] || '未確認'], ['領牌', (row) => M.registrationLabels[row.registration_status] || '未確認'],
   ];
@@ -143,11 +166,18 @@ function renderAlerts(changes) {
 function readUrl() {
   const params = new URLSearchParams(location.search), view = params.get('view');
   state.view = ['active', 'within30', 'ended', 'favorites', 'all'].includes(view) ? view : 'active';
+  const vehicle = (params.get('vehicle') || '').toUpperCase();
+  state.vehicleType = ['MOTORCYCLE', 'CAR', 'MIXED'].includes(vehicle) ? vehicle : 'all';
   state.keyword = (params.get('q') || '').slice(0, 80);
   state.vehicleClass = Object.hasOwn(M.classLabels, params.get('class')) ? params.get('class') : '';
+  state.carCategory = Object.hasOwn(M.carCategoryLabels, params.get('car')) ? params.get('car') : '';
   state.cc = M.ccBands.some((band) => band.value === params.get('cc')) ? params.get('cc') : '';
   state.hasPhotos = params.get('photos') === '1';
-  $('#keyword').value = state.keyword; $('#vehicleClass').value = state.vehicleClass; $('#hasPhotos').checked = state.hasPhotos;
+  if (state.vehicleType === 'CAR') { state.vehicleClass = ''; state.cc = ''; }
+  if (state.vehicleType === 'MOTORCYCLE') state.carCategory = '';
+  if (state.vehicleType === 'MIXED') { state.vehicleClass = ''; state.carCategory = ''; state.cc = ''; }
+  if (state.vehicleType === 'all') { state.vehicleClass = ''; state.carCategory = ''; state.cc = ''; }
+  $('#keyword').value = state.keyword; $('#vehicleClass').value = state.vehicleClass; $('#carCategory').value = state.carCategory; $('#hasPhotos').checked = state.hasPhotos;
 }
 async function load() {
   $('#loading').hidden = false; $('#error').hidden = true; $('#empty').hidden = true;
@@ -168,8 +198,9 @@ async function load() {
 }
 
 $$('.tabs button').forEach((button) => button.addEventListener('click', () => { state.view = button.dataset.view; render(); }));
-$('#filters').addEventListener('submit', (event) => { event.preventDefault(); state.keyword = $('#keyword').value.trim(); state.vehicleClass = $('#vehicleClass').value; state.cc = $('#cc').value; state.hasPhotos = $('#hasPhotos').checked; render(); });
-$('#clearFilters').addEventListener('click', () => { state.keyword = ''; state.vehicleClass = ''; state.cc = ''; state.hasPhotos = false; $('#filters').reset(); renderCcOptions(); render(); });
+$$('.vehicle-tabs button').forEach((button) => button.addEventListener('click', () => { state.vehicleType = button.dataset.vehicle; if (state.vehicleType === 'CAR') { state.vehicleClass = ''; state.cc = ''; } else if (state.vehicleType === 'MOTORCYCLE') state.carCategory = ''; else { state.vehicleClass = ''; state.carCategory = ''; state.cc = ''; } $('#vehicleClass').value = state.vehicleClass; $('#carCategory').value = state.carCategory; $('#cc').value = state.cc; render(); }));
+$('#filters').addEventListener('submit', (event) => { event.preventDefault(); state.keyword = $('#keyword').value.trim(); state.vehicleClass = $('#vehicleClass').value; state.carCategory = $('#carCategory').value; state.cc = $('#cc').value; state.hasPhotos = $('#hasPhotos').checked; render(); });
+$('#clearFilters').addEventListener('click', () => { state.keyword = ''; state.vehicleClass = ''; state.carCategory = ''; state.cc = ''; state.hasPhotos = false; $('#filters').reset(); renderCcOptions(); render(); });
 $('#retry').addEventListener('click', load);
 $('#clearCompare').addEventListener('click', () => { M.writeList(M.COMPARE_KEY, []); render(); });
 $('#openCompare').addEventListener('click', () => { renderComparison(); $('#compareDialog').showModal(); });

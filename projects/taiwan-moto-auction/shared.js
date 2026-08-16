@@ -10,6 +10,8 @@
   const SNAPSHOTS_KEY = "taiwan_moto_snapshots_v1";
 
   const sourceLabels = { shwoo: "臺北惜物網", judicial: "司法院動產拍賣", moj_auction: "法務部公有財產拍賣" };
+  const vehicleTypeLabels = { MOTORCYCLE: "機車", CAR: "汽車", MIXED: "汽機車混合批次", UNKNOWN: "車種未確認" };
+  const carCategoryLabels = { PASSENGER: "小客車／轎車", SUV: "休旅車", VAN: "廂型／客貨車", TRUCK: "貨車", BUS: "大客車／遊覽車", OTHER: "其他汽車", UNKNOWN: "汽車類別未確認" };
   const classLabels = {
     ORDINARY_LIGHT: "普通輕型", ORDINARY_HEAVY: "普通重型", LARGE_HEAVY: "大型重型",
     ELECTRIC_MOTORCYCLE: "電動機車", HEAVY_UNSPECIFIED: "重型（級別未明）", UNKNOWN: "級別未確認",
@@ -85,7 +87,11 @@
     return Math.ceil((new Date(value).getTime() - now.getTime()) / 86400000);
   }
   function title(row) {
-    return [row.brand_name, row.model_name].filter(Boolean).join(" ") || row.official_title || "機車拍賣案件";
+    return [row.brand_name, row.model_name].filter(Boolean).join(" ") || row.official_title || "車輛拍賣案件";
+  }
+  function vehicleType(row) {
+    if (["MOTORCYCLE", "CAR", "MIXED", "UNKNOWN"].includes(row.vehicle_type)) return row.vehicle_type;
+    return row.vehicle_category && row.vehicle_category !== "UNKNOWN" ? "MOTORCYCLE" : "UNKNOWN";
   }
   function fetchRows(query = "") {
     return fetch(`${API_URL}?select=*&order=ends_at.asc.nullslast&limit=300${query}`, {
@@ -110,8 +116,8 @@
   }
 
   return {
-    API_URL, API_KEY, FAVORITES_KEY, COMPARE_KEY, sourceLabels, classLabels, eligibilityLabels,
+    API_URL, API_KEY, FAVORITES_KEY, COMPARE_KEY, sourceLabels, vehicleTypeLabels, carCategoryLabels, classLabels, eligibilityLabels,
     registrationLabels, ccBands, readList, writeList, toggleList, isEnded, safeOfficialUrl, safePhotoUrl,
-    escapeHtml, money, dateTime, daysUntil, title, fetchRows, rememberSnapshots,
+    escapeHtml, money, dateTime, daysUntil, title, vehicleType, fetchRows, rememberSnapshots,
   };
 });
