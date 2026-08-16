@@ -187,11 +187,16 @@ async function load() {
     state.rows = rows;
     renderCcOptions(); $('#cc').value = state.cc;
     const latest = rows.map((row) => row.last_synced_at).filter(Boolean).sort().at(-1);
-    $('#syncStatus').textContent = latest ? `最近同步 ${M.dateTime(latest)}` : '目前尚無案件';
+    const stale = latest && Date.now() - new Date(latest).getTime() > 36 * 60 * 60 * 1000;
+    $('#syncStatus').textContent = latest ? `${stale ? '同步已逾 36 小時・' : ''}最近同步 ${M.dateTime(latest)}` : '目前尚無案件';
+    $('.sync-pill').classList.toggle('stale', Boolean(stale));
     const counts = rows.reduce((all, row) => { const key = M.sourceLabels[row.source_adapter] || row.source_name || '其他官方來源'; all[key] = (all[key] || 0) + 1; return all; }, {});
-    $('#sourceCounts').textContent = Object.entries(counts).map(([name, count]) => `${name} ${count} 筆`).join('・');
+    const typeCounts = rows.reduce((all, row) => { const key = M.vehicleTypeLabels[M.vehicleType(row)]; all[key] = (all[key] || 0) + 1; return all; }, {});
+    $('#sourceCounts').textContent = [...Object.entries(counts), ...Object.entries(typeCounts)].map(([name, count]) => `${name} ${count} 筆`).join('・');
     const changes = M.rememberSnapshots(rows.filter((row) => favorites().includes(row.id)));
-    renderAlerts(changes); render();
+    renderAlerts(changes);
+    if (stale) showMessage('正式資料已超過 36 小時未成功同步；既有案件仍保留，投標前請直接確認官方最新公告。');
+    render();
   } catch (error) {
     console.error(error); $('#error').hidden = false; $('#syncStatus').textContent = '資料暫時離線'; $('#sourceCounts').textContent = '正式資料暫時無法統計';
   } finally { $('#loading').hidden = true; }
