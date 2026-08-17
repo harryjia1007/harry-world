@@ -37,7 +37,9 @@ Cloudflare（網域＋Workers）＝harryjia1007 的帳號；GitHub repo＝harryj
 
 ## 臺灣機車拍賣情報作品頁
 - 對外網址：`https://harryjia.com/projects/taiwan-moto-auction`
-- 只允許合成資料與自有示意圖。不得放入真實案件、車牌、案號、官方附件、官方照片、Supabase URL／金鑰或私人 API。
-- 互動資料位於 `projects/taiwan-moto-auction/app.js`，頁面不連線資料庫或政府網站。
-- 資料與免責：`projects/taiwan-moto-auction/legal.html`；全站分析：`privacy.html`。
+- **2026-08-17 更新：已從合成資料展示頁轉為真實資料產品。** 頁面透過 `shared.js` 的 `fetchRows()` 即時打 Supabase REST API（`public_live_motorcycle_listings` 表，唯讀 publishable key），顯示真實案件、車牌（僅拍賣結束後 30 天內）、官方照片網址。舊版「只放合成資料、不連資料庫」的限制已不適用，別再照抄。
+- **本 repo 只有前端展示層 + Cloudflare Worker（CSP/流量統計）。實際把資料寫進 Supabase 的擷取／爬蟲管線不在這個 repo 裡**（Harry 目前是透過 ChatGPT 另外處理，沒有版控）。要看資料是怎麼進 Supabase 的、或要改抓取邏輯，得去問那條管線，這裡改不到。
+- 自動化與合規規則的目標設計：`projects/taiwan-moto-auction/AUTO-INGESTION-POLICY.md`（供外部管線對齊用的規格書，不是本 repo 會執行的程式碼）。
+- 資料與免責：`projects/taiwan-moto-auction/legal.html`——**這頁的文字必須跟實際管線行為一致**，改了擷取規則就要同步改這頁，不然等於對外做不實揭露。
+- 全站分析：`privacy.html`。
 - 發布前至少執行 `node --check projects/taiwan-moto-auction/app.js`、敏感資料掃描、桌機與手機實測。
