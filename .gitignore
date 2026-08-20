@@ -3,3 +3,7 @@
 images/IMG_6558.JPG
 *.bak
 *.bak2
+
+# 內部商業文件不進版控——這個 repo 是公開的，競爭策略與對外信件草稿
+# 不需要掛在作品集上給同業看。檔案仍留在本機，只是 git 不追蹤。
+projects/taiwan-moto-auction/docs/

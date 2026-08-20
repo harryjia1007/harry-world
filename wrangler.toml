@@ -16,3 +16,12 @@ run_worker_first = true
 [[kv_namespaces]]
 binding = "STATS"
 id = "4acd0d6cba004a6ab65f4eb0acc2c577"
+
+# 機車拍賣資料擷取排程（worker.js 的 scheduled() 用 event.cron 分流）：
+#   */3 * * * *  → 惜物網。來源天天有新案件，這條是「新公告 10 分鐘內上架」的主力，留了緩衝。
+#   17 3 * * *   → 司法院開放資料（來源本身每週更新，每天打一次就夠）＋ 車牌 30 天自動下架。
+#                  分鐘取 17 是避開整點，政府主機整點通常最忙。時間為 UTC（= 台北 11:17）。
+# 需要另外用 `npx wrangler secret put MOTO_SUPABASE_SERVICE_KEY` 設定 Supabase service_role 金鑰才會真的寫入，
+# 沒設就整輪跳過。改這裡的 cron 字串時，worker.js 的 DAILY_CRON 常數要一起改，否則分流會失效。
+[triggers]
+crons = ["*/3 * * * *", "17 3 * * *"]

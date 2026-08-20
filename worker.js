@@ -2,9 +2,16 @@
    Harry World — Cloudflare Worker
    1. /api/spotify  回傳「正在聽 / 近期常聽」歌曲
    2. 流量統計：伺服器端記錄瀏覽，/api/e 收事件，/_stats 私人儀表板
+   3. Cron 排程：機車拍賣資料自動擷取（見 scheduled()，規則見
+      projects/taiwan-moto-auction/AUTO-INGESTION-POLICY.md）
    其他所有路徑照舊直接交給靜態檔案（env.ASSETS）處理。
-   金鑰（Spotify、統計密碼）存在 Cloudflare Secrets，不會進 GitHub。
+   金鑰（Spotify、統計密碼、Supabase service key）存在 Cloudflare Secrets，不會進 GitHub。
    ============================================================ */
+
+import { isPathAllowed } from './projects/taiwan-moto-auction/ingestion/robots.js';
+import { runShwooIngestion } from './projects/taiwan-moto-auction/ingestion/shwoo.js';
+import { runJudicialOpenDataIngestion } from './projects/taiwan-moto-auction/ingestion/judicial-opendata.js';
+import { purgeExpiredPlates } from './projects/taiwan-moto-auction/ingestion/supabase.js';
 
 /* ---------------- 安全標頭（防篡改 / 防點擊劫持 / 防 XSS） ----------------
    內容安全政策（CSP）用白名單，只放行本站與這幾個明確來源。就算有人設法把
@@ -75,7 +82,53 @@ export default {
     }
     return withSecurity(res, url.pathname);
   },
+
+  /* 兩種排程分開跑，因為兩邊的資料新鮮度天差地遠：
+     - 高頻（每 3 分鐘）：惜物網。來源天天有新案件，且 robots.txt 允許 → 速度戰場在這。
+     - 每日：司法院開放資料（來源本身每週才更新，打太密只是浪費）＋ 車牌 30 天下架。
+     用 event.cron 區分；本機 `wrangler dev` 觸發時 cron 可能是空字串，預設走高頻那條。 */
+  async scheduled(event, env, ctx) {
+    const isDaily = event?.cron === DAILY_CRON;
+    ctx.waitUntil(isDaily ? runDailyCycle(env) : runFastCycle(env));
+  },
 };
+
+const DAILY_CRON = '17 3 * * *';
+
+/* 擷取前先確認 robots.txt 仍允許（fail closed，見 robots.js）。
+   單一來源失敗只記錄、不中斷其他來源。 */
+async function runFastCycle(env) {
+  if (!env.MOTO_SUPABASE_SERVICE_KEY) return; // 沒設定寫入金鑰就整輪跳過，不用半套權限硬跑
+
+  const shwooAllowed = await isPathAllowed('https://shwoo.gov.taipei', '/shwoo/browse/');
+  if (!shwooAllowed) {
+    console.error('shwoo robots.txt no longer allows /shwoo/browse/ — skipped this run');
+    return;
+  }
+  try {
+    const n = await runShwooIngestion(env);
+    console.log(`shwoo ingestion ok: ${n} motorcycle rows`);
+  } catch (e) {
+    console.error('shwoo ingestion failed', e);
+  }
+}
+
+/* 司法院這條是「官方開放資料 API」，不是爬蟲，所以不做 robots.txt 檢查——
+   robots.txt 規範的是網頁爬取，而開放資料集本來就是發布給程式讀的。
+   詳細法律理由見 judicial-opendata.js 檔頭。 */
+async function runDailyCycle(env) {
+  if (!env.MOTO_SUPABASE_SERVICE_KEY) return;
+
+  try {
+    const n = await runJudicialOpenDataIngestion(env);
+    console.log(`judicial opendata ingestion ok: ${n} motorcycle rows`);
+  } catch (e) {
+    console.error('judicial opendata ingestion failed', e);
+  }
+
+  try { await purgeExpiredPlates(env); }
+  catch (e) { console.error('plate purge failed', e); }
+}
 
 /* ---------------- 流量統計 ----------------
    設計原則（對訪客零可見、對隱私友善）：

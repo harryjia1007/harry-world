@@ -38,8 +38,18 @@ Cloudflare（網域＋Workers）＝harryjia1007 的帳號；GitHub repo＝harryj
 ## 臺灣機車拍賣情報作品頁
 - 對外網址：`https://harryjia.com/projects/taiwan-moto-auction`
 - **2026-08-17 更新：已從合成資料展示頁轉為真實資料產品。** 頁面透過 `shared.js` 的 `fetchRows()` 即時打 Supabase REST API（`public_live_motorcycle_listings` 表，唯讀 publishable key），顯示真實案件、車牌（僅拍賣結束後 30 天內）、官方照片網址。舊版「只放合成資料、不連資料庫」的限制已不適用，別再照抄。
-- **本 repo 只有前端展示層 + Cloudflare Worker（CSP/流量統計）。實際把資料寫進 Supabase 的擷取／爬蟲管線不在這個 repo 裡**（Harry 目前是透過 ChatGPT 另外處理，沒有版控）。要看資料是怎麼進 Supabase 的、或要改抓取邏輯，得去問那條管線，這裡改不到。
-- 自動化與合規規則的目標設計：`projects/taiwan-moto-auction/AUTO-INGESTION-POLICY.md`（供外部管線對齊用的規格書，不是本 repo 會執行的程式碼）。
-- 資料與免責：`projects/taiwan-moto-auction/legal.html`——**這頁的文字必須跟實際管線行為一致**，改了擷取規則就要同步改這頁，不然等於對外做不實揭露。
+- **2026-08-17 更新：自動擷取管線已經開始搬進這個 repo。** 見 `projects/taiwan-moto-auction/ingestion/`：
+  - `shwoo.js`：臺北惜物網（robots.txt 明確 `Allow: /shwoo/`），POST 表單擷取「運輸車輛」分類、關鍵字篩機車、正則切欄位。**已用真實網站回應測試過**（含修掉「起重機」被「重機」關鍵字誤判、加上從標題解析車牌與級別）。
+  - `judicial-opendata.js`：**司法院待拍開放資料集**（data.gov.tw #49107，JSON、每週更新、政府資料開放授權條款第 1 版，含動產）。**這是官方開放資料 API，不是爬蟲**，跟 `aomp109.judicial.gov.tw` 的 `Disallow: /` 完全無關——兩者是不同東西，別混為一談。⚠️ **欄位名尚未實地驗證**（開發環境連不到 aomp.judicial.gov.tw，逾時），程式寫成「多組候選欄位名＋對不到就回報 0 筆並記錄樣本」，不會寫入假資料。**上線前先跑** `node projects/taiwan-moto-auction/ingestion/probe-judicial.mjs` 確認真實欄位。
+  - `vehicle-match.js`：機車辨識共用模組（關鍵字、級別、車牌、排氣量）。所有來源共用，這樣「起重機被『重機』誤判」這類修正會自動套用到每個來源。回歸測試：`node --test projects/taiwan-moto-auction/ingestion/vehicle-match.test.mjs`（7 個測試，測資是真實網站抓到的標題）。
+  - `moj-auction.js`：法務部查扣變價（robots.txt 完全開放）——**調查完後決定不做**。實測每個地檢署一年僅 1～2 筆公告（新北最新一筆 2023 年），車輛細節都鎖在 PDF 附件裡、標題看不出有沒有機車，投入產出比太差。詳細調查記錄見檔案內註解。
+  - 行政執行署 `tpkonsale.moj.gov.tw`：robots.txt 允許、資料開放宣告也允許再利用，**但查詢介面有驗證碼 → 不自動化**。判準是「著作權授權 ≠ 可繞過技術管制」，見 AUTO-INGESTION-POLICY.md 第 10 節。**2026-08 已正式去信申請，該署回信拒絕 → 結案**。注意：申請被拒之後更不能自己繞驗證碼，別把「試過了」當成正當化理由。
+  - 司法院動產查封拍賣公告網（`aomp109.judicial.gov.tw`）：robots.txt 整站 `Disallow: /`，**沒有排進自動化**，也沒有合法的即時替代管道（政府開放資料平台的相關資料集每月批次更新、只收已拍定結果）。已寫信詢問正式介接可能性，草稿在 `projects/taiwan-moto-auction/docs/司法院合作申請信-草稿.md`（尚未寄出）。這個來源在拿到回覆前維持人工核對。
+  - `worker.js` 的 `scheduled()` 用 `event.cron` 分流兩種排程：`*/3 * * * *` 跑惜物網（速度戰場），`17 3 * * *` 跑司法院開放資料（來源每週才更新）＋車牌 30 天自動下架。改 cron 字串要同步改 worker.js 的 `DAILY_CRON` 常數，否則分流失效。惜物網擷取前會先查 robots.txt 是否仍允許（fail closed）。
+  - **競爭策略**：`projects/taiwan-moto-auction/docs/COMPETITIVE-STRATEGY.md`——**這個資料夾刻意不進版控**（repo 是公開的，商業策略與對外信件草稿不掛在作品集上），檔案只在本機。重點結論：樹懶法拍是綜合型資料站、其法拍主打**不動產**，不是機車競品；別跟它比爬取速度（那條路要違法才贏得了），改打「機車專屬欄位深度」＋「主動通知」——把查詢工具變成監控服務，這是它結構上追不上的。
+  - **要讓這條管線真的寫入 Supabase，需要 `npx wrangler secret put MOTO_SUPABASE_SERVICE_KEY`** 設定 service_role 金鑰（跟前端用的唯讀 publishable key 不同，這把有寫入權限，千萬不要跟公開的 key 混用或進 git）。沒設就整輪跳過，不會半套硬跑。
+  - 部署前務必先用 `npx wrangler dev` 本機測過 `scheduled` 流程，這段目前只驗證過 parsing 邏輯（拿真實回應資料在 Node 裡測），還沒在 Workers runtime 裡實跑過完整流程。
+- 自動化與合規規則全文：`projects/taiwan-moto-auction/AUTO-INGESTION-POLICY.md`。
+- 資料與免責：`projects/taiwan-moto-auction/legal.html`——**這頁的文字必須跟實際管線行為一致**，改了擷取規則就要同步改這頁，不然等於對外做不實揭露。目前 legal.html 還是寫舊規則（司法院人工／惜物網自動），等 moj-auction 也做完、整體穩定後再一起更新，避免頁面講的比系統實際做的還多。
 - 全站分析：`privacy.html`。
-- 發布前至少執行 `node --check projects/taiwan-moto-auction/app.js`、敏感資料掃描、桌機與手機實測。
+- 發布前至少執行 `node --check projects/taiwan-moto-auction/app.js`、`node --check worker.js`、`node --check projects/taiwan-moto-auction/ingestion/*.js`、敏感資料掃描、桌機與手機實測。
