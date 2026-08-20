@@ -78,9 +78,11 @@ test('cc 可以回補未確認的級別，但不覆蓋已確定的級別', () =>
 test('牌照異動登記文字對應到列舉，不確定的一律 UNKNOWN 不硬猜', () => {
   assert.equal(mapRegistrationStatus('已繳銷(可再領牌)'), 'RE_REGISTRATION_REQUIRED');
   assert.equal(mapRegistrationStatus('報廢無法再領牌(得標人需具應回收廢棄物回收業登記證)'), 'CANNOT_RELICENSE');
-  assert.equal(mapRegistrationStatus('無牌照'), 'UNKNOWN');
-  assert.equal(mapRegistrationStatus('詳物品說明'), 'UNKNOWN');
-  assert.equal(mapRegistrationStatus(null), 'UNKNOWN');
-  assert.equal(mapRegistrationStatus(''), 'UNKNOWN');
-  assert.equal(mapRegistrationStatus('未知的新選項'), 'UNKNOWN'); // 官方未來加新選項也不會誤判成已知類別
+  // 這幾種是「查過詳情頁、但官方資訊本身就無法判定」，要回 REGISTRABILITY_UNKNOWN，
+  // 不是泛用的 UNKNOWN（UNKNOWN 是「根本還沒查」，語意不同，2026-08-20 對照正式資料庫發現先前搞混過）。
+  assert.equal(mapRegistrationStatus('無牌照'), 'REGISTRABILITY_UNKNOWN');
+  assert.equal(mapRegistrationStatus('詳物品說明'), 'REGISTRABILITY_UNKNOWN');
+  assert.equal(mapRegistrationStatus(null), 'REGISTRABILITY_UNKNOWN');
+  assert.equal(mapRegistrationStatus(''), 'REGISTRABILITY_UNKNOWN');
+  assert.equal(mapRegistrationStatus('未知的新選項'), 'REGISTRABILITY_UNKNOWN'); // 官方未來加新選項也不會誤判成已知類別
 });

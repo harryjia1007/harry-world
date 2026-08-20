@@ -14,15 +14,25 @@ const UA = 'Mozilla/5.0 (compatible; TaiwanMotoAuctionBot/1.0; +https://harryjia
 const ORGANIZATION_NAME = '臺北市動產質借處';
 const ITEM_BLOCK_MARKER = '<div class="col-xs-6 col-md-3  padding10a">';
 
+/* 2026-08-20：上線後第一輪就收到 520（Cloudflare 對「來源伺服器回應無法辨識」的代號），
+   當下的錯誤訊息只有狀態碼，看不出是 session 沒拿到、來源在擋 Cloudflare 出口 IP、
+   還是純粹暫時性問題。這裡把診斷資訊補齊：session 有沒有拿到、失敗時的回應內容
+   前 300 字，讓下一輪的 log 能真的告訴我們發生什麼事，不用再靠猜的。 */
 async function getSessionId() {
   const res = await fetch(`${BASE}/shwoo/browse/browse00/advancedQuery?isRecyclerLink=N&q_unit1value4C=`, {
     headers: { 'user-agent': UA },
   });
-  const setCookie = res.headers.get('set-cookie') || '';
-  const cookieMatch = setCookie.match(/JSESSIONID=([^;]+)/i);
+  // Workers 的 Headers.get('set-cookie') 在有多個 Set-Cookie 時行為跟瀏覽器不同，
+  // 用 getSetCookie()（有支援才用）確保拿到完整清單，退回單一 get() 當備援。
+  const cookies = typeof res.headers.getSetCookie === 'function'
+    ? res.headers.getSetCookie()
+    : [res.headers.get('set-cookie') || ''];
+  const cookieMatch = cookies.join('; ').match(/JSESSIONID=([^;]+)/i);
   if (cookieMatch) return cookieMatch[1];
   const urlMatch = new URL(res.url).pathname.match(/jsessionid=([^;?]+)/i);
-  return urlMatch ? urlMatch[1] : null;
+  if (urlMatch) return urlMatch[1];
+  console.error(`shwoo getSessionId: 沒拿到 session（GET 狀態 ${res.status}），will proceed without jsessionid`);
+  return null;
 }
 
 async function fetchListingHtml(isRecyclerLink, sessionId) {
@@ -32,7 +42,13 @@ async function fetchListingHtml(isRecyclerLink, sessionId) {
     headers: { 'content-type': 'application/x-www-form-urlencoded', 'user-agent': UA },
     body: new URLSearchParams({ q_item1: 'C', order: '5', isRecyclerLink }).toString(),
   });
-  if (!res.ok) throw new Error(`shwoo listing fetch failed: ${res.status}`);
+  if (!res.ok) {
+    const bodySnippet = await res.text().then((t) => t.slice(0, 300)).catch(() => '(讀取回應內容失敗)');
+    throw new Error(
+      `shwoo listing fetch failed: ${res.status}, sessionId=${sessionId ? 'present' : 'MISSING'}, `
+      + `cf-ray=${res.headers.get('cf-ray') || 'n/a'}, body 開頭="${bodySnippet}"`,
+    );
+  }
   return res.text();
 }
 

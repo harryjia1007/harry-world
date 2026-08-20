@@ -17,11 +17,16 @@ run_worker_first = true
 binding = "STATS"
 id = "4acd0d6cba004a6ab65f4eb0acc2c577"
 
-# 機車拍賣資料擷取排程（worker.js 的 scheduled() 用 event.cron 分流）：
-#   */3 * * * *  → 惜物網。來源天天有新案件，這條是「新公告 10 分鐘內上架」的主力，留了緩衝。
-#   17 3 * * *   → 司法院開放資料（來源本身每週更新，每天打一次就夠）＋ 車牌 30 天自動下架。
-#                  分鐘取 17 是避開整點，政府主機整點通常最忙。時間為 UTC（= 台北 11:17）。
-# 需要另外用 `npx wrangler secret put MOTO_SUPABASE_SERVICE_KEY` 設定 Supabase service_role 金鑰才會真的寫入，
-# 沒設就整輪跳過。改這裡的 cron 字串時，worker.js 的 DAILY_CRON 常數要一起改，否則分流會失效。
+# 機車拍賣資料擷取排程。2026-08-20 現況：Harry 用 ChatGPT 手動核對維護的既有管線
+# 仍是主要資料來源，且用同一套 shwoo id 命名（shwoo-<AUID>），不能讓這裡的新程式碼
+# 寫入真資料去覆蓋它。所以排程重新開啟，但 INGESTION_DRY_RUN=1（見下方 [vars]）讓
+# 三個寫入函式（見 ingestion/supabase.js）全部只印 log、不觸碰資料庫——目的單純是
+# 驗證 Cloudflare 的網路連不連得到這些政府網站、解析邏輯對不對，不是要開始寫入。
+# 等連線與解析都驗證過、且跟舊管線的併存方式談清楚後，才把 INGESTION_DRY_RUN 拿掉。
+#   */3 * * * *  → 惜物網
+#   17 3 * * *   → 司法院開放資料 + 車牌 30 天自動下架（dry-run 下這條也只印 log）
 [triggers]
 crons = ["*/3 * * * *", "17 3 * * *"]
+
+[vars]
+INGESTION_DRY_RUN = "1"

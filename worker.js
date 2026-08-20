@@ -101,9 +101,9 @@ const DAILY_CRON = '17 3 * * *';
 async function runFastCycle(env) {
   if (!env.MOTO_SUPABASE_SERVICE_KEY) return; // 沒設定寫入金鑰就整輪跳過，不用半套權限硬跑
 
-  const shwooAllowed = await isPathAllowed('https://shwoo.gov.taipei', '/shwoo/browse/');
-  if (!shwooAllowed) {
-    console.error('shwoo robots.txt no longer allows /shwoo/browse/ — skipped this run');
+  const robotsCheck = await isPathAllowed('https://shwoo.gov.taipei', '/shwoo/browse/');
+  if (!robotsCheck.allowed) {
+    console.error(`shwoo skipped this run — robots check failed: ${robotsCheck.reason}`);
     return;
   }
   try {
