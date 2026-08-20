@@ -17,29 +17,65 @@ function isDryRun(env) {
   return env.INGESTION_DRY_RUN === '1';
 }
 
-/* upsert 以 id 為衝突鍵；id 必須在資料表上有唯一約束，前端本來就把 id 當唯一鍵用。 */
+/* 「詳情頁才知道的欄位」——列表頁擷取一律不碰這幾個，交給 enrichment 專屬擁有。
+
+   為什麼要這樣切（2026-08-20 決定）：列表頁根本看不到「能否領牌」「廠牌型號」，
+   如果列表頁擷取每 3 分鐘就把這些欄位寫成 UNKNOWN／null，會把既有管線人工核對
+   填好的好資料洗掉，然後指望 enrichment 補回來——但 enrichment 的解析正則還沒
+   拿真實詳情頁驗證過，萬一對不上，那些資料就永久退化了。
+
+   正確做法是讓兩個來源各自只擁有自己權威的欄位：
+   - 列表頁權威：標題、機關、地點、級別、投標資格、狀態、價格、截止、照片、車牌
+   - 詳情頁權威：以下這五個
+   PostgREST 的 merge-duplicates 只會更新 payload 裡出現的欄位，所以只要把這幾個
+   欄位從 payload 拿掉，既有值就會原封不動保留。 */
+const DETAIL_PAGE_OWNED_FIELDS = [
+  'registration_status', 'displacement_cc', 'brand_name', 'model_name', 'condition_summary',
+];
+
+function stripDetailOwnedFields(row) {
+  const copy = { ...row };
+  for (const field of DETAIL_PAGE_OWNED_FIELDS) delete copy[field];
+  return copy;
+}
+
+/* upsert 以 id 為衝突鍵；id 必須在資料表上有唯一約束，前端本來就把 id 當唯一鍵用。
+   詳情頁欄位會被剝掉（見上），所以這個函式永遠不會覆蓋 enrichment 或既有管線
+   已經填好的深度欄位——新案件那幾欄會是 null，前端顯示「未確認」，等 enrichment 補。 */
 export async function upsertListings(rows, env) {
   if (!rows.length) return;
+  const payload = rows.map(stripDetailOwnedFields);
   if (isDryRun(env)) {
-    console.log(`[DRY RUN] 會 upsert ${rows.length} 筆，範例：`, JSON.stringify(rows[0]));
+    console.log(`[DRY RUN] 會 upsert ${payload.length} 筆（已剝除詳情頁欄位），範例：`, JSON.stringify(payload[0]));
     return;
   }
   const res = await fetch(`${TABLE_URL}?on_conflict=id`, {
     method: 'POST',
     headers: { ...authHeaders(env), prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify(rows),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`supabase upsert failed: ${res.status} ${await res.text()}`);
 }
 
 /* 找出「還缺深度欄位」的既有列，給詳情頁擷取用。只挑還在進行中的案件——
-   已結束的案件就算補了「能否領牌」也不會有人拿去投標，浪費請求配額。 */
+   已結束的案件就算補了「能否領牌」也不會有人拿去投標，浪費請求配額。
+
+   篩選條件要同時涵蓋 null 與 'UNKNOWN' 兩種「還沒查到」的表示法：
+   - null：列表頁擷取新建的案件（列表頁不寫詳情頁欄位，見 DETAIL_PAGE_OWNED_FIELDS）
+   - 'UNKNOWN'：既有管線或早期版本寫進去的值
+   注意不要把 'REGISTRABILITY_UNKNOWN' 也撈進來——那代表「已經查過詳情頁、但官方
+   資訊本身就無法判定」，再查一次結果還是一樣，只是白白多打來源網站一次。
+
+   「還在進行中」用 ends_at 判斷，不要用 auction_status（2026-08-20 對照正式資料庫
+   發現的 bug）：實際資料裡 50 筆 shwoo 全部是 auction_status='UNKNOWN'，沒有任何一筆
+   是 'SCHEDULED'，原本寫 eq.SCHEDULED 等於永遠撈不到東西、enrichment 根本不會執行。
+   ends_at 才是真正可靠的訊號，也跟前端 app.js 判斷「進行中」的邏輯一致。 */
 export async function selectRowsNeedingEnrichment(env, { sourceAdapter, limit = 8 }) {
+  const nowIso = new Date().toISOString();
   const query = new URLSearchParams({
     select: 'id,official_url',
     source_adapter: `eq.${sourceAdapter}`,
-    registration_status: 'eq.UNKNOWN',
-    auction_status: 'eq.SCHEDULED',
+    and: `(or(registration_status.is.null,registration_status.eq.UNKNOWN),or(ends_at.is.null,ends_at.gt.${nowIso}))`,
     order: 'last_synced_at.asc',
     limit: String(limit),
   });
