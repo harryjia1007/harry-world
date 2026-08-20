@@ -10,6 +10,7 @@
 
 import { isPathAllowed } from './projects/taiwan-moto-auction/ingestion/robots.js';
 import { runShwooIngestion } from './projects/taiwan-moto-auction/ingestion/shwoo.js';
+import { runShwooEnrichment } from './projects/taiwan-moto-auction/ingestion/shwoo-detail.js';
 import { runJudicialOpenDataIngestion } from './projects/taiwan-moto-auction/ingestion/judicial-opendata.js';
 import { purgeExpiredPlates } from './projects/taiwan-moto-auction/ingestion/supabase.js';
 
@@ -110,6 +111,15 @@ async function runFastCycle(env) {
     console.log(`shwoo ingestion ok: ${n} motorcycle rows`);
   } catch (e) {
     console.error('shwoo ingestion failed', e);
+  }
+
+  // 詳情頁擷取（能否領牌／排氣量／廠牌型號）跟列表頁同源，共用同一個 robots.txt 判斷。
+  // 每輪限量 6 筆：既能持續補完，也不會對來源打太密——3 分鐘一輪，跑幾輪就補完了。
+  try {
+    const enrichedCount = await runShwooEnrichment(env, 6);
+    if (enrichedCount) console.log(`shwoo enrichment ok: ${enrichedCount} rows enriched`);
+  } catch (e) {
+    console.error('shwoo enrichment failed', e);
   }
 }
 

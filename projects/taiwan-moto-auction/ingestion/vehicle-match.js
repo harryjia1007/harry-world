@@ -60,3 +60,18 @@ export function refineCategoryByCc(category, cc) {
   if (cc > 550) return 'LARGE_HEAVY';
   return 'HEAVY_UNSPECIFIED';
 }
+
+/* 惜物網搜尋表單「牌照異動登記」下拉選單（欄位名 UNIT1VALUE_4_C）的固定選項文字，
+   對應到 shared.js 的 registrationLabels 列舉。這四個選項字串是 2026-08 從搜尋表單
+   原始 HTML 讀到的，不是猜的；但沒有實地看過詳情頁怎麼「顯示」這個值，所以呼叫端
+   （shwoo-detail.js）要用寬鬆比對（indexOf/包含），不要求完全相等。
+   對應到哪個列舉是判斷，寫在每一條後面說明理由。 */
+export function mapRegistrationStatus(raw) {
+  if (!raw) return 'UNKNOWN';
+  const text = raw.trim();
+  if (text.includes('已繳銷') && text.includes('可再領牌')) return 'RE_REGISTRATION_REQUIRED'; // 牌已繳銷但能重新領，對買家來說就是「需重新領牌」
+  if (text.includes('報廢') && text.includes('無法再領牌')) return 'CANNOT_RELICENSE';
+  if (text.includes('無牌照')) return 'UNKNOWN'; // 「沒牌」原因不只一種（從沒領過／已繳銷未寫可否再領），不硬猜
+  if (text.includes('詳物品說明')) return 'UNKNOWN'; // 官方自己都說要看說明，不能簡化成固定分類
+  return 'UNKNOWN';
+}

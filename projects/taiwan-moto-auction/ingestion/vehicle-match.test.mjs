@@ -9,7 +9,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   isMotorcycleTitle, classifyVehicleCategory, extractPlateNumber,
-  extractDisplacementCc, refineCategoryByCc,
+  extractDisplacementCc, refineCategoryByCc, mapRegistrationStatus,
 } from './vehicle-match.js';
 
 test('真實惜物網標題：機車要收', () => {
@@ -73,4 +73,14 @@ test('cc 可以回補未確認的級別，但不覆蓋已確定的級別', () =>
   assert.equal(refineCategoryByCc('UNKNOWN', 650), 'LARGE_HEAVY');
   assert.equal(refineCategoryByCc('UNKNOWN', null), 'UNKNOWN');
   assert.equal(refineCategoryByCc('LARGE_HEAVY', 125), 'LARGE_HEAVY'); // 不覆蓋
+});
+
+test('牌照異動登記文字對應到列舉，不確定的一律 UNKNOWN 不硬猜', () => {
+  assert.equal(mapRegistrationStatus('已繳銷(可再領牌)'), 'RE_REGISTRATION_REQUIRED');
+  assert.equal(mapRegistrationStatus('報廢無法再領牌(得標人需具應回收廢棄物回收業登記證)'), 'CANNOT_RELICENSE');
+  assert.equal(mapRegistrationStatus('無牌照'), 'UNKNOWN');
+  assert.equal(mapRegistrationStatus('詳物品說明'), 'UNKNOWN');
+  assert.equal(mapRegistrationStatus(null), 'UNKNOWN');
+  assert.equal(mapRegistrationStatus(''), 'UNKNOWN');
+  assert.equal(mapRegistrationStatus('未知的新選項'), 'UNKNOWN'); // 官方未來加新選項也不會誤判成已知類別
 });
