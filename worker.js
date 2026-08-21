@@ -19,7 +19,7 @@ function buildCSP(allowInlineScript) {
     `script-src 'self' https://static.cloudflareinsights.com${allowInlineScript ? " 'unsafe-inline' 'unsafe-eval' blob:" : ''}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
     `font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:${allowInlineScript ? ' blob:' : ''}`,
-    "img-src 'self' data: blob: https://i.scdn.co https://*.scdn.co https://shwoo.gov.taipei https://auction.moj.gov.tw",
+    "img-src 'self' data: blob: https://i.scdn.co https://*.scdn.co https://shwoo.gov.taipei https://auction.moj.gov.tw https://www.tpkonsale.moj.gov.tw https://www.tcc.moj.gov.tw https://www.qtc.moj.gov.tw https://www.ulc.moj.gov.tw https://www.tpy.moj.gov.tw https://www.sly.moj.gov.tw https://www.pcy.moj.gov.tw https://www.tyy.moj.gov.tw https://www.scy.moj.gov.tw https://www.tcy.moj.gov.tw https://www.chy.moj.gov.tw https://www.cyy.moj.gov.tw https://www.tny.moj.gov.tw https://www.ksy.moj.gov.tw https://www.pty.moj.gov.tw https://www.hly.moj.gov.tw https://www.ily.moj.gov.tw",
     "connect-src 'self' https://cloudflareinsights.com https://hdxlhxqlkdipqkwisjyd.supabase.co",
     "frame-ancestors 'none'",   // 不准被別人用 iframe 包起來假冒
     "base-uri 'self'",
