@@ -12,9 +12,12 @@
 
 /* ---------- 設計 token ---------- */
 :root {
-  /* 淺色（預設） */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f5f5f7;
+  /* 淺色（預設）
+     底色不用純白 #ffffff——hallmark audit 指出純黑純白「顯得扁平、合成感」，
+     是很好認的 AI 生成特徵。這裡朝品牌藍極輕微地染一點色溫（幾乎看不出來，
+     但整體會有溫度），維持 Apple 的乾淨感又不落入純白。 */
+  --bg-primary: #fcfcfd;
+  --bg-secondary: #f2f3f5;
   --bg-elevated: #ffffff;
   --text-primary: #1d1d1f;
   /* Apple 官方行銷頁用的次要文字灰是 #86868b，但實測在白底上對 13px 以下的小字
@@ -30,7 +33,10 @@
   --overlay-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
 
   /* 語意色（沿用 Apple 系統色，深淺模式各一組） */
-  --green: #1d8b4f;
+  /* 這個綠要夠深：疊在 12% 綠底上（合成後約 rgb(231,248,235)）才有 4.5:1。
+     #1d8b4f 實測只有 3.92，不夠——之前沒抓到是因為量測時停在「已結束」分頁，
+     那頁所有標籤都套 .ended 樣式，根本沒量到 .active-status。 */
+  --green: #15703f;
   --green-bg: rgba(52, 199, 89, 0.12);
   --amber: #a05a00;
   --amber-bg: rgba(255, 149, 0, 0.12);
@@ -62,9 +68,10 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-primary: #000000;
-    --bg-secondary: #1d1d1f;
-    --bg-elevated: #1d1d1f;
+    /* 同樣避開純黑 #000000，用極深的中性灰帶一點藍調 */
+    --bg-primary: #0b0b0d;
+    --bg-secondary: #17171a;
+    --bg-elevated: #1c1c20;
     --text-primary: #f5f5f7;
     --text-secondary: #98989d;
     --accent: #0a84ff;
@@ -303,7 +310,15 @@ h1, h2, h3 { letter-spacing: -0.02em; }
   margin: var(--space-lg) 56px 0 var(--space-lg);
   color: var(--text-secondary); font-size: 13px;
 }
-.card-without-photo { border-top: 3px solid var(--accent); }
+/* 沒有照片的案件需要一個視覺標記，但不用單邊粗色條——hallmark audit 點名
+   「side-stripe card」（單邊 4–6px 粗色邊）是很好認的 2018-SaaS-AI 特徵。
+   改成在「官方未提供照片」那行前面放一個小色塊，訊息一樣清楚但不是模板長相。 */
+.no-photo-note::before {
+  content: ""; display: inline-block;
+  width: 6px; height: 6px; margin-right: var(--space-sm);
+  border-radius: 2px; background: var(--neutral);
+  vertical-align: 1px;
+}
 
 /* 收藏按鈕 */
 .favorite-button {
@@ -334,10 +349,15 @@ h1, h2, h3 { letter-spacing: -0.02em; }
 .official-title { margin: -8px 0 0; color: var(--text-secondary); font-size: 13px; line-height: 1.4; }
 
 /* 兩個關鍵決策欄位：能否領牌／投標資格 —— 這是本站對綜合型網站的核心差異，給它最高視覺權重 */
-.gates { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); }
-.gate { padding: 12px; border-radius: var(--radius-sm); background: var(--bg-secondary); }
+/* 不用灰底方塊包住這兩欄——hallmark audit 點名「卡中卡」（卡片裡再放卡片、
+   視覺上多一層容器但沒有語意理由）。改用一條上緣細線界定區塊，資訊分組一樣
+   清楚，但少一層無意義的容器，兩個關鍵欄位也更貼近卡片本身的層級。 */
+.gates {
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);
+  padding-top: var(--space-md); border-top: 1px solid var(--separator);
+}
 .gate span { display: block; color: var(--text-secondary); font-size: 11px; margin-bottom: 2px; }
-.gate strong { font-size: 14px; font-weight: 500; }
+.gate strong { font-size: 15px; font-weight: 600; }
 
 .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0; }
 .facts div { min-width: 0; }
