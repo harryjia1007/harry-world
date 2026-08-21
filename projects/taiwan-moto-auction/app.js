@@ -168,7 +168,30 @@ async function load() {
 }
 
 $$('.tabs button').forEach((button) => button.addEventListener('click', () => { state.view = button.dataset.view; render(); }));
-$('#filters').addEventListener('submit', (event) => { event.preventDefault(); state.keyword = $('#keyword').value.trim(); state.vehicleClass = $('#vehicleClass').value; state.cc = $('#cc').value; state.hasPhotos = $('#hasPhotos').checked; render(); });
+
+/* 篩選改成即時套用，不用按「套用」才有反應。
+   理由：ui-ux-pro-max 的 UX 準則點名「Search: 要邊打邊給預測／回饋，不要逼使用者
+   打完再按 enter」。這個站的資料量小（幾十筆、全部已在前端記憶體裡），filtered()
+   純粹是陣列運算，即時重繪沒有效能問題，卻能省掉每次調條件都要多按一次的成本。
+   「套用」按鈕保留：表單仍可送出（按 Enter 也會觸發），對鍵盤與讀屏使用者是明確的
+   完成訊號，移掉反而會讓無障礙體驗變差。 */
+function applyFiltersFromForm() {
+  state.keyword = $('#keyword').value.trim();
+  state.vehicleClass = $('#vehicleClass').value;
+  state.cc = $('#cc').value;
+  state.hasPhotos = $('#hasPhotos').checked;
+  render();
+}
+$('#filters').addEventListener('submit', (event) => { event.preventDefault(); applyFiltersFromForm(); });
+// 打字用 debounce，避免每個字元都重繪整個列表；下拉與勾選是離散操作，立即套用。
+let keywordTimer;
+$('#keyword').addEventListener('input', () => {
+  clearTimeout(keywordTimer);
+  keywordTimer = setTimeout(applyFiltersFromForm, 200);
+});
+$('#vehicleClass').addEventListener('change', applyFiltersFromForm);
+$('#cc').addEventListener('change', applyFiltersFromForm);
+$('#hasPhotos').addEventListener('change', applyFiltersFromForm);
 $('#clearFilters').addEventListener('click', () => { state.keyword = ''; state.vehicleClass = ''; state.cc = ''; state.hasPhotos = false; $('#filters').reset(); renderCcOptions(); render(); });
 $('#retry').addEventListener('click', load);
 $('#clearCompare').addEventListener('click', () => { M.writeList(M.COMPARE_KEY, []); render(); });
