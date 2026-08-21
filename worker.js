@@ -13,6 +13,7 @@ import { runShwooIngestion } from './projects/taiwan-moto-auction/ingestion/shwo
 import { runShwooEnrichment } from './projects/taiwan-moto-auction/ingestion/shwoo-detail.js';
 import { runJudicialOpenDataIngestion } from './projects/taiwan-moto-auction/ingestion/judicial-opendata.js';
 import { purgeExpiredPlates } from './projects/taiwan-moto-auction/ingestion/supabase.js';
+import { deleteNonMotorcycleRows } from './projects/taiwan-moto-auction/ingestion/one-time-cleanup.js';
 
 /* ---------------- 安全標頭（防篡改 / 防點擊劫持 / 防 XSS） ----------------
    內容安全政策（CSP）用白名單，只放行本站與這幾個明確來源。就算有人設法把
@@ -74,6 +75,7 @@ export default {
     if (url.pathname === '/api/spotify')      res = await handleSpotify(env);
     else if (url.pathname === '/api/e')       res = await handleEvent(request, env, ctx);
     else if (url.pathname === '/_stats')      res = await handleStats(request, env);
+    else if (url.pathname === '/_cleanup')    res = await handleCleanup(request, env);
     else {
       // 統計「頁面瀏覽」：只記 HTML 頁面，不記圖片/JS/CSS，避免灌水
       res = await env.ASSETS.fetch(request);
@@ -246,6 +248,30 @@ async function handleEvent(request, env, ctx) {
     ctx.waitUntil(updateDay(env, today(), d => bump(d.ev, name)));
   } catch (e) { /* 忽略格式錯誤 */ }
   return ok;
+}
+
+/* ---------------- 一次性清理 /_cleanup ----------------
+   用 STATS_KEY 保護（只有 Harry 有），觸發一次就把 23 筆非機車的 moj_auction
+   舊資料刪掉。刪除清單寫死在 one-time-cleanup.js，不吃任何外部輸入。
+   跑完確認 deleted 數字正確後，這個路由、import 與 one-time-cleanup.js 都可以移除。 */
+async function handleCleanup(request, env) {
+  const url = new URL(request.url);
+  const key = url.searchParams.get('k') || '';
+  if (!env.STATS_KEY || key !== env.STATS_KEY) {
+    return new Response('Not found', { status: 404 });
+  }
+  try {
+    const deleted = await deleteNonMotorcycleRows(env);
+    return new Response(
+      JSON.stringify({ ok: true, deleted, note: `已刪除 ${deleted} 筆非機車資料` }, null, 2),
+      { headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } },
+    );
+  } catch (e) {
+    return new Response(
+      JSON.stringify({ ok: false, error: String(e && e.message || e) }, null, 2),
+      { status: 500, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } },
+    );
+  }
 }
 
 /* ---------------- 私人儀表板 /_stats ---------------- */
