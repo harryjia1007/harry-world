@@ -12,8 +12,10 @@
 import fs from 'node:fs';
 
 const URLS = [
+  // 現行官方網址（2026-08-20 從 opendata.judicial.gov.tw 官方 API datasetId 22892 查到）
+  'https://aomp109.judicial.gov.tw/judbp/opendata/Foreclosure.json',
+  // 舊網址（2018 年 data.gov.tw metadata，已失效，留著只是對照）
   'https://aomp.judicial.gov.tw/abbs/opendata/Foreclosure.json',
-  'http://aomp.judicial.gov.tw/abbs/opendata/Foreclosure.json',
 ];
 const MOTO = /機車|機踏車|重機|速克達|檔車|歐兜邁|機器腳踏車/;
 const EXCLUDE = /汽車|貨車|自小客|遊覽車|拖車|曳引車|大客車|小貨車|起重機|吊車|怪手|挖土機|堆高機|推土機|農耕機|割草機|發電機/;
