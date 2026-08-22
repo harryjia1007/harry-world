@@ -40,6 +40,10 @@
     if (!row) return false;
     if (NON_PUBLIC_ELIGIBILITY.has(row.eligibility)) return false;
     if (UNUSABLE_REGISTRATION.has(row.registration_status)) return false;
+    // 這是機車站：排除純汽車案件（vehicle_type='CAR'，多來自既有 ChatGPT 管線的
+    // 自小客車/公務車查扣標售）。保留 MOTORCYCLE 與 MIXED（汽機車混合標的含機車）。
+    // 2026-08-22：站上 27 筆「進行中」其實是汽車雜訊，稀釋掉真正的機車，這條把它擋掉。
+    if (row.vehicle_type === 'CAR') return false;
     return true;
   }
   // 對「來源本身」的誠實描述——講的是各機關自己的公告性質，不是我們的抓取頻率，
