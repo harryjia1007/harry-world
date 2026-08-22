@@ -6,7 +6,7 @@
 import { upsertListings } from './supabase.js';
 import {
   isMotorcycleTitle, classifyVehicleCategory, extractPlateNumber,
-  extractDisplacementCc, refineCategoryByCc,
+  extractDisplacementCc, refineCategoryByCc, contentChecksum,
 } from './vehicle-match.js';
 
 const BASE = 'https://shwoo.gov.taipei';
@@ -102,6 +102,8 @@ function toRow(item, isRecyclerLink) {
   const platePastPurgeWindow = endsAtMs != null && Date.now() - endsAtMs > PLATE_VISIBILITY_WINDOW_MS;
   return {
     id: `shwoo-${item.auid}`,
+    source_record_id: String(item.auid), // 資料表此欄 NOT NULL；慣例＝id 去掉來源前綴（既有管線同格式）
+    content_checksum: contentChecksum([item.title, item.location, item.reservePrice, item.currentPrice, item.endsAt, item.photoUrl, item.plateNumber, item.vehicleCategory]), // NOT NULL；內容變才變
     source_adapter: 'shwoo',
     source_name: '臺北惜物網',
     official_title: item.title,

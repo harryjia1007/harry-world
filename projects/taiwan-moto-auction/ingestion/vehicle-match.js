@@ -2,6 +2,19 @@
    放這裡的理由：惜物網當初踩到「起重機」被「重機」誤判的坑，這種修正必須自動套用到
    每一個新來源，不能每接一個來源就重抄一次關鍵字表。 */
 
+/* 內容雜湊：資料表 content_checksum 欄位 NOT NULL（無預設值），既有管線會填。
+   用途是偵測「同一案件內容有沒有變」。用 FNV-1a 同步算出 hex 字串即可，
+   不需要密碼學強度，只要同內容得同值、內容變則值變。傳入要納入比對的欄位陣列。 */
+export function contentChecksum(parts) {
+  const str = parts.map((v) => (v == null ? '' : String(v))).join('␟');
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i += 1) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, '0');
+}
+
 export const MOTO_KEYWORDS = /機車|機踏車|重機|速克達|檔車|歐兜邁|機器腳踏車/;
 
 /* 只列「字面上會跟機車關鍵字撞到、但其實不是機車」的詞——用途是消除誤命中，不是分類車種。

@@ -37,7 +37,7 @@
 import { upsertListings, fetchExistingIds } from './supabase.js';
 import {
   isMotorcycleTitle, classifyVehicleCategory,
-  extractDisplacementCc, refineCategoryByCc,
+  extractDisplacementCc, refineCategoryByCc, contentChecksum,
 } from './vehicle-match.js';
 
 const DATA_URL = 'https://aomp109.judicial.gov.tw/judbp/opendata/Foreclosure.json';
@@ -90,9 +90,12 @@ function toRow(caseRec, item) {
 
   const filled = [displayName, endsAt, caseRec.crtid].filter((v) => v != null).length;
 
+  // id 用「法院-年度字別案號-拍序」組合，穩定且冪等（同一項重跑不會變新案件）。
+  const recordId = `${(caseRec.crtid || 'X').toLowerCase()}-${caseId}-${item.ordno || '1'}`;
   return {
-    // id 用「法院-年度字別案號-拍序」組合，穩定且冪等（同一項重跑不會變新案件）。
-    id: `judicial-${(caseRec.crtid || 'X').toLowerCase()}-${caseId}-${item.ordno || '1'}`,
+    id: `judicial-${recordId}`,
+    source_record_id: recordId, // 資料表此欄 NOT NULL；慣例＝id 去掉來源前綴
+    content_checksum: contentChecksum([displayName, endsAt, item.qty, item.unit, item.saleno]), // NOT NULL；內容變才變
     source_adapter: 'judicial',
     source_name: '司法院動產拍賣',
     official_title: displayName,
