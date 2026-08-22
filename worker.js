@@ -74,6 +74,7 @@ export default {
     if (url.pathname === '/api/spotify')      res = await handleSpotify(env);
     else if (url.pathname === '/api/e')       res = await handleEvent(request, env, ctx);
     else if (url.pathname === '/_stats')      res = await handleStats(request, env);
+    else if (url.pathname === '/_health')     res = await handleHealth(env);
     else {
       // 統計「頁面瀏覽」：只記 HTML 頁面，不記圖片/JS/CSS，避免灌水
       res = await env.ASSETS.fetch(request);
@@ -246,6 +247,38 @@ async function handleEvent(request, env, ctx) {
     ctx.waitUntil(updateDay(env, today(), d => bump(d.ev, name)));
   } catch (e) { /* 忽略格式錯誤 */ }
   return ok;
+}
+
+/* ---------------- 健康檢查 /_health ----------------
+   讀 Supabase 各來源的最新 last_synced_at，判斷有沒有來源「太久沒更新」＝疑似掛了。
+   公開唯讀、不需金鑰，方便直接開網頁看、或給 UptimeRobot 之類的監控輪詢。
+   目的：來源壞掉時能主動被看到，不用等 Harry 自己發現才回報。 */
+const HEALTH_MAX_AGE_HOURS = { shwoo: 1, judicial: 30, moj_auction: 24 * 8, pcc: 24 * 8, customs: 24 * 8 };
+async function handleHealth(env) {
+  const TABLE = 'https://hdxlhxqlkdipqkwisjyd.supabase.co/rest/v1/public_live_motorcycle_listings';
+  const KEY = 'sb_publishable_O5FXZ4ecH2vFAlkRrCU0Ew_K831f3B2';
+  try {
+    const r = await fetch(`${TABLE}?select=source_adapter,last_synced_at`, { headers: { apikey: KEY, authorization: `Bearer ${KEY}` } });
+    if (!r.ok) throw new Error(`supabase ${r.status}`);
+    const rows = await r.json();
+    const latest = {};
+    for (const row of rows) {
+      const s = row.source_adapter;
+      if (row.last_synced_at && (!latest[s] || row.last_synced_at > latest[s])) latest[s] = row.last_synced_at;
+    }
+    const now = Date.now();
+    const sources = Object.entries(latest).map(([s, ts]) => {
+      const ageH = (now - new Date(ts).getTime()) / 3600000;
+      const budget = HEALTH_MAX_AGE_HOURS[s] ?? 24 * 8;
+      return { source: s, last_synced_at: ts, age_hours: Math.round(ageH * 10) / 10, stale: ageH > budget };
+    });
+    const stale = sources.filter((x) => x.stale).map((x) => x.source);
+    return new Response(JSON.stringify({ ok: stale.length === 0, stale, sources, total: rows.length }, null, 2),
+      { headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
+  } catch (e) {
+    return new Response(JSON.stringify({ ok: false, error: String(e && e.message || e) }, null, 2),
+      { status: 500, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
+  }
 }
 
 /* ---------------- 私人儀表板 /_stats ---------------- */

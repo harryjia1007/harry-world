@@ -1,0 +1,48 @@
+# 自動部署：push 到主要分支就自動把 Worker 部署上 Cloudflare。
+# 目的：任何 AI（Claude／ChatGPT）或人改完 code、push 之後，不需要有人手動跑
+# `wrangler deploy`。這是「讓專案自己跑、不用每天被動修」的關鍵一環。
+#
+# 需要的憑證（只需設定一次，由 Harry 在 GitHub 設定）：
+#   GitHub repo → Settings → Secrets and variables → Actions → New repository secret
+#   名稱：CLOUDFLARE_API_TOKEN
+#   值：Cloudflare Dashboard → My Profile → API Tokens → Create Token
+#       用「Edit Cloudflare Workers」範本，Account 選 Harryjia1007's Account。
+#
+# 注意：Worker 的 secrets（MOTO_SUPABASE_SERVICE_KEY、STATS_KEY、Spotify 等）已存在
+# Cloudflare，`wrangler deploy` 不會動到它們，所以這裡不需要、也不該放那些機密。
+name: Deploy Worker
+
+on:
+  push:
+    branches:
+      - main
+      - docs/auto-ingestion-compliance-policy
+    paths:
+      - 'worker.js'
+      - 'wrangler.toml'
+      - 'projects/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch: {} # 也允許在 GitHub 網頁上手動觸發一次
+
+concurrency:
+  group: deploy-worker
+  cancel-in-progress: false # 部署不中途取消，避免留下半套狀態
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax check ingestion + worker
+        run: |
+          node --check worker.js
+          for f in projects/taiwan-moto-auction/ingestion/*.js; do node --check "$f"; done
+      - name: Run ingestion unit tests
+        run: node --test projects/taiwan-moto-auction/ingestion/vehicle-match.test.mjs
+      - name: Deploy to Cloudflare
+        run: npx wrangler@4 deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
