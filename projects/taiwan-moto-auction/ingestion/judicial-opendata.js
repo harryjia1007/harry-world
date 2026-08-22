@@ -36,7 +36,7 @@
 
 import { upsertListings, fetchExistingIds } from './supabase.js';
 import {
-  isMotorcycleTitle, classifyVehicleCategory,
+  isMotorcycleTitle, classifyVehicleCategory, extractPlateNumber,
   extractDisplacementCc, refineCategoryByCc, contentChecksum,
 } from './vehicle-match.js';
 
@@ -113,10 +113,17 @@ function toRow(caseRec, item) {
     current_price: null,
     sold_price: null,
     ends_at: endsAt,
-    condition_summary: [item.qty, item.unit].filter(Boolean).join(' ') + (item.saleno ? `（${item.saleno}）` : '') || null,
+    // 條件摘要納入承辦股(dpt，如「竹股」)、數量單位、拍次——這些開放資料都有，
+    // treelazy 有渲染、我們原本沒用足。組成如「竹股 · 1 輛 · 一拍」。
+    condition_summary: [
+      item.dpt ? `${item.dpt}` : null,
+      [item.qty, item.unit].filter(Boolean).join(' ') || null,
+      item.saleno || null,
+    ].filter(Boolean).join(' · ') || null,
+    official_case_number: `${caseRec.crmyy || ''}${caseRec.crmid || ''}字第${caseRec.crmno || ''}號`,
     photo_urls: [],
     official_url: OFFICIAL_SEARCH_URL,
-    plate_number: null, // 品名裡偶爾有車牌，但格式不穩，開放資料不主動解析車牌
+    plate_number: extractPlateNumber(displayName), // 品名裡的「車號：XXX」「牌照號碼：XXX」，treelazy 有顯示，我們也解析
     completeness: Math.round((filled / 3) * 100),
     last_synced_at: new Date().toISOString(),
   };

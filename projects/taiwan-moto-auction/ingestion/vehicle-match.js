@@ -55,7 +55,8 @@ export function classifyVehicleCategory(title) {
    只認明確標示為車牌的欄位，不從一般文字裡亂猜英數字串。 */
 export function extractPlateNumber(title) {
   if (!title) return null;
-  const m = title.match(/(?:原車牌|車牌號碼|車牌)[：:\s]*([A-Z0-9]{2,4}-[A-Z0-9]{2,4})/i);
+  // 涵蓋各來源用詞：惜物網「原車牌」、司法院「車號」「牌照號碼」。車牌格式如 NWY-8337、775-FBL、AV-681。
+  const m = title.match(/(?:原車牌|牌照號碼|車牌號碼|車牌|車號)[：:\s]*([A-Z0-9]{2,4}-[A-Z0-9]{2,4})/i);
   return m ? m[1].toUpperCase() : null;
 }
 
