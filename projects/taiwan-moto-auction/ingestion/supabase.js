@@ -44,7 +44,11 @@ function stripDetailOwnedFields(row) {
    已經填好的深度欄位——新案件那幾欄會是 null，前端顯示「未確認」，等 enrichment 補。 */
 export async function upsertListings(rows, env) {
   if (!rows.length) return;
-  const payload = rows.map(stripDetailOwnedFields);
+  // 同一批不能有重複 id，否則 PostgREST 的 ON CONFLICT 會報「cannot affect row a second time」。
+  // 惜物網會抓「不限資格區」＋「回收商區」兩份清單，同一台車可能兩邊都出現 → 先以 id 去重（保留後者）。
+  const byId = new Map();
+  for (const row of rows) byId.set(row.id, row);
+  const payload = [...byId.values()].map(stripDetailOwnedFields);
   if (isDryRun(env)) {
     console.log(`[DRY RUN] 會 upsert ${payload.length} 筆（已剝除詳情頁欄位），範例：`, JSON.stringify(payload[0]));
     return;
