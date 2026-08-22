@@ -35,12 +35,13 @@ async function getSessionId() {
   return null;
 }
 
-async function fetchListingHtml(isRecyclerLink, sessionId) {
+async function fetchListingHtml(isRecyclerLink, sessionId, page = 1) {
   const path = `/shwoo/browse/browse00/advancedQuery${sessionId ? `;jsessionid=${sessionId}` : ''}`;
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded', 'user-agent': UA },
-    body: new URLSearchParams({ q_item1: 'C', order: '5', isRecyclerLink }).toString(),
+    // showPage 是惜物網分頁參數（見搜尋表單 hidden 欄位）。order=5 依上架日期新到舊。
+    body: new URLSearchParams({ q_item1: 'C', order: '5', isRecyclerLink, showPage: String(page) }).toString(),
   });
   if (!res.ok) {
     const bodySnippet = await res.text().then((t) => t.slice(0, 300)).catch(() => '(讀取回應內容失敗)');
@@ -133,17 +134,44 @@ function splitItemBlocks(html) {
   return html.split(ITEM_BLOCK_MARKER).slice(1);
 }
 
+const MAX_PAGES = 15; // 安全上限：避免 showPage 被忽略時無限迴圈；正常「運輸車輛」不會這麼多頁。
+
 /* 回傳這輪擷取到的機車件數；不吞例外，讓呼叫端（worker.js 的排程）決定要不要記錄失敗。
    只抓「不限資格區」（isRecyclerLink='N'）——目標客群是一般民眾，「廢機動車輛回收業
-   競標區」（'Y'）限合格回收商才能投標，一般人根本標不到，不收（2026-08-22 決定）。 */
+   競標區」（'Y'）限合格回收商才能投標，一般人根本標不到，不收（2026-08-22 決定）。
+
+   分頁：一頁一頁抓，直到某頁沒有「新的」AUID 為止（用已見過的 AUID 集合偵測最後一頁，
+   即使 showPage 被伺服器忽略而一直回第一頁，也會在第 2 輪就因為全部重複而停，不會
+   重複寫或無限迴圈）。這是 2026-08-22 補的——先前只抓第一頁，機車散在後面幾頁的全漏了，
+   導致「進行中案件比實際少」。 */
 export async function runShwooIngestion(env) {
   const rows = [];
+  const seenAuids = new Set();
   const sessionId = await getSessionId();
-  const html = await fetchListingHtml('N', sessionId);
-  for (const block of splitItemBlocks(html)) {
-    const item = parseItemBlock(block);
-    if (item) rows.push(toRow(item, 'N'));
+  for (let page = 1; page <= MAX_PAGES; page += 1) {
+    let html;
+    try {
+      html = await fetchListingHtml('N', sessionId, page);
+    } catch (e) {
+      // 惜物網會間歇性 520。中途某頁掛掉就停止分頁，但保留前面抓到的，不整批丟。
+      // 第 1 頁就掛且什麼都沒抓到才往上拋，讓呼叫端記錄這輪失敗。
+      if (page === 1 && !rows.length) throw e;
+      console.error(`shwoo 第 ${page} 頁失敗，保留前 ${rows.length} 筆先寫入：${e.message}`);
+      break;
+    }
+    let newOnThisPage = 0;
+    for (const block of splitItemBlocks(html)) {
+      const item = parseItemBlock(block);
+      const auid = item ? item.auid : (block.match(/AUID=(\d+)/) || [])[1];
+      if (auid && !seenAuids.has(auid)) {
+        seenAuids.add(auid);
+        newOnThisPage += 1;
+        if (item) rows.push(toRow(item, 'N'));
+      }
+    }
+    if (newOnThisPage === 0) break; // 這頁全是看過的（或空頁）→ 已到最後一頁
   }
   await upsertListings(rows, env);
+  console.log(`shwoo pages crawled, unique items across pages: ${seenAuids.size}, motorcycle rows: ${rows.length}`);
   return rows.length;
 }
