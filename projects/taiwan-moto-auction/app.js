@@ -41,6 +41,18 @@ function photoMarkup(item) {
   if (!urls.length) return '<p class="no-photo-note">官方未提供照片</p>';
   return `<div class="photo-carousel" data-index="0">${urls.map((url, index) => `<img src="${M.escapeHtml(url)}" alt="${M.escapeHtml(M.title(item))} 官方照片 ${index + 1}" loading="lazy" ${index ? 'hidden' : ''}>`).join('')}${urls.length > 1 ? `<button class="photo-prev" type="button" aria-label="上一張照片">‹</button><button class="photo-next" type="button" aria-label="下一張照片">›</button><span class="photo-count">1 / ${urls.length}</span>` : ''}<span class="official-photo">官方來源照片</span><div class="photo-failed" hidden>官方照片暫時無法顯示</div></div>`;
 }
+// 卡片高訊號標籤：只在有明確值時顯示，UNKNOWN／null 一律不出現（維持誠實、不製造雜訊）。
+// 資料早已由擷取管線填好，只是列表頁先前沒露出——買家掃視時最在意的就是這幾項。
+function signalChips(item) {
+  const chips = [];
+  const round = Number(item.auction_round);
+  if (round >= 1) chips.push(`<span class="signal-chip${round >= 2 ? ' signal-chip-hot' : ''}">第 ${round} 拍</span>`);
+  if (item.manufacture_year) chips.push(`<span class="signal-chip">${M.escapeHtml(String(item.manufacture_year))} 年車</span>`);
+  if (item.can_start === 'NO') chips.push('<span class="signal-chip signal-chip-warn">不能發動</span>');
+  if (item.has_key === 'NO') chips.push('<span class="signal-chip signal-chip-warn">無鑰匙</span>');
+  if (item.can_test === 'YES') chips.push('<span class="signal-chip signal-chip-good">可試車</span>');
+  return chips.length ? `<div class="signal-chips">${chips.join('')}</div>` : '';
+}
 function card(item) {
   const isFavorite = favorites().includes(item.id);
   const isCompared = compared().includes(item.id);
@@ -48,7 +60,7 @@ function card(item) {
   const article = document.createElement('article');
   article.className = `card${Array.isArray(item.photo_urls) && item.photo_urls.length ? '' : ' card-without-photo'}`;
   article.dataset.id = item.id;
-  article.innerHTML = `<button class="favorite-button${isFavorite ? ' selected' : ''}" type="button" aria-label="${isFavorite ? '取消收藏' : '加入收藏'}" aria-pressed="${isFavorite}">♥</button>${photoMarkup(item)}<div class="card-body"><div class="source"><i></i>${M.escapeHtml(item.source_name)}<span class="status ${M.isEnded(item) ? 'ended' : 'active-status'}">${M.escapeHtml(statusLabels[item.auction_status] || '狀態未確認')}</span></div><h3><a href="./detail.html?id=${encodeURIComponent(item.id)}">${M.escapeHtml(M.title(item))}</a></h3><p class="official-title">${M.escapeHtml(item.official_title)}</p><div class="gates"><div class="gate"><span>誰能投標</span><strong>${M.escapeHtml(M.eligibilityLabels[item.eligibility] || '未確認')}</strong></div><div class="gate"><span>能否領牌</span><strong>${M.escapeHtml(M.registrationLabels[item.registration_status] || '未確認')}</strong></div></div><dl class="facts">${fact('車牌', item.plate_number || '官方未提供／已逾公開期')}${fact('法定級別', M.classLabels[item.vehicle_category] || '級別未確認')}${fact('排氣量', item.displacement_cc == null ? '官方未提供' : `${item.displacement_cc} c.c.`)}${fact('價格', M.money(price))}${fact('拍賣截止', M.dateTime(item.ends_at))}${fact('拍賣機關', item.organization_name)}${fact('地點', item.location || '官方未提供')}</dl>${item.condition_summary ? `<p class="condition">${M.escapeHtml(item.condition_summary)}</p>` : ''}<div class="card-actions"><a class="detail-link" href="./detail.html?id=${encodeURIComponent(item.id)}">查看完整資料</a><button class="compare-button${isCompared ? ' selected' : ''}" type="button" aria-pressed="${isCompared}">${isCompared ? '已加入比較' : '加入比較'}</button><span>完整度 ${Number(item.completeness || 0)}%</span></div></div>`;
+  article.innerHTML = `<button class="favorite-button${isFavorite ? ' selected' : ''}" type="button" aria-label="${isFavorite ? '取消收藏' : '加入收藏'}" aria-pressed="${isFavorite}">♥</button>${photoMarkup(item)}<div class="card-body"><div class="source"><i></i>${M.escapeHtml(item.source_name)}<span class="status ${M.isEnded(item) ? 'ended' : 'active-status'}">${M.escapeHtml(statusLabels[item.auction_status] || '狀態未確認')}</span></div><h3><a href="./detail.html?id=${encodeURIComponent(item.id)}">${M.escapeHtml(M.title(item))}</a></h3><p class="official-title">${M.escapeHtml(item.official_title)}</p>${signalChips(item)}<div class="gates"><div class="gate"><span>誰能投標</span><strong>${M.escapeHtml(M.eligibilityLabels[item.eligibility] || '未確認')}</strong></div><div class="gate"><span>能否領牌</span><strong>${M.escapeHtml(M.registrationLabels[item.registration_status] || '未確認')}</strong></div></div><dl class="facts">${fact('車牌', item.plate_number || '官方未提供／已逾公開期')}${fact('法定級別', M.classLabels[item.vehicle_category] || '級別未確認')}${fact('排氣量', item.displacement_cc == null ? '官方未提供' : `${item.displacement_cc} c.c.`)}${fact('價格', M.money(price))}${fact('拍賣截止', M.dateTime(item.ends_at))}${fact('拍賣機關', item.organization_name)}${fact('地點', item.location || '官方未提供')}</dl>${item.condition_summary ? `<p class="condition">${M.escapeHtml(item.condition_summary)}</p>` : ''}<div class="card-actions"><a class="detail-link" href="./detail.html?id=${encodeURIComponent(item.id)}">查看完整資料</a><button class="compare-button${isCompared ? ' selected' : ''}" type="button" aria-pressed="${isCompared}">${isCompared ? '已加入比較' : '加入比較'}</button><span>完整度 ${Number(item.completeness || 0)}%</span></div></div>`;
   wireCard(article);
   return article;
 }
