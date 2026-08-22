@@ -31,6 +31,17 @@
     pcc: "政府電子採購網",
     customs: "關務署標售",
   };
+  // 目標客群是一般民眾：只列「一般人買得到、也用得了」的車。以下兩類一律不顯示——
+  // 投標資格一般人不符（限回收商/特殊資格/限事業/限整批），或領牌狀態導致買了不能當車用
+  // （僅供報廢回收/不得再領牌/僅供出口）。「需重新領牌」保留，因為重領後仍可正常使用。
+  const NON_PUBLIC_ELIGIBILITY = new Set(["LICENSED_RECYCLER_ONLY", "SPECIAL_QUALIFICATION", "BUSINESS_ONLY", "BULK_PURCHASE_ONLY"]);
+  const UNUSABLE_REGISTRATION = new Set(["SCRAP_ONLY", "CANNOT_RELICENSE", "EXPORT_ONLY"]);
+  function publicBiddable(row) {
+    if (!row) return false;
+    if (NON_PUBLIC_ELIGIBILITY.has(row.eligibility)) return false;
+    if (UNUSABLE_REGISTRATION.has(row.registration_status)) return false;
+    return true;
+  }
   // 對「來源本身」的誠實描述——講的是各機關自己的公告性質，不是我們的抓取頻率，
   // 避免對外過度宣稱即時性（見 docs/COMPETITIVE-STRATEGY.md 第 3 節 (3)、第 5 節 P3）。
   const sourceNotes = {
@@ -166,5 +177,6 @@
     API_URL, API_KEY, FAVORITES_KEY, COMPARE_KEY, WATCHES_KEY, sourceLabels, sourceNotes, classLabels, eligibilityLabels,
     registrationLabels, ccBands, readList, writeList, toggleList, readWatches, writeWatches, isEnded, safeOfficialUrl, safePhotoUrl,
     escapeHtml, money, dateTime, daysUntil, relativeTime, freshnessLevel, title, fetchRows, rememberSnapshots,
+    publicBiddable,
   };
 });

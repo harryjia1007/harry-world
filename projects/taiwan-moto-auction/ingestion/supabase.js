@@ -44,9 +44,12 @@ function stripDetailOwnedFields(row) {
    已經填好的深度欄位——新案件那幾欄會是 null，前端顯示「未確認」，等 enrichment 補。 */
 export async function upsertListings(rows, env) {
   if (!rows.length) return;
-  // 目標客群是一般民眾：限合格回收商才能投標的車一律不寫（2026-08-22）。這是防線，
+  // 目標客群是一般民眾：一般人不能投標或買了不能用的車一律不寫（2026-08-22）。這是防線，
   // 各 adapter 最好在來源端就不抓（見 shwoo.js 只抓不限資格區），這裡再擋一次以防漏網。
-  const biddable = rows.filter((row) => row.eligibility !== 'LICENSED_RECYCLER_ONLY');
+  const NON_PUBLIC_ELIGIBILITY = new Set(['LICENSED_RECYCLER_ONLY', 'SPECIAL_QUALIFICATION', 'BUSINESS_ONLY', 'BULK_PURCHASE_ONLY']);
+  const UNUSABLE_REGISTRATION = new Set(['SCRAP_ONLY', 'CANNOT_RELICENSE', 'EXPORT_ONLY']);
+  const biddable = rows.filter((row) =>
+    !NON_PUBLIC_ELIGIBILITY.has(row.eligibility) && !UNUSABLE_REGISTRATION.has(row.registration_status));
   if (!biddable.length) return;
   // 同一批不能有重複 id，否則 PostgREST 的 ON CONFLICT 會報「cannot affect row a second time」。
   const byId = new Map();

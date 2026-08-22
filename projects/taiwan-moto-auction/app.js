@@ -1,7 +1,7 @@
 const M = window.Moto;
 const DAY = 86400000;
 const statusLabels = { DISCOVERED: '已發現', ANNOUNCED: '已公告', SCHEDULED: '進行中', SOLD: '已得標', UNSOLD: '未得標', WITHDRAWN: '已撤回', CANCELLED: '已取消', EXPIRED: '已截止', UNKNOWN: '結果待官方確認' };
-const state = { view: 'active', keyword: '', vehicleClass: '', cc: '', hasPhotos: false, rows: [] };
+const state = { view: 'active', keyword: '', vehicleClass: '', cc: '', rows: [] };
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
@@ -16,9 +16,10 @@ function filtered() {
   const query = state.keyword.toLocaleLowerCase('zh-TW').replace(/\s/g, '');
   const favoriteIds = favorites();
   return state.rows.filter((item) => {
-    // 目標客群是一般民眾：限合格回收商的車一律不顯示（不論哪個來源、哪個分頁）。
-    // 這是前端保險，讓既有資料庫裡的回收商車即刻消失；擷取端也已停收（見 ingestion）。
-    if (item.eligibility === 'LICENSED_RECYCLER_ONLY') return false;
+    // 目標客群是一般民眾：一般人不能投標（回收商/特殊資格/事業/整批）或買了不能用
+    // （報廢回收/不得再領牌/僅供出口）的車一律不顯示。前端保險，讓既有資料即刻消失；
+    // 擷取端也已停收（見 ingestion 的 upsertListings）。
+    if (!M.publicBiddable(item)) return false;
     const ended = M.isEnded(item);
     const scheduled = !ended && (item.auction_status === 'SCHEDULED' || Boolean(item.ends_at && new Date(item.ends_at).getTime() >= now));
     if (state.view === 'active' && !scheduled) return false;
@@ -28,7 +29,6 @@ function filtered() {
     if (query && !Object.values(item).filter((value) => typeof value === 'string').join(' ').toLocaleLowerCase('zh-TW').replace(/\s/g, '').includes(query)) return false;
     if (state.vehicleClass && item.vehicle_category !== state.vehicleClass) return false;
     if (state.cc && !ccMatch(item.displacement_cc, state.cc)) return false;
-    if (state.hasPhotos && !(Array.isArray(item.photo_urls) && item.photo_urls.some(M.safePhotoUrl))) return false;
     return true;
   }).sort((a, b) => {
     const aEnded = M.isEnded(a), bEnded = M.isEnded(b);
@@ -39,11 +39,6 @@ function filtered() {
   });
 }
 function fact(label, value) { return `<div><dt>${M.escapeHtml(label)}</dt><dd>${M.escapeHtml(value ?? '官方未提供')}</dd></div>`; }
-function photoMarkup(item) {
-  const urls = (Array.isArray(item.photo_urls) ? item.photo_urls : []).map(M.safePhotoUrl).filter(Boolean);
-  if (!urls.length) return '<p class="no-photo-note">官方未提供照片</p>';
-  return `<div class="photo-carousel" data-index="0">${urls.map((url, index) => `<img src="${M.escapeHtml(url)}" alt="${M.escapeHtml(M.title(item))} 官方照片 ${index + 1}" loading="lazy" ${index ? 'hidden' : ''}>`).join('')}${urls.length > 1 ? `<button class="photo-prev" type="button" aria-label="上一張照片">‹</button><button class="photo-next" type="button" aria-label="下一張照片">›</button><span class="photo-count">1 / ${urls.length}</span>` : ''}<span class="official-photo">官方來源照片</span><div class="photo-failed" hidden>官方照片暫時無法顯示</div></div>`;
-}
 // 卡片高訊號標籤：只在有明確值時顯示，UNKNOWN／null 一律不出現（維持誠實、不製造雜訊）。
 // 資料早已由擷取管線填好，只是列表頁先前沒露出——買家掃視時最在意的就是這幾項。
 function signalChips(item) {
@@ -61,9 +56,9 @@ function card(item) {
   const isCompared = compared().includes(item.id);
   const price = item.sold_price ?? item.current_price ?? item.reserve_price;
   const article = document.createElement('article');
-  article.className = `card${Array.isArray(item.photo_urls) && item.photo_urls.length ? '' : ' card-without-photo'}`;
+  article.className = 'card';
   article.dataset.id = item.id;
-  article.innerHTML = `<button class="favorite-button${isFavorite ? ' selected' : ''}" type="button" aria-label="${isFavorite ? '取消收藏' : '加入收藏'}" aria-pressed="${isFavorite}">♥</button>${photoMarkup(item)}<div class="card-body"><div class="source"><i></i>${M.escapeHtml(item.source_name)}<span class="status ${M.isEnded(item) ? 'ended' : 'active-status'}">${M.escapeHtml(statusLabels[item.auction_status] || '狀態未確認')}</span></div><h3><a href="./detail.html?id=${encodeURIComponent(item.id)}">${M.escapeHtml(M.title(item))}</a></h3><p class="official-title">${M.escapeHtml(item.official_title)}</p>${signalChips(item)}<div class="gates"><div class="gate"><span>誰能投標</span><strong>${M.escapeHtml(M.eligibilityLabels[item.eligibility] || '未確認')}</strong></div><div class="gate"><span>能否領牌</span><strong>${M.escapeHtml(M.registrationLabels[item.registration_status] || '未確認')}</strong></div></div><dl class="facts">${fact('車牌', item.plate_number || '官方未提供／已逾公開期')}${fact('法定級別', M.classLabels[item.vehicle_category] || '級別未確認')}${fact('排氣量', item.displacement_cc == null ? '官方未提供' : `${item.displacement_cc} c.c.`)}${fact('價格', M.money(price))}${fact('拍賣截止', M.dateTime(item.ends_at))}${fact('拍賣機關', item.organization_name)}${fact('地點', item.location || '官方未提供')}</dl>${item.condition_summary ? `<p class="condition">${M.escapeHtml(item.condition_summary)}</p>` : ''}<div class="card-actions"><a class="detail-link" href="./detail.html?id=${encodeURIComponent(item.id)}">查看完整資料</a><button class="compare-button${isCompared ? ' selected' : ''}" type="button" aria-pressed="${isCompared}">${isCompared ? '已加入比較' : '加入比較'}</button><span>完整度 ${Number(item.completeness || 0)}%</span></div></div>`;
+  article.innerHTML = `<button class="favorite-button${isFavorite ? ' selected' : ''}" type="button" aria-label="${isFavorite ? '取消收藏' : '加入收藏'}" aria-pressed="${isFavorite}">♥</button><div class="card-body"><div class="source"><i></i>${M.escapeHtml(item.source_name)}<span class="status ${M.isEnded(item) ? 'ended' : 'active-status'}">${M.escapeHtml(statusLabels[item.auction_status] || '狀態未確認')}</span></div><h3><a href="./detail.html?id=${encodeURIComponent(item.id)}">${M.escapeHtml(M.title(item))}</a></h3><p class="official-title">${M.escapeHtml(item.official_title)}</p>${signalChips(item)}<div class="gates"><div class="gate"><span>誰能投標</span><strong>${M.escapeHtml(M.eligibilityLabels[item.eligibility] || '未確認')}</strong></div><div class="gate"><span>能否領牌</span><strong>${M.escapeHtml(M.registrationLabels[item.registration_status] || '未確認')}</strong></div></div><dl class="facts">${fact('車牌', item.plate_number || '官方未提供／已逾公開期')}${fact('法定級別', M.classLabels[item.vehicle_category] || '級別未確認')}${fact('排氣量', item.displacement_cc == null ? '官方未提供' : `${item.displacement_cc} c.c.`)}${fact('價格', M.money(price))}${fact('拍賣截止', M.dateTime(item.ends_at))}${fact('拍賣機關', item.organization_name)}${fact('地點', item.location || '官方未提供')}</dl>${item.condition_summary ? `<p class="condition">${M.escapeHtml(item.condition_summary)}</p>` : ''}<div class="card-actions"><a class="detail-link" href="./detail.html?id=${encodeURIComponent(item.id)}">查看完整資料</a><button class="compare-button${isCompared ? ' selected' : ''}" type="button" aria-pressed="${isCompared}">${isCompared ? '已加入比較' : '加入比較'}</button><span>完整度 ${Number(item.completeness || 0)}%</span></div></div>`;
   wireCard(article);
   return article;
 }
@@ -84,23 +79,6 @@ function wireCard(article) {
     event.currentTarget.textContent = result.added ? '已加入比較' : '加入比較';
     updateCompareTray();
   });
-  const carousel = article.querySelector('.photo-carousel');
-  if (!carousel) return;
-  const images = [...carousel.querySelectorAll('img')];
-  const count = carousel.querySelector('.photo-count');
-  const show = (next) => {
-    const index = (next + images.length) % images.length;
-    carousel.dataset.index = index;
-    images.forEach((image, i) => { image.hidden = i !== index; });
-    if (count) count.textContent = `${index + 1} / ${images.length}`;
-  };
-  carousel.querySelector('.photo-prev')?.addEventListener('click', () => show(Number(carousel.dataset.index) - 1));
-  carousel.querySelector('.photo-next')?.addEventListener('click', () => show(Number(carousel.dataset.index) + 1));
-  images.forEach((image) => image.addEventListener('error', () => {
-    image.remove();
-    const remaining = carousel.querySelectorAll('img');
-    if (!remaining.length) { carousel.querySelector('.photo-failed').hidden = false; carousel.classList.add('image-error'); }
-  }));
 }
 function renderCcOptions() {
   const selected = state.cc;
@@ -115,7 +93,7 @@ function render() {
   $('#emptyHint').textContent = state.view === 'favorites' ? '按案件右上角的愛心，就會收藏在這台裝置。' : '可切換案件狀態或清除部分條件。';
   const labels = { active: '進行中', within30: '未來 30 天', ended: '已結束', favorites: '我的收藏', all: '全部正式案件' };
   const ccLabel = M.ccBands.find((band) => band.value === state.cc)?.label;
-  const parts = [labels[state.view], state.keyword ? `搜尋「${state.keyword}」` : null, state.vehicleClass ? M.classLabels[state.vehicleClass] : null, ccLabel, state.hasPhotos ? '有照片' : null, `共 ${items.length} 筆`].filter(Boolean);
+  const parts = [labels[state.view], state.keyword ? `搜尋「${state.keyword}」` : null, state.vehicleClass ? M.classLabels[state.vehicleClass] : null, ccLabel, `共 ${items.length} 筆`].filter(Boolean);
   $('#summary').textContent = parts.join('・');
   $('#chips').replaceChildren(...parts.slice(0, -1).map((text) => { const chip = document.createElement('span'); chip.className = 'chip'; chip.textContent = text; return chip; }));
   $('#favoriteCount').textContent = favorites().length;
@@ -125,7 +103,6 @@ function render() {
   if (state.keyword) params.set('q', state.keyword);
   if (state.vehicleClass) params.set('class', state.vehicleClass);
   if (state.cc) params.set('cc', state.cc);
-  if (state.hasPhotos) params.set('photos', '1');
   history.replaceState(null, '', `${location.pathname}${params.size ? `?${params}` : ''}`);
   updateCompareTray();
 }
@@ -151,18 +128,17 @@ function matchCriteria(rows, c) {
     if (query && !Object.values(item).filter((v) => typeof v === 'string').join(' ').toLocaleLowerCase('zh-TW').replace(/\s/g, '').includes(query)) return false;
     if (c.vehicleClass && item.vehicle_category !== c.vehicleClass) return false;
     if (c.cc && !ccMatch(item.displacement_cc, c.cc)) return false;
-    if (c.hasPhotos && !(Array.isArray(item.photo_urls) && item.photo_urls.some(M.safePhotoUrl))) return false;
     return true;
   });
 }
 function describeCriteria(c) {
   const labels = { active: '進行中', within30: '未來 30 天', ended: '已結束', all: '全部' };
   const ccLabel = M.ccBands.find((band) => band.value === c.cc)?.label;
-  const parts = [labels[c.view] || '全部', c.keyword ? `「${c.keyword}」` : null, c.vehicleClass ? M.classLabels[c.vehicleClass] : null, ccLabel, c.hasPhotos ? '有照片' : null].filter(Boolean);
+  const parts = [labels[c.view] || '全部', c.keyword ? `「${c.keyword}」` : null, c.vehicleClass ? M.classLabels[c.vehicleClass] : null, ccLabel].filter(Boolean);
   return parts.join('・') || '全部案件';
 }
 function currentCriteria() {
-  return { view: state.view === 'favorites' ? 'all' : state.view, keyword: state.keyword, vehicleClass: state.vehicleClass, cc: state.cc, hasPhotos: state.hasPhotos };
+  return { view: state.view === 'favorites' ? 'all' : state.view, keyword: state.keyword, vehicleClass: state.vehicleClass, cc: state.cc };
 }
 function subscribeCurrentSearch() {
   const criteria = currentCriteria();
@@ -255,8 +231,7 @@ function readUrl() {
   state.keyword = (params.get('q') || '').slice(0, 80);
   state.vehicleClass = Object.hasOwn(M.classLabels, params.get('class')) ? params.get('class') : '';
   state.cc = M.ccBands.some((band) => band.value === params.get('cc')) ? params.get('cc') : '';
-  state.hasPhotos = params.get('photos') === '1';
-  $('#keyword').value = state.keyword; $('#vehicleClass').value = state.vehicleClass; $('#hasPhotos').checked = state.hasPhotos;
+  $('#keyword').value = state.keyword; $('#vehicleClass').value = state.vehicleClass;
 }
 async function load() {
   $('#loading').hidden = false; $('#error').hidden = true; $('#empty').hidden = true;
@@ -280,7 +255,7 @@ async function load() {
 function renderSourcePanel(rows) {
   const bySource = new Map();
   for (const row of rows) {
-    if (row.eligibility === 'LICENSED_RECYCLER_ONLY') continue; // 不計入，與畫面顯示一致
+    if (!M.publicBiddable(row)) continue; // 不計入，與畫面顯示一致
     const key = row.source_adapter || 'other';
     const entry = bySource.get(key) || { count: 0, latest: null, sourceName: row.source_name };
     entry.count += 1;
@@ -318,7 +293,6 @@ function applyFiltersFromForm() {
   state.keyword = $('#keyword').value.trim();
   state.vehicleClass = $('#vehicleClass').value;
   state.cc = $('#cc').value;
-  state.hasPhotos = $('#hasPhotos').checked;
   render();
 }
 $('#filters').addEventListener('submit', (event) => { event.preventDefault(); applyFiltersFromForm(); });
@@ -330,8 +304,7 @@ $('#keyword').addEventListener('input', () => {
 });
 $('#vehicleClass').addEventListener('change', applyFiltersFromForm);
 $('#cc').addEventListener('change', applyFiltersFromForm);
-$('#hasPhotos').addEventListener('change', applyFiltersFromForm);
-$('#clearFilters').addEventListener('click', () => { state.keyword = ''; state.vehicleClass = ''; state.cc = ''; state.hasPhotos = false; $('#filters').reset(); renderCcOptions(); render(); });
+$('#clearFilters').addEventListener('click', () => { state.keyword = ''; state.vehicleClass = ''; state.cc = ''; $('#filters').reset(); renderCcOptions(); render(); });
 $('#retry').addEventListener('click', load);
 $('#clearCompare').addEventListener('click', () => { M.writeList(M.COMPARE_KEY, []); render(); });
 $('#openCompare').addEventListener('click', () => { renderComparison(); $('#compareDialog').showModal(); });
@@ -346,8 +319,8 @@ $('#watchList').addEventListener('click', (event) => {
     const w = M.readWatches().find((x) => x.id === applyBtn.dataset.id);
     if (!w) return;
     const c = w.criteria;
-    state.view = c.view; state.keyword = c.keyword || ''; state.vehicleClass = c.vehicleClass || ''; state.cc = c.cc || ''; state.hasPhotos = !!c.hasPhotos;
-    $('#keyword').value = state.keyword; $('#vehicleClass').value = state.vehicleClass; $('#cc').value = state.cc; $('#hasPhotos').checked = state.hasPhotos;
+    state.view = c.view; state.keyword = c.keyword || ''; state.vehicleClass = c.vehicleClass || ''; state.cc = c.cc || '';
+    $('#keyword').value = state.keyword; $('#vehicleClass').value = state.vehicleClass; $('#cc').value = state.cc;
     render();
   }
 });
