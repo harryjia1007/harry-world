@@ -406,14 +406,35 @@ h1, h2, h3 { letter-spacing: -0.02em; }
 
 /* ---------- 資料來源區 ---------- */
 .source-summary { padding: var(--space-xl) 0; background: var(--bg-primary); }
-.source-summary .shell {
-  display: grid; grid-template-columns: 1fr 1.3fr auto;
-  align-items: center; gap: var(--space-lg);
+.source-summary .shell { display: grid; gap: var(--space-lg); }
+.source-summary-head {
+  display: grid; grid-template-columns: 1fr auto; align-items: baseline;
+  gap: var(--space-sm) var(--space-lg);
 }
-.source-summary h2 { margin: 0 0 var(--space-xs); font-size: 21px; font-weight: 600; }
-.source-summary p { margin: 0; color: var(--text-secondary); font-size: 15px; }
-.source-summary a { color: var(--accent); font-size: 15px; font-weight: 500; white-space: nowrap; text-decoration: none; }
-.source-summary a:hover { text-decoration: underline; }
+.source-summary-head h2 { margin: 0; font-size: 21px; font-weight: 600; grid-column: 1; }
+.source-summary-head p { margin: 0; color: var(--text-secondary); font-size: 15px; grid-column: 1; }
+.source-summary-head a { color: var(--accent); font-size: 15px; font-weight: 500; white-space: nowrap; text-decoration: none; grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+.source-summary-head a:hover { text-decoration: underline; }
+.source-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-md);
+}
+.source-loading { margin: 0; color: var(--text-secondary); font-size: 15px; }
+.source-card {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg);
+  display: grid; gap: 6px;
+}
+.source-card-top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-sm); }
+.source-name { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+.source-count { font-size: 22px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.source-count::after { content: " 筆"; font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+.source-note { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+.source-sync { display: flex; align-items: center; gap: var(--space-sm); font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+.fresh-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--neutral); }
+.source-card[data-fresh="fresh"] .fresh-dot { background: var(--green); box-shadow: 0 0 0 4px var(--green-bg); }
+.source-card[data-fresh="recent"] .fresh-dot { background: var(--accent); }
+.source-card[data-fresh="stale"] .fresh-dot { background: var(--neutral); }
 
 .notice { padding: var(--space-md) 0; background: var(--bg-secondary); border-top: 1px solid var(--separator); }
 .notice .shell { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; font-size: 13px; }

@@ -157,14 +157,43 @@ async function load() {
     state.rows = rows;
     renderCcOptions(); $('#cc').value = state.cc;
     const latest = rows.map((row) => row.last_synced_at).filter(Boolean).sort().at(-1);
-    $('#syncStatus').textContent = latest ? `最近同步 ${M.dateTime(latest)}` : '目前尚無案件';
-    const counts = rows.reduce((all, row) => { const key = M.sourceLabels[row.source_adapter] || row.source_name || '其他官方來源'; all[key] = (all[key] || 0) + 1; return all; }, {});
-    $('#sourceCounts').textContent = Object.entries(counts).map(([name, count]) => `${name} ${count} 筆`).join('・');
+    $('#syncStatus').textContent = latest ? `最近同步 ${M.relativeTime(latest)}` : '目前尚無案件';
+    renderSourcePanel(rows);
     const changes = M.rememberSnapshots(rows.filter((row) => favorites().includes(row.id)));
     renderAlerts(changes); render();
   } catch (error) {
-    console.error(error); $('#error').hidden = false; $('#syncStatus').textContent = '資料暫時離線'; $('#sourceCounts').textContent = '正式資料暫時無法統計';
+    console.error(error); $('#error').hidden = false; $('#syncStatus').textContent = '資料暫時離線';
+    $('#sourceGrid').innerHTML = '<p class="source-loading">正式資料暫時無法統計</p>';
   } finally { $('#loading').hidden = true; }
+}
+// P3：每個來源各自的筆數、最後同步時間（相對）、新鮮度色點與來源性質說明。
+// 時間戳全部由資料本身算出，是事實；不宣稱我們的抓取頻率，避免過度承諾即時性。
+function renderSourcePanel(rows) {
+  const bySource = new Map();
+  for (const row of rows) {
+    const key = row.source_adapter || 'other';
+    const entry = bySource.get(key) || { count: 0, latest: null, sourceName: row.source_name };
+    entry.count += 1;
+    if (row.source_name && !entry.sourceName) entry.sourceName = row.source_name;
+    if (row.last_synced_at && (!entry.latest || row.last_synced_at > entry.latest)) entry.latest = row.last_synced_at;
+    bySource.set(key, entry);
+  }
+  const freshLabels = { fresh: '資料新', recent: '近期同步', stale: '較久未更新', unknown: '時間未知' };
+  const cards = [...bySource.entries()]
+    .sort((a, b) => b[1].count - a[1].count)
+    .map(([key, e]) => {
+      // 未知的 adapter 用資料自己的 source_name 當名稱，不讓多個未知來源都變成同一張「其他」卡
+      const name = M.escapeHtml(M.sourceLabels[key] || e.sourceName || '其他官方來源');
+      const note = M.escapeHtml(M.sourceNotes[key] || e.sourceName || '官方公告來源');
+      const level = M.freshnessLevel(e.latest);
+      const rel = e.latest ? M.relativeTime(e.latest) : '尚無同步紀錄';
+      return `<article class="source-card" data-fresh="${level}">
+        <div class="source-card-top"><span class="source-name">${name}</span><span class="source-count">${e.count}</span></div>
+        <p class="source-note">${note}</p>
+        <div class="source-sync"><span class="fresh-dot" title="${freshLabels[level]}"></span><span>最後同步 ${M.escapeHtml(rel)}</span></div>
+      </article>`;
+    }).join('');
+  $('#sourceGrid').innerHTML = cards || '<p class="source-loading">目前尚無案件</p>';
 }
 
 $$('.tabs button').forEach((button) => button.addEventListener('click', () => { state.view = button.dataset.view; render(); }));

@@ -9,7 +9,47 @@
   const COMPARE_KEY = "taiwan_moto_compare_v1";
   const SNAPSHOTS_KEY = "taiwan_moto_snapshots_v1";
 
-  const sourceLabels = { shwoo: "臺北惜物網", judicial: "司法院動產拍賣", moj_auction: "法務部公有財產拍賣" };
+  // 對照 2026-08-21 實際資料庫裡的 source_adapter；pcc / customs 是既有管線後來新增、
+  // 前端原本沒涵蓋的來源，補上以免掉進通用的「其他官方來源」。名稱與資料的 source_name 對齊。
+  const sourceLabels = {
+    shwoo: "臺北惜物網",
+    judicial: "司法院動產拍賣",
+    moj_auction: "法務部查扣物集中拍賣",
+    pcc: "政府電子採購網",
+    customs: "關務署標售",
+  };
+  // 對「來源本身」的誠實描述——講的是各機關自己的公告性質，不是我們的抓取頻率，
+  // 避免對外過度宣稱即時性（見 docs/COMPETITIVE-STRATEGY.md 第 3 節 (3)、第 5 節 P3）。
+  const sourceNotes = {
+    shwoo: "臺北市動產質借處流當品與報廢車，官方隨時更新",
+    judicial: "司法院每週公告的待拍動產（官方開放資料）",
+    moj_auction: "各地檢署查扣變價集中拍賣，不定期",
+    pcc: "政府電子採購網財物變賣公告",
+    customs: "財政部關務署四關沒入／逾期物標售",
+  };
+  // 相對時間：把最後同步時間轉成「幾分鐘／小時／天前」。純粹依資料算，不誇大。
+  function relativeTime(value, now = new Date()) {
+    if (!value) return null;
+    const diff = now.getTime() - new Date(value).getTime();
+    if (diff < 0) return "剛剛";
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "剛剛";
+    if (mins < 60) return `${mins} 分鐘前`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs} 小時前`;
+    const days = Math.floor(hrs / 24);
+    if (days < 30) return `${days} 天前`;
+    const months = Math.floor(days / 30);
+    return `${months} 個月前`;
+  }
+  // 依最後同步距今多久給新鮮度等級，前端用來上色（綠=新、灰=舊）。
+  function freshnessLevel(value, now = new Date()) {
+    if (!value) return "unknown";
+    const hrs = (now.getTime() - new Date(value).getTime()) / 3600000;
+    if (hrs <= 24) return "fresh";
+    if (hrs <= 24 * 8) return "recent";
+    return "stale";
+  }
   const classLabels = {
     ORDINARY_LIGHT: "普通輕型", ORDINARY_HEAVY: "普通重型", LARGE_HEAVY: "大型重型",
     ELECTRIC_MOTORCYCLE: "電動機車", HEAVY_UNSPECIFIED: "重型（級別未明）", UNKNOWN: "級別未確認",
@@ -110,8 +150,8 @@
   }
 
   return {
-    API_URL, API_KEY, FAVORITES_KEY, COMPARE_KEY, sourceLabels, classLabels, eligibilityLabels,
+    API_URL, API_KEY, FAVORITES_KEY, COMPARE_KEY, sourceLabels, sourceNotes, classLabels, eligibilityLabels,
     registrationLabels, ccBands, readList, writeList, toggleList, isEnded, safeOfficialUrl, safePhotoUrl,
-    escapeHtml, money, dateTime, daysUntil, title, fetchRows, rememberSnapshots,
+    escapeHtml, money, dateTime, daysUntil, relativeTime, freshnessLevel, title, fetchRows, rememberSnapshots,
   };
 });
