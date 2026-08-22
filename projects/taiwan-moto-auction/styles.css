@@ -255,6 +255,26 @@ h1, h2, h3 { letter-spacing: -0.02em; }
   font-size: 15px; cursor: pointer; white-space: nowrap;
 }
 .current-view button:hover { text-decoration: underline; }
+.view-actions { display: flex; align-items: center; gap: var(--space-md); flex: none; }
+/* 選擇器要比 `.current-view button` 更具體，否則填色會被那條的 transparent 蓋掉 */
+.view-actions .subscribe-btn {
+  border: 0; border-radius: var(--radius-pill); cursor: pointer; white-space: nowrap;
+  background: var(--accent); color: #fff; font-size: 14px; font-weight: 600;
+  padding: 7px 16px;
+}
+.view-actions .subscribe-btn:hover { background: var(--accent-hover); color: #fff; text-decoration: none; }
+
+/* 訂閱清單 */
+.watches { margin: var(--space-md) 0 0; }
+.watches-head { display: flex; align-items: baseline; gap: var(--space-sm); flex-wrap: wrap; margin-bottom: var(--space-sm); }
+.watches-head span { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.watches-head small { font-size: 12px; color: var(--text-secondary); }
+.watch-list { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
+.watch-item { display: inline-flex; align-items: stretch; border: 1px solid var(--border); border-radius: var(--radius-pill); overflow: hidden; background: var(--bg-secondary); }
+.watch-apply { border: 0; background: transparent; color: var(--text-primary); font-size: 13px; font-weight: 500; padding: 5px 12px; cursor: pointer; }
+.watch-apply:hover { color: var(--accent); }
+.watch-remove { border: 0; border-left: 1px solid var(--border); background: transparent; color: var(--text-secondary); font-size: 12px; padding: 5px 10px; cursor: pointer; line-height: 1; }
+.watch-remove:hover { color: var(--red); background: var(--red-bg); }
 
 .chips { min-height: 24px; display: flex; gap: var(--space-sm); flex-wrap: wrap; margin: var(--space-md) 0 var(--space-lg); }
 .chip {

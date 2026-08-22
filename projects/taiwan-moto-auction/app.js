@@ -132,6 +132,100 @@ function updateCompareTray() {
   $('#compareCount').textContent = count;
   $('#openCompare').disabled = count < 2;
 }
+
+// ---- 訂閱搜尋（主動通知）----
+// 純瀏覽器端：條件與「已看過的案件」都存在使用者裝置，不上傳、不含個資、不寄信。
+// 通知只在頁面開著／被重新打開時觸發，這是純前端方案的誠實限制（沒有背景推播伺服器）。
+function matchCriteria(rows, c) {
+  const now = Date.now();
+  const query = (c.keyword || '').toLocaleLowerCase('zh-TW').replace(/\s/g, '');
+  return rows.filter((item) => {
+    const ended = M.isEnded(item);
+    const scheduled = !ended && (item.auction_status === 'SCHEDULED' || Boolean(item.ends_at && new Date(item.ends_at).getTime() >= now));
+    if (c.view === 'active' && !scheduled) return false;
+    if (c.view === 'ended' && !ended) return false;
+    if (c.view === 'within30' && (ended || !item.ends_at || new Date(item.ends_at).getTime() > now + 30 * DAY)) return false;
+    if (query && !Object.values(item).filter((v) => typeof v === 'string').join(' ').toLocaleLowerCase('zh-TW').replace(/\s/g, '').includes(query)) return false;
+    if (c.vehicleClass && item.vehicle_category !== c.vehicleClass) return false;
+    if (c.cc && !ccMatch(item.displacement_cc, c.cc)) return false;
+    if (c.hasPhotos && !(Array.isArray(item.photo_urls) && item.photo_urls.some(M.safePhotoUrl))) return false;
+    return true;
+  });
+}
+function describeCriteria(c) {
+  const labels = { active: '進行中', within30: '未來 30 天', ended: '已結束', all: '全部' };
+  const ccLabel = M.ccBands.find((band) => band.value === c.cc)?.label;
+  const parts = [labels[c.view] || '全部', c.keyword ? `「${c.keyword}」` : null, c.vehicleClass ? M.classLabels[c.vehicleClass] : null, ccLabel, c.hasPhotos ? '有照片' : null].filter(Boolean);
+  return parts.join('・') || '全部案件';
+}
+function currentCriteria() {
+  return { view: state.view === 'favorites' ? 'all' : state.view, keyword: state.keyword, vehicleClass: state.vehicleClass, cc: state.cc, hasPhotos: state.hasPhotos };
+}
+function subscribeCurrentSearch() {
+  const criteria = currentCriteria();
+  const watches = M.readWatches();
+  const label = describeCriteria(criteria);
+  if (watches.some((w) => w.label === label)) { showMessage('這個搜尋條件已經訂閱過了。'); return; }
+  const seenIds = matchCriteria(state.rows, criteria).map((r) => r.id);
+  watches.push({ id: `w${Date.now()}`, label, criteria, seenIds });
+  M.writeWatches(watches);
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().catch(() => {});
+  }
+  renderWatches();
+  showMessage(`已訂閱「${label}」。符合的新機車出現、且你開著本頁時會通知你。`);
+}
+function removeWatch(id) {
+  M.writeWatches(M.readWatches().filter((w) => w.id !== id));
+  renderWatches();
+}
+function renderWatches() {
+  const watches = M.readWatches();
+  const wrap = $('#watches');
+  if (!wrap) return;
+  wrap.hidden = watches.length === 0;
+  $('#watchList').replaceChildren(...watches.map((w) => {
+    const el = document.createElement('div');
+    el.className = 'watch-item';
+    el.innerHTML = `<button class="watch-apply" type="button" data-id="${M.escapeHtml(w.id)}">${M.escapeHtml(w.label)}</button><button class="watch-remove" type="button" data-id="${M.escapeHtml(w.id)}" aria-label="移除訂閱">✕</button>`;
+    return el;
+  }));
+}
+// 回傳每個訂閱的新增筆數；commit=true 時把目前符合的 id 存回 seenIds（看過即清零）。
+function watchNewCounts(rows, watches, commit) {
+  const counts = {};
+  let mutated = false;
+  for (const w of watches) {
+    const matchIds = matchCriteria(rows, w.criteria).map((r) => r.id);
+    const seen = new Set(w.seenIds || []);
+    const fresh = matchIds.filter((id) => !seen.has(id));
+    counts[w.id] = fresh.length;
+    if (commit && fresh.length) { w.seenIds = matchIds; mutated = true; }
+  }
+  if (commit && mutated) M.writeWatches(watches);
+  return counts;
+}
+// 進站時偵測各訂閱的新案件：更新畫面提示，並在有權限時發瀏覽器通知，然後把已看過的存回。
+function detectAndNotifyWatches(rows) {
+  const watches = M.readWatches();
+  if (!watches.length) { renderWatches(); return; }
+  const counts = watchNewCounts(rows, watches, false);
+  const hits = watches.filter((w) => counts[w.id] > 0);
+  const total = hits.reduce((s, w) => s + counts[w.id], 0);
+  if (total > 0) {
+    showMessage(`你的訂閱有 ${total} 筆新機車：${hits.map((w) => `${w.label}（${counts[w.id]}）`).join('、')}。`);
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification('臺灣機車拍賣情報', {
+          body: `有 ${total} 筆符合你訂閱條件的新機車`,
+          tag: 'taiwan-moto-watch',
+        });
+      } catch { /* 部分瀏覽器需在使用者手勢後才能發，靜默略過 */ }
+    }
+  }
+  watchNewCounts(rows, watches, true); // 標記為已看過，下次不重複提示
+  renderWatches();
+}
 function renderComparison() {
   const rows = compared().map((id) => state.rows.find((row) => row.id === id)).filter(Boolean);
   const fields = [
@@ -172,7 +266,7 @@ async function load() {
     $('#syncStatus').textContent = latest ? `最近同步 ${M.relativeTime(latest)}` : '目前尚無案件';
     renderSourcePanel(rows);
     const changes = M.rememberSnapshots(rows.filter((row) => favorites().includes(row.id)));
-    renderAlerts(changes); render();
+    renderAlerts(changes); render(); detectAndNotifyWatches(rows);
   } catch (error) {
     console.error(error); $('#error').hidden = false; $('#syncStatus').textContent = '資料暫時離線';
     $('#sourceGrid').innerHTML = '<p class="source-loading">正式資料暫時無法統計</p>';
@@ -238,4 +332,19 @@ $('#retry').addEventListener('click', load);
 $('#clearCompare').addEventListener('click', () => { M.writeList(M.COMPARE_KEY, []); render(); });
 $('#openCompare').addEventListener('click', () => { renderComparison(); $('#compareDialog').showModal(); });
 $('#closeCompare').addEventListener('click', () => $('#compareDialog').close());
-readUrl(); load();
+// 訂閱搜尋
+$('#subscribeSearch').addEventListener('click', subscribeCurrentSearch);
+$('#watchList').addEventListener('click', (event) => {
+  const applyBtn = event.target.closest('.watch-apply');
+  const removeBtn = event.target.closest('.watch-remove');
+  if (removeBtn) { removeWatch(removeBtn.dataset.id); return; }
+  if (applyBtn) {
+    const w = M.readWatches().find((x) => x.id === applyBtn.dataset.id);
+    if (!w) return;
+    const c = w.criteria;
+    state.view = c.view; state.keyword = c.keyword || ''; state.vehicleClass = c.vehicleClass || ''; state.cc = c.cc || ''; state.hasPhotos = !!c.hasPhotos;
+    $('#keyword').value = state.keyword; $('#vehicleClass').value = state.vehicleClass; $('#cc').value = state.cc; $('#hasPhotos').checked = state.hasPhotos;
+    render();
+  }
+});
+readUrl(); load(); renderWatches();

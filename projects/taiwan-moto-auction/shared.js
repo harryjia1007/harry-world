@@ -8,6 +8,19 @@
   const FAVORITES_KEY = "taiwan_moto_favorites_v1";
   const COMPARE_KEY = "taiwan_moto_compare_v1";
   const SNAPSHOTS_KEY = "taiwan_moto_snapshots_v1";
+  const WATCHES_KEY = "taiwan_moto_watches_v1";
+
+  // 訂閱條件：純存在使用者自己的裝置（localStorage），不上傳、不含個資。
+  // 每筆 { id, label, criteria, seenIds:[] }；seenIds 記錄上次看過的符合案件，用來算「新增幾筆」。
+  function readWatches() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(WATCHES_KEY) || "[]");
+      return Array.isArray(parsed) ? parsed.filter((w) => w && typeof w.id === "string" && w.criteria) : [];
+    } catch { return []; }
+  }
+  function writeWatches(watches) {
+    localStorage.setItem(WATCHES_KEY, JSON.stringify(watches.slice(0, 20)));
+  }
 
   // 對照 2026-08-21 實際資料庫裡的 source_adapter；pcc / customs 是既有管線後來新增、
   // 前端原本沒涵蓋的來源，補上以免掉進通用的「其他官方來源」。名稱與資料的 source_name 對齊。
@@ -150,8 +163,8 @@
   }
 
   return {
-    API_URL, API_KEY, FAVORITES_KEY, COMPARE_KEY, sourceLabels, sourceNotes, classLabels, eligibilityLabels,
-    registrationLabels, ccBands, readList, writeList, toggleList, isEnded, safeOfficialUrl, safePhotoUrl,
+    API_URL, API_KEY, FAVORITES_KEY, COMPARE_KEY, WATCHES_KEY, sourceLabels, sourceNotes, classLabels, eligibilityLabels,
+    registrationLabels, ccBands, readList, writeList, toggleList, readWatches, writeWatches, isEnded, safeOfficialUrl, safePhotoUrl,
     escapeHtml, money, dateTime, daysUntil, relativeTime, freshnessLevel, title, fetchRows, rememberSnapshots,
   };
 });
