@@ -17,16 +17,18 @@ run_worker_first = true
 binding = "STATS"
 id = "4acd0d6cba004a6ab65f4eb0acc2c577"
 
-# 機車拍賣資料擷取排程。2026-08-20 現況：Harry 用 ChatGPT 手動核對維護的既有管線
-# 仍是主要資料來源，且用同一套 shwoo id 命名（shwoo-<AUID>），不能讓這裡的新程式碼
-# 寫入真資料去覆蓋它。所以排程重新開啟，但 INGESTION_DRY_RUN=1（見下方 [vars]）讓
-# 三個寫入函式（見 ingestion/supabase.js）全部只印 log、不觸碰資料庫——目的單純是
-# 驗證 Cloudflare 的網路連不連得到這些政府網站、解析邏輯對不對，不是要開始寫入。
-# 等連線與解析都驗證過、且跟舊管線的併存方式談清楚後，才把 INGESTION_DRY_RUN 拿掉。
-#   */3 * * * *  → 惜物網
-#   17 3 * * *   → 司法院開放資料 + 車牌 30 天自動下架（dry-run 下這條也只印 log）
+# 機車拍賣資料擷取排程。2026-08-22：dry-run 已解除，自動寫入正式啟用。
+# 併存安全性已就緒（在拿掉 dry-run 前完成）：
+#   - 惜物網：列表頁擷取剝除 DETAIL_PAGE_OWNED_FIELDS（能否領牌／廠牌型號等），
+#     merge-duplicates 只更新 payload 有的欄位 → 不會覆蓋既有管線人工填好的深度欄位。
+#   - 司法院：以「法院|年度|案號」簽章跟既有人工核對案件去重（見 judicial-opendata.js），
+#     避免新舊 id 格式不同造成同案件重複。
+#   - 車牌 30 天自動下架：purgeExpiredPlates 現在會真的執行（先前 dry-run 只印 log）。
+#   */3 * * * *  → 惜物網（擷取 + 詳情頁補欄位）
+#   17 3 * * *   → 司法院開放資料（每週更新的來源）+ 車牌 30 天自動下架
 [triggers]
 crons = ["*/3 * * * *", "17 3 * * *"]
 
 [vars]
-INGESTION_DRY_RUN = "1"
+# "0"＝正式寫入；改回 "1" 可隨時退回只印 log 不寫入的安全模式。
+INGESTION_DRY_RUN = "0"

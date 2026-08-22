@@ -100,6 +100,14 @@ export async function patchListingFields(id, fields, env) {
   if (!res.ok) throw new Error(`supabase patch failed for ${id}: ${res.status} ${await res.text()}`);
 }
 
+/* 取某來源目前已存在的所有 id，給去重用（例如司法院自動流要避開既有人工核對的案件）。 */
+export async function fetchExistingIds(env, sourceAdapter) {
+  const query = new URLSearchParams({ select: 'id', source_adapter: `eq.${sourceAdapter}` });
+  const res = await fetch(`${TABLE_URL}?${query}`, { headers: authHeaders(env) });
+  if (!res.ok) throw new Error(`supabase fetchExistingIds failed: ${res.status} ${await res.text()}`);
+  return (await res.json()).map((r) => r.id);
+}
+
 /* AUTO-INGESTION-POLICY.md 第 3 節：拍賣結束 30 天後車牌自動下架，不靠人記得。 */
 export async function purgeExpiredPlates(env) {
   const cutoff = new Date(Date.now() - 30 * 86400000).toISOString();

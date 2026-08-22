@@ -34,7 +34,7 @@
        動產項目沒有底價欄位 → reserve_price 一律 null
    驗證工具：ingestion/probe-judicial.mjs（在能連到政府站的網路上跑）。 */
 
-import { upsertListings } from './supabase.js';
+import { upsertListings, fetchExistingIds } from './supabase.js';
 import {
   isMotorcycleTitle, classifyVehicleCategory,
   extractDisplacementCc, refineCategoryByCc,
@@ -138,6 +138,23 @@ function extractCases(payload) {
   return [];
 }
 
+/* 從案件 id 抽出「法院|年度|案號」簽章，用來跟既有人工核對的案件去重。
+   兩種 id 格式的案號位置不同（人工版沒有字別段、自動版有）：
+     人工：judicial-{法院}-{年度}-{案號}-motorcycle-{n}      → 案號在第 3 段（純數字）
+     自動：judicial-{法院}-{年度}-{字別}-{案號}-{拍序}        → 字別非數字，案號在第 4 段
+   靠「第 3 段是不是純數字」判斷是哪種格式。案號正規化：只留數字、去前導零，
+   吸收兩邊補零差異。抽不出來就回 null（不參與去重，寧可重複也不誤刪）。 */
+function judicialSignature(id) {
+  const p = String(id).split('-');
+  if (p.length < 4) return null;
+  const court = (p[1] || '').toLowerCase();
+  const year = (p[2] || '').replace(/\D/g, '');
+  const caseRaw = /^[0-9]+$/.test(p[3] || '') ? p[3] : (p[4] || '');
+  const caseNo = String(caseRaw).replace(/\D/g, '').replace(/^0+/, '');
+  if (!court || !year || !caseNo) return null;
+  return `${court}|${year}|${caseNo}`;
+}
+
 /* 回傳寫入的機車件數。展開每筆案件的 movable_decide[]，只收機車品項。
    完全對不到 movable_decide 結構時記錄樣本並回 0，不硬塞假資料。 */
 export async function runJudicialOpenDataIngestion(env) {
@@ -167,6 +184,26 @@ export async function runJudicialOpenDataIngestion(env) {
     return 0;
   }
 
-  await upsertListings(rows, env);
-  return rows.length;
+  // 去重：跳過「案件簽章」已存在於既有 judicial 列（多半是人工核對版）的自動案件，
+  // 避免同一案件因新舊 id 格式不同而出現兩筆。id 完全相同的交給 upsert 合併、不算重複。
+  // 偏誤方向：簽章抽不出來時不跳過（寧可偶爾重複，也不要把真正的新案件藏起來）。
+  let deduped = rows;
+  try {
+    const existingIds = await fetchExistingIds(env, 'judicial');
+    const existingExact = new Set(existingIds);
+    const existingSigs = new Set(existingIds.map(judicialSignature).filter(Boolean));
+    deduped = rows.filter((row) => {
+      if (existingExact.has(row.id)) return true; // 同 id → upsert 合併，不是重複
+      const sig = judicialSignature(row.id);
+      return !(sig && existingSigs.has(sig)); // 簽章撞既有案件 → 跳過
+    });
+    if (deduped.length !== rows.length) {
+      console.log(`judicial opendata: 去重跳過 ${rows.length - deduped.length} 筆（已有人工核對版）`);
+    }
+  } catch (e) {
+    console.error('judicial opendata: 去重查詢失敗，改為全部寫入（upsert 仍會處理同 id）', e);
+  }
+
+  await upsertListings(deduped, env);
+  return deduped.length;
 }
