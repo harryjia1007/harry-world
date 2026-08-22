@@ -16,6 +16,9 @@ function filtered() {
   const query = state.keyword.toLocaleLowerCase('zh-TW').replace(/\s/g, '');
   const favoriteIds = favorites();
   return state.rows.filter((item) => {
+    // 目標客群是一般民眾：限合格回收商的車一律不顯示（不論哪個來源、哪個分頁）。
+    // 這是前端保險，讓既有資料庫裡的回收商車即刻消失；擷取端也已停收（見 ingestion）。
+    if (item.eligibility === 'LICENSED_RECYCLER_ONLY') return false;
     const ended = M.isEnded(item);
     const scheduled = !ended && (item.auction_status === 'SCHEDULED' || Boolean(item.ends_at && new Date(item.ends_at).getTime() >= now));
     if (state.view === 'active' && !scheduled) return false;
@@ -277,6 +280,7 @@ async function load() {
 function renderSourcePanel(rows) {
   const bySource = new Map();
   for (const row of rows) {
+    if (row.eligibility === 'LICENSED_RECYCLER_ONLY') continue; // 不計入，與畫面顯示一致
     const key = row.source_adapter || 'other';
     const entry = bySource.get(key) || { count: 0, latest: null, sourceName: row.source_name };
     entry.count += 1;

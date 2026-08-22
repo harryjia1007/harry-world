@@ -44,10 +44,13 @@ function stripDetailOwnedFields(row) {
    已經填好的深度欄位——新案件那幾欄會是 null，前端顯示「未確認」，等 enrichment 補。 */
 export async function upsertListings(rows, env) {
   if (!rows.length) return;
+  // 目標客群是一般民眾：限合格回收商才能投標的車一律不寫（2026-08-22）。這是防線，
+  // 各 adapter 最好在來源端就不抓（見 shwoo.js 只抓不限資格區），這裡再擋一次以防漏網。
+  const biddable = rows.filter((row) => row.eligibility !== 'LICENSED_RECYCLER_ONLY');
+  if (!biddable.length) return;
   // 同一批不能有重複 id，否則 PostgREST 的 ON CONFLICT 會報「cannot affect row a second time」。
-  // 惜物網會抓「不限資格區」＋「回收商區」兩份清單，同一台車可能兩邊都出現 → 先以 id 去重（保留後者）。
   const byId = new Map();
-  for (const row of rows) byId.set(row.id, row);
+  for (const row of biddable) byId.set(row.id, row);
   const payload = [...byId.values()].map(stripDetailOwnedFields);
   if (isDryRun(env)) {
     console.log(`[DRY RUN] 會 upsert ${payload.length} 筆（已剝除詳情頁欄位），範例：`, JSON.stringify(payload[0]));

@@ -133,16 +133,16 @@ function splitItemBlocks(html) {
   return html.split(ITEM_BLOCK_MARKER).slice(1);
 }
 
-/* 回傳這輪擷取到的機車件數；不吞例外，讓呼叫端（worker.js 的排程）決定要不要記錄失敗。 */
+/* 回傳這輪擷取到的機車件數；不吞例外，讓呼叫端（worker.js 的排程）決定要不要記錄失敗。
+   只抓「不限資格區」（isRecyclerLink='N'）——目標客群是一般民眾，「廢機動車輛回收業
+   競標區」（'Y'）限合格回收商才能投標，一般人根本標不到，不收（2026-08-22 決定）。 */
 export async function runShwooIngestion(env) {
   const rows = [];
-  for (const isRecyclerLink of ['N', 'Y']) {
-    const sessionId = await getSessionId();
-    const html = await fetchListingHtml(isRecyclerLink, sessionId);
-    for (const block of splitItemBlocks(html)) {
-      const item = parseItemBlock(block);
-      if (item) rows.push(toRow(item, isRecyclerLink));
-    }
+  const sessionId = await getSessionId();
+  const html = await fetchListingHtml('N', sessionId);
+  for (const block of splitItemBlocks(html)) {
+    const item = parseItemBlock(block);
+    if (item) rows.push(toRow(item, 'N'));
   }
   await upsertListings(rows, env);
   return rows.length;
