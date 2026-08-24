@@ -129,8 +129,8 @@ function toRow(caseRec, item) {
   };
 }
 
-async function fetchDataset() {
-  const res = await fetch(DATA_URL, { headers: { 'user-agent': UA, accept: 'application/json' } });
+async function fetchDataset(dataUrl = DATA_URL) {
+  const res = await fetch(dataUrl, { headers: { 'user-agent': UA, accept: 'application/json' } });
   if (!res.ok) throw new Error(`judicial opendata HTTP ${res.status}`);
   const declared = Number(res.headers.get('content-length') || '0');
   if (declared > MAX_BYTES) {
