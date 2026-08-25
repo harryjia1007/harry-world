@@ -18,21 +18,32 @@ const ITEM_BLOCK_MARKER = '<div class="col-xs-6 col-md-3  padding10a">';
    當下的錯誤訊息只有狀態碼，看不出是 session 沒拿到、來源在擋 Cloudflare 出口 IP、
    還是純粹暫時性問題。這裡把診斷資訊補齊：session 有沒有拿到、失敗時的回應內容
    前 300 字，讓下一輪的 log 能真的告訴我們發生什麼事，不用再靠猜的。 */
+// 列表頁請求逾時：惜物網對 Cloudflare 出口很慢（實測回應要 ~40 秒），逾時要比它的回應時間長，
+// 不然自己先中止＝保證失敗。放 50 秒。等待是 I/O 不吃 CPU，排程不會因此被砍。
+// 搭配 CRAWL_BUDGET_MS=15s：慢的時候只抓第 1 頁（一次 ~40 秒 fetch）就寫入；快的時候一輪抓完全部頁。
+const REQUEST_TIMEOUT_MS = 50000;
+
+/* 拿 session 失敗（逾時、520、沒 cookie）一律回 null，讓主流程用無 session 繼續，
+   不讓「拿 session」這一步的失敗把整輪擷取拖垮——實測沒有 session 也抓得到列表。 */
 async function getSessionId() {
-  const res = await fetch(`${BASE}/shwoo/browse/browse00/advancedQuery?isRecyclerLink=N&q_unit1value4C=`, {
-    headers: { 'user-agent': UA },
-  });
-  // Workers 的 Headers.get('set-cookie') 在有多個 Set-Cookie 時行為跟瀏覽器不同，
-  // 用 getSetCookie()（有支援才用）確保拿到完整清單，退回單一 get() 當備援。
-  const cookies = typeof res.headers.getSetCookie === 'function'
-    ? res.headers.getSetCookie()
-    : [res.headers.get('set-cookie') || ''];
-  const cookieMatch = cookies.join('; ').match(/JSESSIONID=([^;]+)/i);
-  if (cookieMatch) return cookieMatch[1];
-  const urlMatch = new URL(res.url).pathname.match(/jsessionid=([^;?]+)/i);
-  if (urlMatch) return urlMatch[1];
-  console.error(`shwoo getSessionId: 沒拿到 session（GET 狀態 ${res.status}），will proceed without jsessionid`);
-  return null;
+  try {
+    // session 是加分、非必要（實測無 session 也抓得到）。給短逾時，拿不到就快點放棄、
+    // 把時間留給真正需要的列表頁請求，不要在這步就把時間耗光。
+    const res = await fetch(`${BASE}/shwoo/browse/browse00/advancedQuery?isRecyclerLink=N&q_unit1value4C=`, {
+      headers: { 'user-agent': UA }, signal: AbortSignal.timeout(8000),
+    });
+    const cookies = typeof res.headers.getSetCookie === 'function'
+      ? res.headers.getSetCookie()
+      : [res.headers.get('set-cookie') || ''];
+    const cookieMatch = cookies.join('; ').match(/JSESSIONID=([^;]+)/i);
+    if (cookieMatch) return cookieMatch[1];
+    const urlMatch = new URL(res.url).pathname.match(/jsessionid=([^;?]+)/i);
+    if (urlMatch) return urlMatch[1];
+    return null;
+  } catch (e) {
+    console.error(`shwoo getSessionId 失敗，改用無 session 繼續：${e.message}`);
+    return null;
+  }
 }
 
 async function fetchListingHtml(isRecyclerLink, sessionId, page = 1) {
@@ -42,6 +53,7 @@ async function fetchListingHtml(isRecyclerLink, sessionId, page = 1) {
     headers: { 'content-type': 'application/x-www-form-urlencoded', 'user-agent': UA },
     // showPage 是惜物網分頁參數（見搜尋表單 hidden 欄位）。order=5 依上架日期新到舊。
     body: new URLSearchParams({ q_item1: 'C', order: '5', isRecyclerLink, showPage: String(page) }).toString(),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   if (!res.ok) {
     const bodySnippet = await res.text().then((t) => t.slice(0, 300)).catch(() => '(讀取回應內容失敗)');
@@ -136,6 +148,7 @@ function splitItemBlocks(html) {
 
 const MAX_PAGES = 15; // 安全上限：避免 showPage 被忽略時無限迴圈；正常「運輸車輛」不會這麼多頁。
 
+
 /* 回傳這輪擷取到的機車件數；不吞例外，讓呼叫端（worker.js 的排程）決定要不要記錄失敗。
    只抓「不限資格區」（isRecyclerLink='N'）——目標客群是一般民眾，「廢機動車輛回收業
    競標區」（'Y'）限合格回收商才能投標，一般人根本標不到，不收（2026-08-22 決定）。
@@ -144,11 +157,20 @@ const MAX_PAGES = 15; // 安全上限：避免 showPage 被忽略時無限迴圈
    即使 showPage 被伺服器忽略而一直回第一頁，也會在第 2 輪就因為全部重複而停，不會
    重複寫或無限迴圈）。這是 2026-08-22 補的——先前只抓第一頁，機車散在後面幾頁的全漏了，
    導致「進行中案件比實際少」。 */
+const CRAWL_BUDGET_MS = 15000; // 分頁總預算：慢的時候只抓第 1 頁就寫入（頁 1 已有機車），確保排程有時間 upsert 不被砍；快的時候一輪抓完全部頁
+
 export async function runShwooIngestion(env) {
   const rows = [];
   const seenAuids = new Set();
+  const startedAt = Date.now();
   const sessionId = await getSessionId();
   for (let page = 1; page <= MAX_PAGES; page += 1) {
+    // 預算只限制「第 2 頁以後」——第 1 頁一定要抓（不然拿不到任何機車）。
+    // 這是 2026-08-23 修的關鍵 bug：原本 getSessionId 慢就把預算耗光，第 1 頁還沒抓就 break→寫 0 筆。
+    if (page > 1 && Date.now() - startedAt > CRAWL_BUDGET_MS) {
+      console.error(`shwoo 分頁超過時間預算，停在第 ${page - 1} 頁、先寫入 ${rows.length} 筆`);
+      break;
+    }
     let html;
     try {
       html = await fetchListingHtml('N', sessionId, page);

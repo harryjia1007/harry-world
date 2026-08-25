@@ -41,7 +41,7 @@ function extractAuid(officialUrl) {
 
 async function fetchDetailHtml(auid) {
   const res = await fetch(`https://shwoo.gov.taipei/shwoo/newproduct/newproduct00/product?AUID=${auid}`, {
-    headers: { 'user-agent': UA },
+    headers: { 'user-agent': UA }, signal: AbortSignal.timeout(8000), // 惜物網最近很慢，逐筆逾時避免拖垮排程
   });
   if (!res.ok) throw new Error(`detail fetch failed for AUID=${auid}: ${res.status}`);
   return res.text();
