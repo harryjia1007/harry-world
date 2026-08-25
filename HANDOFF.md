@@ -102,23 +102,40 @@ Supabase：public_live_motorcycle_listings（單一資料表）
 
 ## 8. Current State（交接棒——每次收工更新這段）
 
-**更新於 2026-08-22（Claude）**
+**更新於 2026-08-25（Claude）**
+
+🚨 **最重要的架構發現：惜物網（shwoo）封鎖資料中心 IP。**
+2026-08-25 從兩個獨立資料中心環境（Cloudflare Worker、另一美國資料中心）測試，shwoo
+連 robots.txt（小檔）都 40 秒+ 逾時抓不到，同環境連 Google 只要 0.13 秒（網路沒問題）。
+`/_health` 的 lastRuns.shwoo 記錄也證實：robots 檢查逾時 → 繞過後列表頁本身也逾時。
+**結論：任何雲端資料中心（Cloudflare / GitHub Actions 皆是）都無法可靠抓 shwoo。**
+之前 ChatGPT 那條管線抓得到，是因為它跑在非資料中心 IP（很可能 Harry 自己的電腦）。
+→ shwoo 需要「非資料中心 / 台灣境內」的抓取端才可靠。Worker 這條 shwoo cron 保留著
+（哪天 shwoo 放行就自動恢復），但逾時改短、預期會一直失敗，別誤判成程式壞了。
 
 已上線且自動運轉：
-- ✅ 惜物網（shwoo）：每 3 分鐘擷取，正式寫入中，已驗證端到端成功。只抓「不限資格區」。
-- ✅ 司法院開放資料（judicial）：每日擷取，已 enrich（案號/車牌/承辦股/拍次），
-  正式寫入。⚠️ 待拍快照常常 0 機車（滾動的），這正常。
-- ✅ 圖片功能已完整移除（惜物網圖需 session，外連拿不到）。
-- ✅ 回收商/特殊資格/報廢車已全面排除（前端＋擷取端）。
-- ✅ 車牌 30 天自動下架、健康檢查（見 worker.js）。
+- ✅ 司法院開放資料（judicial）：每日從 Cloudflare 擷取（aomp109 opendata JSON 可連），
+  已 enrich（案號/車牌/承辦股/拍次）。⚠️ 待拍快照幾乎 0 機車（資料集以不動產為主，
+  合法開放資料就是這樣，見第 9 節與 AUTO-INGESTION-POLICY 第 10 節），非 bug。
+- ✅ 圖片功能已完整移除。回收商/特殊資格/報廢車已全面排除（前端＋擷取端）。
+- ✅ 車牌 30 天自動下架。健康檢查 `/_health`（含各來源 lastRuns cron 結果，讀 KV）。
+- ✅ 每輪 cron 結果寫入 KV（recordIngest）→ /_health 看得到成功/失敗/錯誤，不依賴 tail。
 
-進行中／待辦（退役 ChatGPT 的收尾）：
-- ⏳ **補三個 adapter**：`pcc`（政府電子採購網）、`customs`（關務署）、`moj_auction`
-  （法務部查扣變價）——這三個目前是 ChatGPT 外部管線在寫，退役後會斷。照第 5 節補。
-  moj_auction 已調查過（量少、車輛細節鎖 PDF，投報比低，見 ingestion/moj-auction.js）。
-- ⏳ **一次性回填歷史**：從司法院「已拍定」資料集（data.gov.tw #22893）回填,補歷史深度。
+進行中／待辦：
+- 🚨 **shwoo 需要非資料中心抓取端**（最關鍵）。選項見下方「給 Harry 的決策」。在解決前，
+  shwoo 資料只能靠既有（ChatGPT/本機）管線或手動，Cloudflare 這條幾乎不會成功。
+- ⏳ pcc / customs / moj_auction：調查後判定**不值得補**（幾乎全是報廢車/非機車/非一般民眾，
+  見對話與 AUTO-INGESTION-POLICY）。這三個目前仍由 ChatGPT 外部管線寫。
 - ⏳ Harry 要在 GitHub 設 `CLOUDFLARE_API_TOKEN`，自動部署才會真的動。
-- ⏳ 分支 `docs/auto-ingestion-compliance-policy` 領先 main 23 commit,建議擇期併回 main。
+- ⏳ 分支 `docs/auto-ingestion-compliance-policy` 領先 main 多個 commit，建議擇期併回 main。
+
+**給 Harry 的決策（shwoo 自動化的唯一可靠路徑）：**
+1. 在**台灣境內的小型 VPS / 一直開機的機器**上跑 repo 的 shwoo 擷取（node 排程），
+   從非封鎖 IP 寫入 Supabase。最可靠、全自動、程式仍在 repo、不需 ChatGPT。
+2. 或在 Harry 自己的電腦上排程（launchd/cron）跑同一支 node 腳本——但電腦要開機且 IP
+   不被封（Harry 在美國時可能一樣被封，待驗證）。
+3. 或接受 shwoo 只能半手動/靠既有管線更新。
+無論哪個，判定「是否可自動」的鐵則見第 5 節第 1 步：先確認該 IP 抓得到 robots 與列表頁。
 
 黑箱風險（退役前必看）：ChatGPT 那條外部管線目前仍在寫 pcc/customs/moj_auction/shwoo，
 會覆蓋 repo 管線的部分改動。**真正退役 = Harry 停掉那條外部管線**。在補完上述 adapter

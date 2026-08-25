@@ -9,7 +9,11 @@ export async function isPathAllowed(origin, path) {
   let text;
   let res;
   try {
-    res = await fetch(`${origin}/robots.txt`, { cf: { cacheTtl: 3600, cacheEverything: true } });
+    // 加逾時：來源（如惜物網）對 Cloudflare 出口很慢時，連 robots.txt 都可能拖很久，
+    // 沒逾時會把整個排程 worker 拖死。8 秒拿不到就當 fetch 失敗處理。
+    res = await fetch(`${origin}/robots.txt`, {
+      cf: { cacheTtl: 3600, cacheEverything: true }, signal: AbortSignal.timeout(8000),
+    });
   } catch (e) {
     return { allowed: false, reason: `fetch failed: ${e.message}` };
   }

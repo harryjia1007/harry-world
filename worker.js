@@ -97,20 +97,60 @@ export default {
 
 const DAILY_CRON = '17 3 * * *';
 
+/* robots.txt 檢查＋KV 快取：區分「robots 說不准」與「抓不到 robots」。
+   - 成功拿到 robots → 照結果走，並把結果快取進 KV。
+   - 抓取暫時性失敗（逾時／5xx，來源 throttle Cloudflare 常見）→ 沿用最近 7 天內的
+     已知結果，而不是 fail-closed 把已驗證的來源永久鎖死。
+   - 真正的 Disallow 規則（reason 含 "disallow"）永遠尊重，不會被快取覆蓋。
+   這樣既守住「不爬禁止來源」的原則，又不讓來源對 Cloudflare 的 throttle 卡死更新。 */
+const ROBOTS_CACHE_TTL_MS = 7 * 86400000;
+async function robotsAllowedWithCache(env, origin, path, cacheKey) {
+  const live = await isPathAllowed(origin, path);
+  const transient = /fetch failed|returned HTTP 5|failed reading/i.test(live.reason || '');
+  if (!transient) {
+    // 拿得到 robots（不論 allow 或 disallow）→ 這是權威結果，快取起來
+    try { await env.STATS.put(cacheKey, JSON.stringify({ allowed: live.allowed, reason: live.reason, at: Date.now() }), { expirationTtl: DAY_TTL }); } catch { /* ignore */ }
+    return live;
+  }
+  // 暫時性抓取失敗 → 沿用最近的已知結果
+  try {
+    const raw = await env.STATS.get(cacheKey);
+    if (raw) {
+      const c = JSON.parse(raw);
+      if (c.allowed && Date.now() - c.at < ROBOTS_CACHE_TTL_MS) {
+        return { allowed: true, reason: `robots 暫時抓不到（${live.reason}），沿用最近已知：allowed` };
+      }
+    }
+  } catch { /* ignore */ }
+  return live; // 沒有可用的已知結果 → 維持 fail-closed
+}
+
+/* 把每輪擷取結果寫進 KV，讓 /_health 讀得到「上一輪 cron 到底成功還失敗、錯在哪」——
+   比 wrangler tail 可靠（tail 在某些網路環境會一直斷線），也是給 Harry 的永久可觀測性。 */
+async function recordIngest(env, source, status) {
+  try {
+    await env.STATS.put(`ingest:${source}:last`, JSON.stringify({ at: new Date().toISOString(), ...status }), { expirationTtl: DAY_TTL });
+  } catch { /* 記錄失敗不影響擷取本身 */ }
+}
+
 /* 擷取前先確認 robots.txt 仍允許（fail closed，見 robots.js）。
    單一來源失敗只記錄、不中斷其他來源。 */
 async function runFastCycle(env) {
   if (!env.MOTO_SUPABASE_SERVICE_KEY) return; // 沒設定寫入金鑰就整輪跳過，不用半套權限硬跑
 
-  const robotsCheck = await isPathAllowed('https://shwoo.gov.taipei', '/shwoo/browse/');
-  if (!robotsCheck.allowed) {
-    console.error(`shwoo skipped this run — robots check failed: ${robotsCheck.reason}`);
+  const robotsOk = await robotsAllowedWithCache(env, 'https://shwoo.gov.taipei', '/shwoo/browse/', 'robots:shwoo');
+  if (!robotsOk.allowed) {
+    await recordIngest(env, 'shwoo', { ok: false, error: `robots check: ${robotsOk.reason}` });
+    console.error(`shwoo skipped this run — robots check failed: ${robotsOk.reason}`);
     return;
   }
   try {
+    const started = Date.now();
     const n = await runShwooIngestion(env);
+    await recordIngest(env, 'shwoo', { ok: true, wrote: n, ms: Date.now() - started });
     console.log(`shwoo ingestion ok: ${n} motorcycle rows`);
   } catch (e) {
+    await recordIngest(env, 'shwoo', { ok: false, error: String(e && e.message || e) });
     console.error('shwoo ingestion failed', e);
   }
 
@@ -132,8 +172,10 @@ async function runDailyCycle(env) {
 
   try {
     const n = await runJudicialOpenDataIngestion(env);
+    await recordIngest(env, 'judicial', { ok: true, wrote: n });
     console.log(`judicial opendata ingestion ok: ${n} motorcycle rows`);
   } catch (e) {
+    await recordIngest(env, 'judicial', { ok: false, error: String(e && e.message || e) });
     console.error('judicial opendata ingestion failed', e);
   }
 
@@ -273,7 +315,13 @@ async function handleHealth(env) {
       return { source: s, last_synced_at: ts, age_hours: Math.round(ageH * 10) / 10, stale: ageH > budget };
     });
     const stale = sources.filter((x) => x.stale).map((x) => x.source);
-    return new Response(JSON.stringify({ ok: stale.length === 0, stale, sources, total: rows.length }, null, 2),
+    // 讀出各來源「上一輪 cron 的實際結果」（成功/失敗/錯誤訊息），比只看資料新鮮度更能診斷
+    const lastRuns = {};
+    for (const s of ['shwoo', 'judicial']) {
+      const raw = await env.STATS.get(`ingest:${s}:last`);
+      if (raw) { try { lastRuns[s] = JSON.parse(raw); } catch { /* ignore */ } }
+    }
+    return new Response(JSON.stringify({ ok: stale.length === 0, stale, sources, lastRuns, total: rows.length }, null, 2),
       { headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
   } catch (e) {
     return new Response(JSON.stringify({ ok: false, error: String(e && e.message || e) }, null, 2),

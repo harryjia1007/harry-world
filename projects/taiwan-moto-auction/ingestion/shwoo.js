@@ -18,10 +18,12 @@ const ITEM_BLOCK_MARKER = '<div class="col-xs-6 col-md-3  padding10a">';
    當下的錯誤訊息只有狀態碼，看不出是 session 沒拿到、來源在擋 Cloudflare 出口 IP、
    還是純粹暫時性問題。這裡把診斷資訊補齊：session 有沒有拿到、失敗時的回應內容
    前 300 字，讓下一輪的 log 能真的告訴我們發生什麼事，不用再靠猜的。 */
-// 列表頁請求逾時：惜物網對 Cloudflare 出口很慢（實測回應要 ~40 秒），逾時要比它的回應時間長，
-// 不然自己先中止＝保證失敗。放 50 秒。等待是 I/O 不吃 CPU，排程不會因此被砍。
-// 搭配 CRAWL_BUDGET_MS=15s：慢的時候只抓第 1 頁（一次 ~40 秒 fetch）就寫入；快的時候一輪抓完全部頁。
-const REQUEST_TIMEOUT_MS = 50000;
+// 2026-08-25 定案：惜物網封鎖資料中心 IP（Cloudflare 與另一美國資料中心測試皆 40s+ 逾時，
+// 同環境連 Google 0.13s，證明網路沒問題）。所以 Cloudflare Worker 結構上抓不到 shwoo，
+// 這條每 3 分鐘的 cron 幾乎必失敗——保留只為了「哪天 shwoo 放行 Cloudflare 就自動恢復」。
+// 逾時改短（快速失敗、少浪費），不再期待它在雲端成功。shwoo 需要非資料中心的抓取方式，
+// 見 HANDOFF.md / AUTO-INGESTION-POLICY.md 的「shwoo 資料中心封鎖」段。
+const REQUEST_TIMEOUT_MS = 15000;
 
 /* 拿 session 失敗（逾時、520、沒 cookie）一律回 null，讓主流程用無 session 繼續，
    不讓「拿 session」這一步的失敗把整輪擷取拖垮——實測沒有 session 也抓得到列表。 */
