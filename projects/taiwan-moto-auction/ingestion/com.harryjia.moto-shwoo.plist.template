@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd 排程範本：每 5 分鐘在本機跑一次惜物網擷取。
+  這是「範本」——安裝前把 __NODE__ 和 __REPO__ 換成你機器上的實際路徑，
+  然後複製到 ~/Library/LaunchAgents/（那份不進版控，見 SETUP-LOCAL.md）。
+  金鑰不放這裡——run-local.mjs 會去讀 ~/.moto-ingest.env。
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.harryjia.moto-shwoo</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>__NODE__</string>
+    <string>__REPO__/projects/taiwan-moto-auction/ingestion/run-local.mjs</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>__REPO__</string>
+
+  <!-- 每 5 分鐘跑一次（300 秒）。想更頻繁改小、更省改大。 -->
+  <key>StartInterval</key>
+  <integer>300</integer>
+
+  <!-- 開機／登入後也先跑一次 -->
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!-- log 方便你事後看有沒有正常跑 -->
+  <key>StandardOutPath</key>
+  <string>__REPO__/.moto-shwoo.log</string>
+  <key>StandardErrorPath</key>
+  <string>__REPO__/.moto-shwoo.log</string>
+</dict>
+</plist>
