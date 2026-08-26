@@ -129,13 +129,13 @@ Supabase：public_live_motorcycle_listings（單一資料表）
 - ⏳ Harry 要在 GitHub 設 `CLOUDFLARE_API_TOKEN`，自動部署才會真的動。
 - ⏳ 分支 `docs/auto-ingestion-compliance-policy` 領先 main 多個 commit，建議擇期併回 main。
 
-**給 Harry 的決策（shwoo 自動化的唯一可靠路徑）：**
-1. 在**台灣境內的小型 VPS / 一直開機的機器**上跑 repo 的 shwoo 擷取（node 排程），
-   從非封鎖 IP 寫入 Supabase。最可靠、全自動、程式仍在 repo、不需 ChatGPT。
-2. 或在 Harry 自己的電腦上排程（launchd/cron）跑同一支 node 腳本——但電腦要開機且 IP
-   不被封（Harry 在美國時可能一樣被封，待驗證）。
-3. 或接受 shwoo 只能半手動/靠既有管線更新。
-無論哪個，判定「是否可自動」的鐵則見第 5 節第 1 步：先確認該 IP 抓得到 robots 與列表頁。
+**shwoo 決策（2026-08-25 拍板）：走「選項 2＝Harry 自己電腦排程跑」，但先擱置，等回台灣再啟用。**
+- 已驗證：shwoo 也擋 Harry 目前的美國 IP（本機 curl robots.txt 12s 逾時，同環境 Google 0.13s）。
+  所以選項 2 只在 Harry 人在台灣（或台灣 IP）時有效。人在美國期間 shwoo 不會更新，這是已知且接受的。
+- 腳本已現成（不需再寫）：回台灣後照 `ingestion/SETUP-LOCAL.md` 三步即可啟用
+  （建 ~/.moto-ingest.env 放金鑰 → 手動跑一次 → launchctl load plist）。
+- 若之後要「不管人在哪都 24h 更新」，再升級成台灣 VPS（同一支 run-local.mjs，換成 systemd timer）。
+- 判定任何 IP 能否自動的鐵則見第 5 節第 1 步：先確認抓得到 robots 與列表頁。
 
 黑箱風險（退役前必看）：ChatGPT 那條外部管線目前仍在寫 pcc/customs/moj_auction/shwoo，
 會覆蓋 repo 管線的部分改動。**真正退役 = Harry 停掉那條外部管線**。在補完上述 adapter
