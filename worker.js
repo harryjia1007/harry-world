@@ -126,10 +126,26 @@ async function robotsAllowedWithCache(env, origin, path, cacheKey) {
 }
 
 /* 把每輪擷取結果寫進 KV，讓 /_health 讀得到「上一輪 cron 到底成功還失敗、錯在哪」——
-   比 wrangler tail 可靠（tail 在某些網路環境會一直斷線），也是給 Harry 的永久可觀測性。 */
+   比 wrangler tail 可靠，也是給 Harry 的永久可觀測性。
+
+   2026-08-26 修：Cloudflare 寄信警告 KV 每日寫入額度（免費層 1,000 次/天）用到 90%。
+   查出來是這裡——shwoo 排程當時每三分鐘跑一次、guaranteed 失敗（shwoo 封鎖資料中心
+   IP，見 HANDOFF 第 8 節），每次都無條件寫一筆幾乎一模一樣的失敗記錄，一天就佔掉
+   480 次寫入、快半個免費額度。改成「狀態沒變就不寫」——讀一次比對，只有 ok/error
+   內容真的變了才 PUT。讀是免費層 100,000 次/天，遠比寫寬裕，這樣換是划算的。
+   （另一半修法是排程頻率從每三分鐘降到每三十分鐘，見 wrangler.toml。） */
 async function recordIngest(env, source, status) {
+  const key = `ingest:${source}:last`;
   try {
-    await env.STATS.put(`ingest:${source}:last`, JSON.stringify({ at: new Date().toISOString(), ...status }), { expirationTtl: DAY_TTL });
+    const prevRaw = await env.STATS.get(key);
+    if (prevRaw) {
+      const prev = JSON.parse(prevRaw);
+      const unchanged = prev.ok === status.ok
+        && prev.error === status.error
+        && prev.wrote === status.wrote;
+      if (unchanged) return; // 狀態沒變，不浪費一次寫入額度
+    }
+    await env.STATS.put(key, JSON.stringify({ at: new Date().toISOString(), ...status }), { expirationTtl: DAY_TTL });
   } catch { /* 記錄失敗不影響擷取本身 */ }
 }
 
