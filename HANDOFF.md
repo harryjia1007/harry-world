@@ -70,6 +70,14 @@ Supabase：public_live_motorcycle_listings（單一資料表）
 - **不覆蓋既有好資料**：`upsertListings` 會剝除 `DETAIL_PAGE_OWNED_FIELDS`（能否領牌、
   排氣量、廠牌型號、車況），這些交給詳情頁 enrichment 擁有，列表頁不碰。
 - **dry-run 開關**：`env.INGESTION_DRY_RUN==='1'` 時只印 log 不寫入。目前是 **'0'（正式寫入）**。
+- **KV 免費層寫入額度只有 1,000 次/天，讀是 100,000 次/天**：任何在 cron 裡「每輪都無條件
+  `env.STATS.put(...)`」的寫法，只要排程夠密就會把額度衝爆（2026-08-26 真的發生過：
+  shwoo 每 3 分鐘一輪、每輪無條件寫一筆診斷記錄，一天 480 次，快吃掉半個額度，Cloudflare
+  寄警告信）。原則：**先 GET 比對，狀態沒變就不 PUT**；讀便宜、寫貴。加新的 KV 寫入前
+  想一下這個排程一天會跑幾次。
+- **註解裡不要寫 `*/數字` 這種 cron 字面量**：`*/` 會把 JS 的 block comment 提前關掉，
+  變成語法錯誤（`Expected ";" but found "..."`）。要講頻率用中文描述（「每三分鐘」），
+  cron 字串只寫在 code 或字串常數裡。
 - **機車辨識共用**：一律用 `vehicle-match.js`（關鍵字、級別、車牌、排氣量、牌照文字對應）。
   「起重機被『重機』誤判」這種坑已在裡面修掉，別再各寫一份。回歸測試：
   `node --test projects/taiwan-moto-auction/ingestion/vehicle-match.test.mjs`。
