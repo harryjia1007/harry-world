@@ -1,39 +1,52 @@
 /* ============================================================
-   臺灣機車拍賣情報 — Apple 風格設計系統
-   2026-08-20 依 apple-ui-design skill 重寫（Clarity / Deference / Depth）
+   臺灣機車拍賣情報 — 正式官方風格設計系統
+   2026-08-27 依 Harry 要求由 Apple 風格改版：換成政府入口網站那種調性——
+   素雅色調、結構化表格感、以可信度與權威感為優先，取代原本圓潤活潑的膠囊
+   按鈕與飄浮卡片。參考基準：這次調查司法院／法務部各站點時實際看過的
+   judicial.gov.tw、moj.gov.tw 一類台灣官方入口網站視覺語彙（深藏青主色、
+   方正結構、清楚分隔線），但**不**放任何政府機關標誌／印信一類圖像——
+   本站是「非政府」資訊彙整站，法律頁與頁尾的免責聲明維持顯著可見，
+   風格正式不等於冒充官方。
 
-   重寫原則：
+   重寫原則（沿用上一版就定案的規矩，這次同樣適用）：
    • 所有 class 名稱一律不動——app.js 與 detail.js 直接產生這些 class，
      改名會讓畫面靜默壞掉。這份檔案只換視覺，不碰結構。
-   • 原本是壓縮成一行的寫法，改成可讀排版。檔案本來就小，維護性比幾 KB 重要。
-   • 資料密集的列表頁不套用 Apple 行銷頁那種 680px 窄版；「內容為王」在這裡
-     的意思是把案件資訊排清楚，不是把版面縮窄。
+   • 語意色（綠／琥珀／紅／中性灰）的實際色值全部原封不動沿用——那組數字是
+     逐一實測對比度調出來的（見下方個別註解），換調性不代表要重新賭一次
+     WCAG AA 過不過，能力所及的地方就不要重新發明。只換外框/形狀語言。
    ============================================================ */
 
 /* ---------- 設計 token ---------- */
 :root {
-  /* 淺色（預設）
-     底色不用純白 #ffffff——hallmark audit 指出純黑純白「顯得扁平、合成感」，
-     是很好認的 AI 生成特徵。這裡朝品牌藍極輕微地染一點色溫（幾乎看不出來，
-     但整體會有溫度），維持 Apple 的乾淨感又不落入純白。 */
-  --bg-primary: #fcfcfd;
-  --bg-secondary: #f2f3f5;
+  /* 淺色（預設）——official 文件感：偏冷的灰白紙面，不是 Apple 那種奶白。 */
+  --bg-primary: #f6f7f9;
+  --bg-secondary: #eef1f5;
   --bg-elevated: #ffffff;
-  --text-primary: #1d1d1f;
-  /* Apple 官方行銷頁用的次要文字灰是 #86868b，但實測在白底上對 13px 以下的小字
-     只有 3.62:1，gate 小標更低到 3.33:1——低於 WCAG AA 對小字要求的 4.5:1。
-     apple-ui-design skill 的色票與它自己的 checklist（Contrast ratio ≥ 4.5:1）
-     在這裡互相衝突，取無障礙優先，改用較深的 #6e6e73（實測 5.1:1 / 4.67:1）。 */
-  --text-secondary: #6e6e73;
-  --accent: #0071e3;
-  --accent-hover: #0077ed;
-  --accent-bg: rgba(0, 113, 227, 0.10);
-  --separator: rgba(0, 0, 0, 0.08);
-  --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-  --card-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.10);
-  --overlay-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  --text-primary: #1a2233;
+  /* #445069 對白底實測 7.7:1，對 --bg-secondary（#eef1f5）實測 6.9:1，
+     兩處都遠超過 WCAG AA 小字 4.5:1 的門檻，比原本 Apple 版本的次要灰更深、
+     更符合「正式文件」的閱讀感。 */
+  --text-secondary: #445069;
+  /* 深藏青，官方入口網站常見主色（司法院／法務部一類站台的色感）。
+     #1e3a5f 對白底文字對比度約 9.9:1；當按鈕底色配白字約同一數字，兩種用法
+     都遠超 WCAG AA。 */
+  --accent: #1e3a5f;
+  --accent-hover: #2b4d78;
+  --accent-bg: rgba(30, 58, 95, 0.08);
+  /* 「填色底＋白字」專用（按鈕、分頁選中態、比較列⋯）。淺色模式跟 --accent
+     共用同一個值——#1e3a5f 配白字對比 9.9:1，本來就夠深，不用另外調。
+     深色模式才需要真的分開，見下方個別註解。 */
+  --accent-fill: var(--accent);
+  --accent-fill-hover: var(--accent-hover);
+  /* 分隔線比 Apple 版本更明顯——正式文件靠「看得見的格線」分區塊，
+     不是靠陰影堆疊出的飄浮層次。 */
+  --separator: rgba(15, 23, 42, 0.14);
+  --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --card-shadow-hover: 0 2px 10px rgba(15, 23, 42, 0.10);
+  --overlay-shadow: 0 16px 48px rgba(15, 23, 42, 0.28);
 
-  /* 語意色（沿用 Apple 系統色，深淺模式各一組） */
+  /* 語意色——色值不動（實測過 WCAG AA，見下方個別註解），只是這次外框
+     從圓角膠囊改成有邊框的方正標籤，色彩本身沿用上一版已驗證的結果。 */
   /* 這個綠要夠深：疊在 12% 綠底上（合成後約 rgb(231,248,235)）才有 4.5:1。
      #1d8b4f 實測只有 3.92，不夠——之前沒抓到是因為量測時停在「已結束」分頁，
      那頁所有標籤都套 .ended 樣式，根本沒量到 .active-status。 */
@@ -57,10 +70,13 @@
   --space-xl: 48px;
   --space-2xl: 96px;
 
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
-  --radius-pill: 980px;
+  /* 圓角大幅收斂：正式文件用方正結構，不用膠囊。--radius-pill 保留這個
+     token 名稱（沿用它的既有用途：按鈕／分頁／標籤），但值改成跟 sm 一樣小，
+     整站的「膠囊形狀」就此全面消失，不用逐一去改每條規則。 */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-pill: 4px;
 
   --max: 1180px;
   --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -69,18 +85,24 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* 同樣避開純黑 #000000，用極深的中性灰帶一點藍調 */
-    --bg-primary: #0b0b0d;
-    --bg-secondary: #17171a;
-    --bg-elevated: #1c1c20;
-    --text-primary: #f5f5f7;
-    --text-secondary: #98989d;
-    --accent: #0a84ff;
-    --accent-hover: #409cff;
-    --accent-bg: rgba(10, 132, 255, 0.18);
-    --separator: rgba(255, 255, 255, 0.12);
-    --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
-    --card-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.6);
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b24;
+    --bg-elevated: #1b212c;
+    --text-primary: #eef1f6;
+    --text-secondary: #a3adc2;
+    --accent: #6f96c6;
+    --accent-hover: #8fb0da;
+    --accent-bg: rgba(111, 150, 198, 0.16);
+    /* 深色模式這裡一定要分開：--accent 要夠亮才能在深底上當連結文字讀
+       （#6f96c6 對卡片底實測 14.26:1）；但同一個亮度拿去當「按鈕底色配白字」
+       只有 3.06:1，不過 WCAG AA。故意調深一組專門給填色底用，
+       白字對比實測 5.33 / 4.62（hover），兩者都過標，且仍是同一色相，
+       不會讓按鈕跟連結看起來像不同色系。 */
+    --accent-fill: #456e99;
+    --accent-fill-hover: #4d78a5;
+    --separator: rgba(255, 255, 255, 0.14);
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --card-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.5);
     --overlay-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
 
     --green: #30d158;
@@ -125,26 +147,46 @@ h1, h2, h3 { letter-spacing: -0.02em; }
 
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
 
-/* ---------- 頁首 ---------- */
+/* ---------- 頂部識別色條 ----------
+   單純的色塊裝飾，不是任何機關印信／標誌——正式感靠色彩與結構傳達，
+   不靠疑似官方圖像。sticky 頁首本身 z-index:20，這條再高一層蓋在最上緣。 */
+body::before {
+  content: ""; position: sticky; top: 0; z-index: 21;
+  display: block; height: 3px;
+  background: var(--accent);
+}
+
+/* ---------- 頁首 ----------
+   從 Apple 版的半透明毛玻璃改成實色「公文列」：官方入口網站的頁首通常是
+   不透明實色、底部一條清楚分隔線，不是懸浮玻璃感。 */
 .site-header {
-  position: sticky; top: 0; z-index: 20;
-  height: 52px;
+  position: sticky; top: 3px; z-index: 20;
+  height: 56px;
   padding-inline: max(var(--space-lg), calc((100vw - var(--max)) / 2));
-  display: flex; align-items: center; justify-content: space-between;
-  background: color-mix(in srgb, var(--bg-primary) 72%, transparent);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-md);
+  background: var(--bg-elevated);
   border-bottom: 1px solid var(--separator);
 }
-.brand { font-size: 15px; font-weight: 600; text-decoration: none; letter-spacing: -0.01em; }
-.site-header nav { display: flex; align-items: center; gap: var(--space-lg); font-size: 13px; }
-.site-header nav a { color: var(--text-secondary); text-decoration: none; transition: color 0.2s var(--ease); }
-.site-header nav a:hover { color: var(--text-primary); }
-.site-header .back {
-  padding: 6px 14px; border-radius: var(--radius-pill);
-  background: var(--accent); color: #fff; font-weight: 500;
+.brand {
+  font-size: 16px; font-weight: 700; text-decoration: none;
+  letter-spacing: 0.01em; color: var(--text-primary); white-space: nowrap;
 }
-.site-header .back:hover { background: var(--accent-hover); color: #fff; }
+.site-header nav {
+  display: flex; align-items: center; gap: var(--space-lg); font-size: 13px;
+  min-width: 0; overflow-x: auto; scrollbar-width: none;
+}
+.site-header nav::-webkit-scrollbar { display: none; }
+.site-header nav a {
+  color: var(--text-secondary); text-decoration: none; white-space: nowrap;
+  padding-block: 4px; border-bottom: 2px solid transparent;
+  transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+.site-header nav a:hover { color: var(--text-primary); border-color: var(--separator); }
+.site-header .back {
+  padding: 6px 14px; border-radius: var(--radius-pill); border: 1px solid var(--accent-fill);
+  background: var(--accent-fill); color: #fff; font-weight: 500; flex: none;
+}
+.site-header .back:hover { background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); color: #fff; }
 
 /* ---------- 通用文字與按鈕 ---------- */
 .eyebrow {
@@ -157,11 +199,11 @@ h1, h2, h3 { letter-spacing: -0.02em; }
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-sm);
   min-height: 44px; padding: 12px 24px;
   border: 0; border-radius: var(--radius-pill);
-  background: var(--accent); color: #fff;
+  background: var(--accent-fill); color: #fff;
   font-size: 15px; font-weight: 500; text-decoration: none; cursor: pointer;
   transition: transform 0.2s var(--ease), background 0.2s var(--ease);
 }
-.button:hover { background: var(--accent-hover); transform: scale(1.02); }
+.button:hover { background: var(--accent-fill-hover); transform: scale(1.02); }
 .button:active { transform: scale(0.99); }
 
 /* ---------- 頁面標題區 ---------- */
@@ -210,7 +252,7 @@ h1, h2, h3 { letter-spacing: -0.02em; }
   transition: background 0.2s var(--ease), color 0.2s var(--ease);
 }
 .tabs button:hover { background: var(--separator); color: var(--text-primary); }
-.tabs button.active { background: var(--accent); color: #fff; }
+.tabs button.active { background: var(--accent-fill); color: #fff; }
 .tabs span { margin-left: auto; color: var(--text-secondary); font-size: 13px; }
 
 /* 篩選列 */
@@ -244,7 +286,7 @@ h1, h2, h3 { letter-spacing: -0.02em; }
 .current-view {
   display: flex; justify-content: space-between; align-items: center; gap: var(--space-md);
   padding: var(--space-md) var(--space-lg);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--separator); border-radius: var(--radius-md);
   background: var(--bg-elevated); box-shadow: var(--card-shadow);
 }
 .current-view div { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
@@ -259,10 +301,10 @@ h1, h2, h3 { letter-spacing: -0.02em; }
 /* 選擇器要比 `.current-view button` 更具體，否則填色會被那條的 transparent 蓋掉 */
 .view-actions .subscribe-btn {
   border: 0; border-radius: var(--radius-pill); cursor: pointer; white-space: nowrap;
-  background: var(--accent); color: #fff; font-size: 14px; font-weight: 600;
+  background: var(--accent-fill); color: #fff; font-size: 14px; font-weight: 600;
   padding: 7px 16px;
 }
-.view-actions .subscribe-btn:hover { background: var(--accent-hover); color: #fff; text-decoration: none; }
+.view-actions .subscribe-btn:hover { background: var(--accent-fill-hover); color: #fff; text-decoration: none; }
 
 /* 訂閱清單 */
 .watches { margin: var(--space-md) 0 0; }
@@ -270,17 +312,17 @@ h1, h2, h3 { letter-spacing: -0.02em; }
 .watches-head span { font-size: 14px; font-weight: 600; color: var(--text-primary); }
 .watches-head small { font-size: 12px; color: var(--text-secondary); }
 .watch-list { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
-.watch-item { display: inline-flex; align-items: stretch; border: 1px solid var(--border); border-radius: var(--radius-pill); overflow: hidden; background: var(--bg-secondary); }
+.watch-item { display: inline-flex; align-items: stretch; border: 1px solid var(--separator); border-radius: var(--radius-pill); overflow: hidden; background: var(--bg-secondary); }
 .watch-apply { border: 0; background: transparent; color: var(--text-primary); font-size: 13px; font-weight: 500; padding: 5px 12px; cursor: pointer; }
 .watch-apply:hover { color: var(--accent); }
-.watch-remove { border: 0; border-left: 1px solid var(--border); background: transparent; color: var(--text-secondary); font-size: 12px; padding: 5px 10px; cursor: pointer; line-height: 1; }
+.watch-remove { border: 0; border-left: 1px solid var(--separator); background: transparent; color: var(--text-secondary); font-size: 12px; padding: 5px 10px; cursor: pointer; line-height: 1; }
 .watch-remove:hover { color: var(--red); background: var(--red-bg); }
 
 .chips { min-height: 24px; display: flex; gap: var(--space-sm); flex-wrap: wrap; margin: var(--space-md) 0 var(--space-lg); }
 .chip {
-  padding: 5px 12px; border-radius: var(--radius-pill);
+  padding: 5px 12px; border: 1px solid var(--separator); border-radius: var(--radius-pill);
   background: var(--bg-elevated); color: var(--text-secondary);
-  font-size: 13px; box-shadow: var(--card-shadow);
+  font-size: 13px;
 }
 
 /* ---------- 案件卡片 ---------- */
@@ -290,12 +332,15 @@ h1, h2, h3 { letter-spacing: -0.02em; }
   position: relative;
   display: flex; flex-direction: column; min-width: 0;
   background: var(--bg-elevated);
+  border: 1px solid var(--separator);
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--card-shadow);
-  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
 }
-.card:hover { transform: translateY(-2px); box-shadow: var(--card-shadow-hover); }
+/* 拿掉上一版的位移＋放大 hover 動畫——正式文件卡片是「選取」不是「懸浮」，
+   只用邊框變色＋極輕微陰影提示可互動，不做位置位移。 */
+.card:hover { border-color: var(--accent); box-shadow: var(--card-shadow-hover); }
 
 /* 收藏按鈕 */
 .favorite-button {
@@ -316,7 +361,12 @@ h1, h2, h3 { letter-spacing: -0.02em; }
 
 .source { display: flex; gap: var(--space-sm); align-items: center; color: var(--text-secondary); font-size: 13px; }
 .source i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: none; }
-.source .status { margin-left: auto; padding: 3px 10px; border-radius: var(--radius-pill); font-size: 11px; font-weight: 500; }
+/* 狀態標籤從「純色底填滿的膠囊」改成「淡底＋同色邊框」——像公文上蓋的
+   狀態章，而不是 app 裡的彩色小圓標。色值不變，只換外框語言。 */
+.source .status {
+  margin-left: auto; padding: 2px 9px; border-radius: var(--radius-pill);
+  border: 1px solid currentColor; font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+}
 .source .active-status { color: var(--green); background: var(--green-bg); }
 .source .ended { color: var(--neutral); background: var(--neutral-bg); }
 
@@ -328,7 +378,7 @@ h1, h2, h3 { letter-spacing: -0.02em; }
 .signal-chip {
   display: inline-flex; align-items: center; padding: 3px 9px; border-radius: var(--radius-pill);
   font-size: 12px; font-weight: 600; line-height: 1.3;
-  background: transparent; border: 1px solid var(--border); color: var(--text-secondary);
+  background: transparent; border: 1px solid var(--separator); color: var(--text-secondary);
 }
 /* 第 2 拍以上＝曾流標、底價已降，用琥珀色標成「值得留意」；語意比純強調色更貼切。 */
 .signal-chip-hot { background: var(--amber-bg); border-color: transparent; color: var(--amber); }
@@ -336,12 +386,16 @@ h1, h2, h3 { letter-spacing: -0.02em; }
 .signal-chip-warn { background: var(--red-bg); border-color: transparent; color: var(--red); }
 
 /* 兩個關鍵決策欄位：能否領牌／投標資格 —— 這是本站對綜合型網站的核心差異，給它最高視覺權重 */
-/* 不用灰底方塊包住這兩欄——hallmark audit 點名「卡中卡」（卡片裡再放卡片、
-   視覺上多一層容器但沒有語意理由）。改用一條上緣細線界定區塊，資訊分組一樣
-   清楚，但少一層無意義的容器，兩個關鍵欄位也更貼近卡片本身的層級。 */
+/* 正式文件常用「左側色條」標記重點區塊（公文簽核欄、重點提示框都是這種語言）。
+   這裡沿用上一版「不做卡中卡」的判斷（不整塊包灰底），但加一條左側 accent
+   色條＋淡底，讓這兩個關鍵欄位在視覺上明確比其他事實欄位更重——這正是它們
+   語意上該有的權重。 */
 .gates {
   display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);
-  padding-top: var(--space-md); border-top: 1px solid var(--separator);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 .gate span { display: block; color: var(--text-secondary); font-size: 11px; margin-bottom: 2px; }
 .gate strong { font-size: 15px; font-weight: 600; }
@@ -372,13 +426,13 @@ h1, h2, h3 { letter-spacing: -0.02em; }
   transition: all 0.2s var(--ease);
 }
 .compare-button:hover { border-color: var(--accent); color: var(--accent); }
-.compare-button.selected { border-color: var(--accent); background: var(--accent); color: #fff; }
+.compare-button.selected { border-color: var(--accent-fill); background: var(--accent-fill); color: #fff; }
 .card-actions span { margin-left: auto; color: var(--text-secondary); font-size: 11px; white-space: nowrap; }
 
 /* ---------- 狀態區塊 ---------- */
 .loading, .error, .empty {
   margin-top: var(--space-md); padding: var(--space-2xl) var(--space-lg);
-  text-align: center; border-radius: var(--radius-lg);
+  text-align: center; border: 1px solid var(--separator); border-radius: var(--radius-lg);
   background: var(--bg-elevated); box-shadow: var(--card-shadow);
 }
 .loading span {
@@ -408,7 +462,7 @@ h1, h2, h3 { letter-spacing: -0.02em; }
 }
 .source-loading { margin: 0; color: var(--text-secondary); font-size: 15px; }
 .source-card {
-  background: var(--bg-secondary); border: 1px solid var(--border);
+  background: var(--bg-secondary); border: 1px solid var(--separator);
   border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg);
   display: grid; gap: 6px;
 }
@@ -437,28 +491,32 @@ footer { padding: var(--space-xl) 0; background: var(--bg-secondary); border-top
 .footer-inner nav a:hover { color: var(--text-primary); }
 
 /* ---------- 比較列與對話框 ---------- */
+/* 從 Apple 版「近黑毛玻璃膠囊」改成藏青實色、方正的操作列——跟主色系
+   （accent 藏青）呼應，不再是獨立於整體調色盤之外的黑色浮層。
+   文字色直接寫死白／半透明白，不依賴 --bg-primary：那個 token 深淺模式
+   差異很大（淺色近白、深色近黑），套在「不論主題永遠是深色底」的浮層上
+   在深色模式會整條看不見文字，是上一版遺留的隱藏 bug，這次一併修掉。 */
 .compare-tray {
   position: fixed; z-index: 15; left: 50%; bottom: var(--space-lg);
   transform: translateX(-50%);
   display: flex; align-items: center; gap: var(--space-md);
   padding: 10px 10px 10px var(--space-lg);
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--text-primary) 92%, transparent);
-  color: var(--bg-primary);
-  backdrop-filter: blur(20px);
+  background: var(--accent-fill);
+  color: #fff;
   box-shadow: var(--overlay-shadow);
   animation: fadeUp 0.3s var(--ease);
 }
 .compare-tray[hidden] { display: none; }
-.compare-tray span { font-size: 15px; white-space: nowrap; }
+.compare-tray span { font-size: 15px; white-space: nowrap; color: #fff; }
 .compare-tray button {
   min-height: 36px; padding: 8px 18px;
   border: 0; border-radius: var(--radius-pill);
-  background: var(--accent); color: #fff;
-  font-size: 15px; font-weight: 500; cursor: pointer;
+  background: #fff; color: var(--accent-fill);
+  font-size: 15px; font-weight: 600; cursor: pointer;
   transition: opacity 0.2s var(--ease);
 }
-.compare-tray button:last-child { background: transparent; color: var(--bg-primary); }
+.compare-tray button:last-child { background: rgba(255, 255, 255, 0.16); color: #fff; }
 .compare-tray button:hover { opacity: 0.85; }
 .compare-tray button:disabled { opacity: 0.35; cursor: not-allowed; }
 
@@ -470,7 +528,7 @@ footer { padding: var(--space-xl) 0; background: var(--bg-secondary); border-top
 dialog {
   width: min(920px, calc(100% - var(--space-lg)));
   max-height: 85vh; padding: 0;
-  border: 0; border-radius: var(--radius-lg);
+  border: 1px solid var(--separator); border-radius: var(--radius-lg);
   background: var(--bg-elevated); color: var(--text-primary);
   box-shadow: var(--overlay-shadow);
 }
@@ -531,14 +589,18 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(4px); 
 .detail-facts dt { color: var(--text-secondary); font-size: 11px; }
 .detail-facts dd { margin: 2px 0 0; font-size: 15px; font-weight: 500; overflow-wrap: anywhere; }
 
+/* 上一版底色用 --text-primary／文字用 --bg-primary 互換做「反色卡片」；
+   改成直接用 accent 藏青底＋白字——跟整站新色彩語言一致，也不用依賴兩個
+   token 剛好互補這種隱性假設。 */
 .official-callout {
   display: flex; justify-content: space-between; align-items: center; gap: var(--space-lg);
   margin-top: var(--space-md); padding: var(--space-lg);
   border-radius: var(--radius-lg);
-  background: var(--text-primary); color: var(--bg-primary);
+  background: var(--accent-fill); color: #fff;
 }
-.official-callout p { margin: var(--space-xs) 0 0; opacity: 0.7; font-size: 15px; }
-.official-callout .button { background: var(--accent); color: #fff; }
+.official-callout p { margin: var(--space-xs) 0 0; opacity: 0.85; font-size: 15px; }
+.official-callout .button { background: #fff; color: var(--accent-fill); }
+.official-callout .button:hover { background: rgba(255, 255, 255, 0.85); }
 
 /* ---------- 法律頁（legal.html 內嵌樣式的底稿） ---------- */
 .legal { max-width: 680px; padding: var(--space-xl) 0 var(--space-2xl); }
@@ -558,7 +620,12 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(4px); 
 
 /* ---------- 響應式 ---------- */
 @media (max-width: 900px) {
-  .site-header nav a:not(.back) { display: none; }
+  /* 上一版寬度不夠時把導覽連結整組隱藏、只留「返回作品集」，等於窄螢幕
+     使用者找不到「資料來源」「資料說明」的路徑。改成讓 nav 自然換行——
+     不用捲動（捲動會把最後的返回作品集按鈕捲出畫面看不到），也不用另外
+     做漢堡選單，維持零 JS 依賴。 */
+  .site-header { height: auto; flex-wrap: wrap; padding-block: var(--space-sm); row-gap: 6px; }
+  .site-header nav { flex-wrap: wrap; overflow-x: visible; row-gap: 6px; }
   .filters { grid-template-columns: 1fr 1fr; }
   .search-field { grid-column: 1 / -1; }
   .card-grid { grid-template-columns: repeat(2, 1fr); }
