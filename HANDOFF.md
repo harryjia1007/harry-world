@@ -110,9 +110,19 @@ Supabase：public_live_motorcycle_listings（單一資料表）
 
 ## 8. Current State（交接棒——每次收工更新這段）
 
-**更新於 2026-08-25（Claude）**
+**更新於 2026-08-27（Claude）**
 
-🚨 **最重要的架構發現：惜物網（shwoo）封鎖資料中心 IP。**
+🎨 **前端視覺風格已從「Apple 風格」改成「正式官方感」**（Harry 要求整體換調性）。
+只改了 `projects/taiwan-moto-auction/styles.css`，class 名稱全部沒動。主色從 Apple 藍
+換成深藏青 `#1e3a5f`、圓角大幅收斂（膠囊→方正小圓角）、卡片從陰影飄浮改成看得見的
+邊框。**接手的人要注意**：深色模式的 `--accent` 現在拆成兩組——`--accent` 給連結文字
+用（調亮，方便在深色底上閱讀），`--accent-fill` 給「填色底配白字」的按鈕/分頁/浮層用
+（調深，否則白字在亮色底上對比度不夠、過不了 WCAG AA）。**新增按鈕/填色元件時要用
+`--accent-fill`，不要直接用 `--accent`**，不然深色模式白字會看不清楚。詳細規則見
+styles.css 檔頭與 token 區塊註解。過程中順手修掉三個舊 bug（`var(--border)` 從沒定義過、
+`.compare-tray` 深色模式文字色會反轉不見、手機版導覽整組消失），細節見該 commit 訊息。
+
+🚨 **架構發現：惜物網（shwoo）封鎖資料中心 IP。**
 2026-08-25 從兩個獨立資料中心環境（Cloudflare Worker、另一美國資料中心）測試，shwoo
 連 robots.txt（小檔）都 40 秒+ 逾時抓不到，同環境連 Google 只要 0.13 秒（網路沒問題）。
 `/_health` 的 lastRuns.shwoo 記錄也證實：robots 檢查逾時 → 繞過後列表頁本身也逾時。
