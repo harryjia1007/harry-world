@@ -10,6 +10,8 @@ const M = require('./shared.js');
 
 assert.equal(M.isScrap({ registration_status: 'SCRAP_ONLY' }), true);
 assert.equal(M.isScrap({ eligibility: 'LICENSED_RECYCLER_ONLY' }), true);
+assert.equal(M.isScrap({ official_title: '報廢警用汽⾞3輛、機⾞10輛' }), true);
+assert.equal(M.isScrap({ official_title: '公務用汽車標售' }), false);
 assert.equal(M.isScrap({ registration_status: 'NORMAL_TRANSFER', eligibility: 'PUBLIC' }), false);
 assert.equal(M.isActive({ auction_status: 'SCHEDULED', ends_at: '2099-01-01T00:00:00Z' }, new Date('2026-08-18T00:00:00Z')), true);
 assert.equal(M.isActive({ auction_status: 'SCHEDULED', ends_at: '2026-01-01T00:00:00Z' }, new Date('2026-08-18T00:00:00Z')), false);
@@ -23,6 +25,16 @@ assert.equal(M.safeOfficialUrl('https://web.pcc.gov.tw/opas/aspam/public/readOne
 assert.equal(M.safeOfficialUrl('https://web.customs.gov.tw/download/auction.pdf') !== null, true);
 assert.equal(M.safeOfficialUrl('https://www.tcy.moj.gov.tw/notice/123/post') !== null, true);
 assert.equal(M.safeOfficialUrl('https://example.com/not-official'), null);
+
+const time = new Date('2026-09-25T12:00:00Z');
+const daily = { staleHours: 36 };
+assert.deepEqual(M.sourceFreshness([], daily, time), { state: 'missing', latest: null });
+assert.deepEqual(M.sourceFreshness([{ last_synced_at: null }], daily, time), { state: 'unknown', latest: null });
+assert.equal(M.sourceFreshness([{ last_synced_at: '2026-09-25T06:00:00Z' }], daily, time).state, 'recent');
+assert.equal(M.sourceFreshness([{ last_synced_at: '2026-08-27T04:45:00Z' }], daily, time).state, 'stale');
+assert.equal(M.sourceFreshness([{ last_synced_at: '2026-08-14T23:27:00Z' }], { staleHours: 72 }, time).state, 'stale');
+assert.equal(M.sourceFreshness([{ last_synced_at: '2026-09-26T12:00:00Z' }], daily, time).state, 'unknown');
+assert.equal(M.sourceMeta.some((source) => /每日兩次/.test(source.mode)), false);
 
 M.writeList(M.FAVORITES_KEY, ['kept', 'gone']);
 assert.equal(M.pruneList(M.FAVORITES_KEY, ['kept']), true);
