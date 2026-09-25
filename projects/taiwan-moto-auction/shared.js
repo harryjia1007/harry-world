@@ -22,7 +22,7 @@
     {
       adapter: "moj_auction",
       name: sourceLabels.moj_auction,
-      mode: "每日兩次自動同步",
+      mode: "排程嘗試同步",
       scope: "檢察機關查扣物集中拍賣",
       officialUrl: "https://auction.moj.gov.tw/1724/1726/searchList",
       staleHours: 36,
@@ -30,7 +30,7 @@
     {
       adapter: "pcc",
       name: sourceLabels.pcc,
-      mode: "官方開放資料每日檢查",
+      mode: "官方開放資料排程檢查",
       scope: "全國機關財物變賣；報廢案件另行分區",
       officialUrl: "https://data.gov.tw/dataset/7263",
       staleHours: 72,
@@ -38,15 +38,15 @@
     {
       adapter: "moj_enforcement_cms",
       name: sourceLabels.moj_enforcement_cms,
-      mode: "13 個分署公告每日兩次檢查",
-      scope: "由分署官方公告發現案件，不操作中央驗證碼",
+      mode: "分署公告排程檢查",
+      scope: "13 個分署公告管道；本站不保證案件完整",
       officialUrl: "https://www.tpk.moj.gov.tw/9539/9685/1458230/1461437/",
       staleHours: 36,
     },
     {
       adapter: "customs",
       name: sourceLabels.customs,
-      mode: "四關公告每日檢查",
+      mode: "四關公告排程檢查",
       scope: "基隆、臺北、臺中、高雄四關；附件只連回官方",
       officialUrl: "https://web.customs.gov.tw/singlehtml/1207?cntId=cus1_93228_1207",
       staleHours: 72,
@@ -54,7 +54,7 @@
     {
       adapter: "shwoo",
       name: sourceLabels.shwoo,
-      mode: "臺灣網路批次同步",
+      mode: "臺灣網路批次嘗試同步",
       scope: "參與機關公開標售與近期結果",
       officialUrl: "https://shwoo.gov.taipei/shwoo/browse/browse00/",
       staleHours: 36,
@@ -63,9 +63,9 @@
       adapter: "judicial",
       name: sourceLabels.judicial,
       mode: "人工核對官方公告",
-      scope: "法院動產法拍；不宣稱全國即時完整",
+      scope: "人工核對的法院動產法拍；非全國完整收錄",
       officialUrl: "https://aomp109.judicial.gov.tw/",
-      staleHours: null,
+      staleHours: 72,
     },
     {
       adapter: "moj_enforcement",
@@ -73,7 +73,7 @@
       mode: "人工驗證後匯入",
       scope: "官方查詢含驗證碼，尚未納入無人排程",
       officialUrl: "https://www.tpkonsale.moj.gov.tw/Chattel",
-      staleHours: null,
+      staleHours: 72,
     },
   ];
   const vehicleTypeLabels = { MOTORCYCLE: "機車", CAR: "汽車", MIXED: "汽機車混合批次", UNKNOWN: "車種未確認" };
@@ -173,6 +173,18 @@
     if (Number.isNaN(date.getTime())) return "官方未提供";
     return new Intl.DateTimeFormat("zh-TW", { timeZone: "Asia/Taipei", year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(date);
   }
+  function sourceFreshness(rows, meta, now = new Date()) {
+    if (!rows.length) return { state: "missing", latest: null };
+    const timestamps = rows.map((row) => Date.parse(row.last_synced_at)).filter(Number.isFinite);
+    if (!timestamps.length) return { state: "unknown", latest: null };
+    const newest = Math.max(...timestamps);
+    const current = now instanceof Date ? now.getTime() : Number(now);
+    if (!Number.isFinite(current) || newest > current + 5 * 60 * 1000) return { state: "unknown", latest: null };
+    return {
+      state: current - newest > meta.staleHours * 60 * 60 * 1000 ? "stale" : "recent",
+      latest: new Date(newest).toISOString(),
+    };
+  }
   function daysUntil(value, now = new Date()) {
     if (!value) return null;
     return Math.ceil((new Date(value).getTime() - now.getTime()) / 86400000);
@@ -185,9 +197,11 @@
     return row.vehicle_category && row.vehicle_category !== "UNKNOWN" ? "MOTORCYCLE" : "UNKNOWN";
   }
   function isScrap(row) {
+    const officialTitle = String(row.official_title || "").normalize("NFKC");
     return ["SCRAP_ONLY", "CANNOT_RELICENSE"].includes(row.registration_status)
       || row.eligibility === "LICENSED_RECYCLER_ONLY"
-      || row.disposal_origin === "SCRAP_DISPOSAL";
+      || row.disposal_origin === "SCRAP_DISPOSAL"
+      || /報廢[^，,。；;\s]{0,8}(?:汽(?:、|及|與|和)?機車|汽車|機車|車輛)/.test(officialTitle);
   }
   function isActive(row, now = new Date()) {
     if (isEnded(row, now)) return false;
@@ -254,6 +268,6 @@
   return {
     API_URL, API_KEY, FAVORITES_KEY, COMPARE_KEY, sourceLabels, sourceMeta, vehicleTypeLabels, carCategoryLabels, classLabels, eligibilityLabels,
     registrationLabels, ccBands, readList, writeList, toggleList, pruneList, isEnded, isActive, isScrap, statusLabel, priceInfo, region, safeOfficialUrl, safePhotoUrl,
-    escapeHtml, money, dateTime, daysUntil, title, vehicleType, fetchRows, rememberSnapshots,
+    escapeHtml, money, dateTime, sourceFreshness, daysUntil, title, vehicleType, fetchRows, rememberSnapshots,
   };
 });

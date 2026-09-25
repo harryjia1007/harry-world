@@ -296,31 +296,31 @@ function renderComparison() {
   }));
 }
 function showMessage(text) { $('#alerts').hidden = false; $('#alertText').textContent = text; }
-function sourceLatest(rows) { return rows.map((row) => row.last_synced_at).filter(Boolean).sort().at(-1) || null; }
 function renderSourceHealth(rows) {
-  const staleNames = [];
+  const summary = { recent: 0, stale: 0, missing: 0, unknown: 0 };
   $('#sourceHealth').replaceChildren(...M.sourceMeta.map((meta) => {
     const sourceRows = rows.filter((row) => row.source_adapter === meta.adapter);
-    const latest = sourceLatest(sourceRows);
-    const stale = latest && meta.staleHours && Date.now() - new Date(latest).getTime() > meta.staleHours * 60 * 60 * 1000;
-    if (stale) staleNames.push(meta.name);
+    const freshness = M.sourceFreshness(sourceRows, meta);
+    summary[freshness.state] += 1;
     const active = sourceRows.filter((row) => matchesLifecycle(row, 'active')).length;
-    const status = !sourceRows.length ? '尚未匯入' : stale ? `更新逾 ${meta.staleHours} 小時` : meta.staleHours == null ? '人工核對' : '已有正式資料';
+    const status = { recent: '近期有同步資料', stale: '收錄資料已過期', missing: '本站尚未收錄', unknown: '資料時間未確認' }[freshness.state];
     const card = document.createElement('article');
-    card.className = `source-health-card${stale || !sourceRows.length ? ' warning' : ''}`;
-    card.innerHTML = `<div><h3>${M.escapeHtml(meta.name)}</h3><span>${M.escapeHtml(status)}</span></div><p>${M.escapeHtml(meta.scope)}</p><dl><div><dt>同步方式</dt><dd>${M.escapeHtml(meta.mode)}</dd></div><div><dt>目前收錄</dt><dd>${sourceRows.length} 筆</dd></div><div><dt>進行中</dt><dd>${active} 筆</dd></div><div><dt>最後資料時間</dt><dd>${latest ? M.escapeHtml(M.dateTime(latest)) : '尚無'}</dd></div></dl><a href="${M.escapeHtml(meta.officialUrl)}" target="_blank" rel="noopener noreferrer">前往官方來源 ↗</a>`;
+    card.className = `source-health-card${freshness.state === 'recent' ? '' : ' warning'}`;
+    card.innerHTML = `<div><h3>${M.escapeHtml(meta.name)}</h3><span>${M.escapeHtml(status)}</span></div><p>${M.escapeHtml(meta.scope)}</p><dl><div><dt>取得方式</dt><dd>${M.escapeHtml(meta.mode)}</dd></div><div><dt>本站收錄</dt><dd>${sourceRows.length} 筆</dd></div><div><dt>進行中</dt><dd>${active} 筆</dd></div><div><dt>最近收錄資料</dt><dd>${freshness.latest ? M.escapeHtml(M.dateTime(freshness.latest)) : '尚無'}</dd></div></dl><a href="${M.escapeHtml(meta.officialUrl)}" target="_blank" rel="noopener noreferrer">前往官方來源 ↗</a>`;
     return card;
   }));
   const active = rows.filter((row) => matchesLifecycle(row, 'active')).length;
-  $('#sourceCounts').textContent = `共收錄 ${rows.length} 筆正式資料，其中 ${active} 筆拍賣日期尚未到。`;
-  return staleNames;
+  $('#sourceCounts').textContent = `本站收錄 ${rows.length} 筆，其中 ${active} 筆列為進行中；不代表官方來源的案件總量。`;
+  return summary;
 }
-function renderAlerts(changes, staleNames) {
+function renderAlerts(changes, freshness) {
   const ids = favorites();
   const due = state.rows.filter((row) => ids.includes(row.id) && M.isActive(row) && M.daysUntil(row.ends_at) != null && M.daysUntil(row.ends_at) >= 0 && M.daysUntil(row.ends_at) <= 3);
   const relevantChanges = changes.filter((change) => ids.includes(change.id));
   const messages = [];
-  if (staleNames.length) messages.push(`${staleNames.join('、')}超過 36 小時未更新`);
+  if (freshness.stale) messages.push(`${freshness.stale} 個來源的收錄資料已過期`);
+  if (freshness.missing) messages.push(`${freshness.missing} 個來源尚無本站收錄資料`);
+  if (freshness.unknown) messages.push(`${freshness.unknown} 個來源的資料時間未確認`);
   if (due.length) messages.push(`${due.length} 筆收藏將在 3 天內截止`);
   if (relevantChanges.length) messages.push(`${relevantChanges.length} 筆收藏價格有異動`);
   $('#alerts').hidden = !messages.length;
@@ -372,11 +372,13 @@ async function load() {
     M.pruneList(M.FAVORITES_KEY, state.rows.map((row) => row.id));
     M.pruneList(M.COMPARE_KEY, state.rows.map((row) => row.id));
     renderDynamicOptions(); renderCcOptions(); syncForm();
-    const latest = sourceLatest(state.rows);
-    const staleNames = renderSourceHealth(state.rows);
-    $('#syncStatus').textContent = latest ? `最新一筆資料 ${M.dateTime(latest)}；各來源時間見下方` : '目前尚無案件';
-    $('.sync-pill').classList.toggle('stale', Boolean(staleNames.length));
-    renderAlerts(M.rememberSnapshots(state.rows.filter((row) => favorites().includes(row.id))), staleNames);
+    const latest = M.sourceFreshness(state.rows, { staleHours: 72 }).latest;
+    const freshness = renderSourceHealth(state.rows);
+    $('#syncStatus').textContent = latest
+      ? `最近收錄 ${M.dateTime(latest)}；${freshness.stale} 來源過期、${freshness.missing} 來源未收錄`
+      : '目前沒有可確認時間的收錄資料';
+    $('.sync-pill').classList.toggle('stale', freshness.stale + freshness.missing + freshness.unknown > 0);
+    renderAlerts(M.rememberSnapshots(state.rows.filter((row) => favorites().includes(row.id))), freshness);
     render();
   } catch (error) {
     console.error(error); $('#error').hidden = false; $('#syncStatus').textContent = '資料暫時離線'; $('#sourceCounts').textContent = '正式資料暫時無法統計';
