@@ -54,7 +54,7 @@
     {
       adapter: "shwoo",
       name: sourceLabels.shwoo,
-      mode: "臺灣網路批次嘗試同步",
+      mode: "獨立批次，未納入每日排程",
       scope: "參與機關公開標售與近期結果",
       officialUrl: "https://shwoo.gov.taipei/shwoo/browse/browse00/",
       staleHours: 36,
@@ -192,6 +192,15 @@
   function title(row) {
     return [row.brand_name, row.model_name].filter(Boolean).join(" ") || row.official_title || "車輛拍賣案件";
   }
+  function hasFactValue(value) {
+    return value !== null && value !== undefined && value !== "" && value !== false;
+  }
+  function lotQuantityLabel(row) {
+    const quantity = Number(row.lot_size);
+    return row.lot_size != null && Number.isInteger(quantity) && quantity > 0 && (!row.bulk_lot || quantity > 1)
+      ? `${quantity} 輛${row.bulk_lot ? "（整批）" : ""}`
+      : "數量待核對";
+  }
   function vehicleType(row) {
     if (["MOTORCYCLE", "CAR", "MIXED", "UNKNOWN"].includes(row.vehicle_type)) return row.vehicle_type;
     return row.vehicle_category && row.vehicle_category !== "UNKNOWN" ? "MOTORCYCLE" : "UNKNOWN";
@@ -268,6 +277,6 @@
   return {
     API_URL, API_KEY, FAVORITES_KEY, COMPARE_KEY, sourceLabels, sourceMeta, vehicleTypeLabels, carCategoryLabels, classLabels, eligibilityLabels,
     registrationLabels, ccBands, readList, writeList, toggleList, pruneList, isEnded, isActive, isScrap, statusLabel, priceInfo, region, safeOfficialUrl, safePhotoUrl,
-    escapeHtml, money, dateTime, sourceFreshness, daysUntil, title, vehicleType, fetchRows, rememberSnapshots,
+    escapeHtml, money, dateTime, sourceFreshness, daysUntil, title, hasFactValue, lotQuantityLabel, vehicleType, fetchRows, rememberSnapshots,
   };
 });

@@ -25,6 +25,14 @@ assert.equal(M.safeOfficialUrl('https://web.pcc.gov.tw/opas/aspam/public/readOne
 assert.equal(M.safeOfficialUrl('https://web.customs.gov.tw/download/auction.pdf') !== null, true);
 assert.equal(M.safeOfficialUrl('https://www.tcy.moj.gov.tw/notice/123/post') !== null, true);
 assert.equal(M.safeOfficialUrl('https://example.com/not-official'), null);
+assert.equal(M.hasFactValue(0), true);
+assert.equal(M.hasFactValue(false), false);
+assert.equal(M.hasFactValue(null), false);
+assert.equal(M.lotQuantityLabel({ lot_size: null, bulk_lot: true }), '數量待核對');
+assert.equal(M.lotQuantityLabel({ lot_size: 0, bulk_lot: true }), '數量待核對');
+assert.equal(M.lotQuantityLabel({ lot_size: 1, bulk_lot: true }), '數量待核對');
+assert.equal(M.lotQuantityLabel({ lot_size: 1, bulk_lot: false }), '1 輛');
+assert.equal(M.lotQuantityLabel({ lot_size: 2, bulk_lot: true }), '2 輛（整批）');
 
 const time = new Date('2026-09-25T12:00:00Z');
 const daily = { staleHours: 36 };
@@ -35,6 +43,7 @@ assert.equal(M.sourceFreshness([{ last_synced_at: '2026-08-27T04:45:00Z' }], dai
 assert.equal(M.sourceFreshness([{ last_synced_at: '2026-08-14T23:27:00Z' }], { staleHours: 72 }, time).state, 'stale');
 assert.equal(M.sourceFreshness([{ last_synced_at: '2026-09-26T12:00:00Z' }], daily, time).state, 'unknown');
 assert.equal(M.sourceMeta.some((source) => /每日兩次/.test(source.mode)), false);
+assert.match(M.sourceMeta.find((source) => source.adapter === 'shwoo').mode, /未納入每日排程/);
 
 M.writeList(M.FAVORITES_KEY, ['kept', 'gone']);
 assert.equal(M.pruneList(M.FAVORITES_KEY, ['kept']), true);
