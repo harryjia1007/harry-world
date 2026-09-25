@@ -33,6 +33,7 @@ footer{background:var(--ink);color:white}.footer-inner{display:flex;justify-cont
 
 /* Marketplace interaction improvements */
 .card{position:relative}.no-photo-note{margin:18px 56px -4px 20px;color:var(--muted);font-size:12px;font-weight:800}.card-without-photo{border-top:5px solid var(--forest)}
+.check[hidden]{display:none}
 .photo-failed{height:100%;display:grid;place-items:center;color:var(--muted);font-weight:800}.photo-failed[hidden]{display:none}.image-error .official-photo,.image-error .photo-count,.image-error button{display:none}
 .source{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center}.source-name{min-width:0;overflow:hidden;margin-left:0!important;text-overflow:ellipsis;white-space:nowrap}.source-actions{display:flex;align-items:center;gap:6px;margin-left:auto}.source-actions .vehicle-badge,.source-actions .status{margin-left:0}.favorite-button{position:static;z-index:auto;flex:none;width:44px;height:44px;border:1px solid rgba(23,35,31,.16);border-radius:50%;background:var(--canvas);color:#7c8581;font-size:20px;cursor:pointer;box-shadow:none}.favorite-button.selected{color:#b13d3d;background:#fff1f1}
 .card-actions{justify-content:flex-start;flex-wrap:wrap}.detail-link{font-weight:900;color:var(--forest);font-size:13px}.compare-button{border:1px solid var(--line);border-radius:7px;background:white;padding:6px 9px;color:var(--ink);font-size:11px;font-weight:800;cursor:pointer}.compare-button.selected{border-color:var(--forest);background:#e7eee9;color:var(--forest)}.card-actions span{margin-left:auto}

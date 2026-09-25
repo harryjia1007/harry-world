@@ -23,7 +23,7 @@
         <label><span>地區</span><select id="region"><option value="">全部地區</option></select></label>
         <label><span>排序</span><select id="sort"><option value="deadline">快截止優先</option><option value="newest">最近同步優先</option><option value="priceLow">價格低到高</option><option value="priceHigh">價格高到低</option><option value="completeness">資料完整優先</option></select></label>
         <button class="button filter-button" type="submit">套用</button>
-        <details class="advanced-filters" id="advancedFilters"><summary>更多篩選：規格、資格、價格與照片</summary><div>
+        <details class="advanced-filters" id="advancedFilters"><summary>更多篩選：規格、資格與價格</summary><div>
           <label id="motorcycleClassField"><span>機車級別</span><select id="vehicleClass"><option value="">全部機車級別</option><option value="ORDINARY_LIGHT">普通輕型</option><option value="ORDINARY_HEAVY">普通重型</option><option value="LARGE_HEAVY">大型重型</option><option value="ELECTRIC_MOTORCYCLE">電動機車</option><option value="HEAVY_UNSPECIFIED">重型（級別未明）</option><option value="UNKNOWN">級別未確認</option></select></label>
           <label id="ccField"><span>機車排氣量</span><select id="cc"><option value="">全部排氣量</option></select></label>
           <label id="carCategoryField"><span>汽車類別</span><select id="carCategory"><option value="">全部汽車類別</option><option value="PASSENGER">小客車／轎車</option><option value="SUV">休旅車</option><option value="VAN">廂型／客貨車</option><option value="TRUCK">貨車</option><option value="BUS">大客車／遊覽車</option><option value="OTHER">其他汽車</option><option value="UNKNOWN">類別未確認</option></select></label>
@@ -32,13 +32,13 @@
           <label><span>拍賣期限</span><select id="deadline"><option value="">不限期限</option><option value="3">3 天內</option><option value="7">7 天內</option><option value="14">14 天內</option><option value="30">30 天內</option></select></label>
           <label><span>最低價格</span><input id="minPrice" type="number" min="0" step="100" inputmode="numeric" placeholder="不限"></label>
           <label><span>最高價格</span><input id="maxPrice" type="number" min="0" step="100" inputmode="numeric" placeholder="不限"></label>
-          <label class="check"><input id="hasPhotos" type="checkbox">只看有照片</label>
+          <label class="check" id="photoFilterField" hidden><input id="hasPhotos" type="checkbox">只看有照片</label>
           <label class="check"><input id="singleLot" type="checkbox">只看單輛</label>
         </div></details>
       </form>
       <div class="current-view"><div><span>目前瀏覽</span><strong id="summary">正式資料讀取中</strong></div><button id="clearFilters" type="button">清除條件</button></div><div class="chips" id="chips"></div>
       <div class="loading" id="loading"><span></span>正在讀取正式案件…</div><div class="error" id="error" hidden><h3>正式資料暫時無法載入</h3><p>沒有以假資料替代。請稍後重試，或直接前往官方來源。</p><button class="button" id="retry" type="button">重新讀取</button></div>
-      <div class="card-grid" id="results"></div><div class="empty" id="empty" hidden><h3>目前沒有符合條件的正式案件</h3><p id="emptyHint">可切換狀態或清除部分條件。</p><div class="empty-actions"><button class="button" id="emptyClear" type="button">清除篩選</button><button id="emptyEnded" type="button">查看已結束紀錄</button></div></div>
+      <div class="card-grid" id="results"></div><div class="empty" id="empty" hidden><h3>目前沒有符合條件的正式案件</h3><p id="emptyHint">可切換狀態或清除部分條件。</p><div class="empty-actions"><button class="button" id="emptyClear" type="button">清除篩選</button><button id="emptyMixed" type="button" hidden>查看混合批次</button><button id="emptyEnded" type="button">查看已結束紀錄</button></div></div>
     </div></section>
     <section class="source-summary" id="coverage"><div class="shell"><div class="source-heading"><div><h2>各來源收錄狀態</h2><p id="sourceCounts">正在統計正式案件</p></div><a href="./legal.html">查看資料與存取說明</a></div><div class="source-health-grid" id="sourceHealth"></div><p class="source-footnote">狀態依本站案件的最近收錄時間計算，不能證明排程成功或已涵蓋官方所有案件。「未收錄」也不代表官方沒有案件。</p></div></section>
     <aside class="notice"><div class="shell"><strong>投標前請查看官方公告。</strong><span>本站為非政府資訊彙整，資料可能延遲或異動。</span></div></aside>

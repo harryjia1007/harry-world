@@ -20,8 +20,8 @@ function preferredPrice(row) { return M.priceInfo(row).value; }
 function matchesLifecycle(item, view = state.view) {
   const scrap = M.isScrap(item);
   if (view === 'scrap') return scrap;
-  if (scrap) return false;
   if (view === 'favorites') return favorites().includes(item.id);
+  if (scrap) return false;
   if (view === 'all') return true;
   if (view === 'active') return M.isActive(item);
   if (view === 'ended') return M.isEnded(item);
@@ -97,7 +97,7 @@ function riskMarkup(item) {
 }
 function photoMarkup(item) {
   const urls = (Array.isArray(item.photo_urls) ? item.photo_urls : []).map(M.safePhotoUrl).filter(Boolean);
-  if (!urls.length) return '<p class="no-photo-note">官方未提供照片</p>';
+  if (!urls.length) return '<p class="no-photo-note">本站未顯示照片</p>';
   return `<div class="photo-carousel" data-index="0" tabindex="0" aria-label="${M.escapeHtml(M.title(item))} 官方照片，可用左右方向鍵切換">${urls.map((url, index) => `<img src="${M.escapeHtml(url)}" alt="${M.escapeHtml(M.title(item))} 官方照片 ${index + 1}" loading="lazy" ${index ? 'hidden' : ''}>`).join('')}${urls.length > 1 ? `<button class="photo-prev" type="button" aria-label="上一張照片">‹</button><button class="photo-next" type="button" aria-label="下一張照片">›</button><span class="photo-count">1 / ${urls.length}</span>` : ''}<span class="official-photo">官方來源照片</span><div class="photo-failed" hidden>官方照片暫時無法顯示</div></div>`;
 }
 function currentReturnSearch() {
@@ -131,7 +131,7 @@ function card(item) {
     ? `${fact('機車級別', M.classLabels[item.vehicle_category] || '級別未確認')}${fact('排氣量', item.displacement_cc == null ? '官方未提供' : `${item.displacement_cc} c.c.`)}`
     : type === 'CAR'
       ? `${fact('汽車類別', M.carCategoryLabels[item.car_category] || '類別未確認')}${fact('引擎排氣量', item.displacement_cc == null ? '官方未提供' : `${item.displacement_cc} c.c.`)}`
-      : `${fact('車輛類型', M.vehicleTypeLabels[type])}${fact('批次數量', item.lot_size > 1 ? `${item.lot_size} 輛` : '官方未提供')}`;
+      : `${fact('車輛類型', M.vehicleTypeLabels[type])}${fact('批次數量', M.lotQuantityLabel(item))}`;
   const officialTitle = item.official_title && item.official_title !== M.title(item) ? `<p class="official-title">${M.escapeHtml(item.official_title)}</p>` : '';
   article.className = `card${Array.isArray(item.photo_urls) && item.photo_urls.some(M.safePhotoUrl) ? '' : ' card-without-photo'}`;
   article.dataset.id = item.id;
@@ -244,9 +244,15 @@ function renderCounts() {
 function render() {
   renderCcOptions();
   const items = filtered();
+  const mixedCount = state.rows.filter((row) => M.vehicleType(row) === 'MIXED' && matchesFilters(row, { ignoreVehicle: true, ignoreTypeFilters: true, ignoreCc: true })).length;
   $('#results').replaceChildren(...items.map(card));
   $('#empty').hidden = items.length !== 0 || !state.rows.length;
-  $('#emptyHint').textContent = state.view === 'favorites' ? '按案件右上角的愛心，就會收藏在這台裝置。' : '目前條件可能太窄，也可能是該來源尚未完成更新。';
+  const showMixed = items.length === 0 && ['MOTORCYCLE', 'CAR'].includes(state.vehicleType) && mixedCount > 0;
+  $('#emptyHint').textContent = showMixed
+    ? `另有 ${mixedCount} 筆汽機車混合批次，可能包含你要找的車；請確認是否須整批投標。`
+    : state.view === 'favorites' ? '按案件右上角的愛心，就會收藏在這台裝置。' : '目前條件可能太窄，也可能是該來源尚未完成更新。';
+  $('#emptyMixed').hidden = !showMixed;
+  $('#emptyMixed').textContent = `查看 ${mixedCount} 筆混合批次`;
   renderChips(items); renderCounts();
   $$('.tabs button').forEach((button) => { const on = button.dataset.view === state.view; button.classList.toggle('active', on); button.setAttribute('aria-selected', String(on)); });
   $$('.vehicle-tabs button').forEach((button) => { const on = button.dataset.vehicle === state.vehicleType; button.classList.toggle('active', on); button.setAttribute('aria-selected', String(on)); });
@@ -369,6 +375,9 @@ async function load() {
   try {
     const rows = await M.fetchRows();
     state.rows = [...new Map(rows.map((row) => [row.id, row])).values()];
+    const hasVisiblePhotos = state.rows.some((row) => Array.isArray(row.photo_urls) && row.photo_urls.some(M.safePhotoUrl));
+    $('#photoFilterField').hidden = !hasVisiblePhotos;
+    if (!hasVisiblePhotos) state.hasPhotos = false;
     M.pruneList(M.FAVORITES_KEY, state.rows.map((row) => row.id));
     M.pruneList(M.COMPARE_KEY, state.rows.map((row) => row.id));
     renderDynamicOptions(); renderCcOptions(); syncForm();
@@ -408,6 +417,7 @@ $('#filters').addEventListener('submit', (event) => {
 $('#clearFilters').addEventListener('click', () => { resetFilters(); render(); });
 $('#emptyClear').addEventListener('click', () => { resetFilters(); state.view = 'active'; render(); });
 $('#emptyEnded').addEventListener('click', () => { resetFilters(); state.view = 'ended'; render(); });
+$('#emptyMixed').addEventListener('click', () => { state.vehicleType = 'MIXED'; state.vehicleClass = ''; state.carCategory = ''; state.cc = ''; syncForm(); render(); });
 $('#retry').addEventListener('click', load);
 $('#clearCompare').addEventListener('click', () => { M.writeList(M.COMPARE_KEY, []); render(); });
 $('#openCompare').addEventListener('click', () => { renderComparison(); $('#compareDialog').showModal(); });
