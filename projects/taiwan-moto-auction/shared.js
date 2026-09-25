@@ -54,7 +54,7 @@
     {
       adapter: "shwoo",
       name: sourceLabels.shwoo,
-      mode: "臺灣網路批次嘗試同步",
+      mode: "獨立批次，未納入每日排程",
       scope: "參與機關公開標售與近期結果",
       officialUrl: "https://shwoo.gov.taipei/shwoo/browse/browse00/",
       staleHours: 36,
