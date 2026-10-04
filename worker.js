@@ -53,6 +53,56 @@ function withSecurity(res, pathname) {
   return r;
 }
 
+// Static Assets currently omits byte-range support for these two short previews.
+// A fixed-length full response lets the native Cache API serve video ranges.
+const NOTCHGLASS_PREVIEWS = new Map([
+  ['/notchglass-assets/v7-20261004/media/web-convert.mp4', 6673508],
+  ['/notchglass-assets/v7-20261004/media/web-music.mp4', 2840702],
+]);
+async function previewResponse(request, env) {
+  const url = new URL(request.url);
+  const expectedLength = NOTCHGLASS_PREVIEWS.get(url.pathname);
+  const key = new URL(url.origin + url.pathname);
+  key.searchParams.set('ng-range-cache', `v1-${expectedLength}`);
+  const cache = caches.default;
+  let full = await cache.match(key.href);
+  if (!full) {
+    const asset = await env.ASSETS.fetch(new Request(url.origin + url.pathname, {
+      headers: { 'accept-encoding': 'identity' },
+    }));
+    if (asset.status !== 200) return asset;
+    const bytes = await asset.arrayBuffer();
+    if (bytes.byteLength !== expectedLength) {
+      return new Response('Preview unavailable', { status: 503 });
+    }
+    const headers = new Headers(asset.headers);
+    headers.delete('content-encoding');
+    headers.set('content-length', String(bytes.byteLength));
+    headers.set('accept-ranges', 'bytes');
+    headers.set('cache-control', 'public, max-age=3600');
+    full = new Response(bytes, { headers });
+    await cache.put(key.href, full.clone());
+  }
+  const headers = new Headers(request.headers);
+  const range = headers.get('range');
+  // Ignore malformed or multipart ranges; these small previews need one range.
+  if (range && (range.length > 128 || !/^bytes=(?:\d+-\d*|-\d+)$/.test(range))) {
+    headers.delete('range');
+  }
+  const ifRange = headers.get('if-range');
+  if (ifRange && (ifRange.startsWith('W/') ||
+      (ifRange !== full.headers.get('etag') && ifRange !== full.headers.get('last-modified')))) {
+    headers.delete('range');
+  }
+  headers.delete('if-range');
+  // HEAD describes the full representation, never a range body.
+  if (request.method === 'HEAD') headers.delete('range');
+  const selected = await cache.match(new Request(key.href, { headers })) || full;
+  return request.method === 'HEAD'
+    ? new Response(null, selected)
+    : selected;
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -68,7 +118,9 @@ export default {
     else if (url.pathname === '/_stats')      res = await handleStats(request, env);
     else {
       // 統計「頁面瀏覽」：只記 HTML 頁面，不記圖片/JS/CSS，避免灌水
-      res = await env.ASSETS.fetch(request);
+      res = NOTCHGLASS_PREVIEWS.has(url.pathname) && ['GET', 'HEAD'].includes(request.method)
+        ? await previewResponse(request, env)
+        : await env.ASSETS.fetch(request);
       if (isPageRequest(url, request, res)) {
         ctx.waitUntil(recordView(request, env, url));
       }
