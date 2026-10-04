@@ -9,3 +9,7 @@ worker.js
 IMG_6558.JPG
 *.bak
 *.bak2
+*.bak*
+*.md.*
+.dev.vars*
+.env*

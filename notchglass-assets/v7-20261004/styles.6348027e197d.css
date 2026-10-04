@@ -1,0 +1,327 @@
+
+/* 版面概念：整個網頁就是一台 Mac 的螢幕。最上面的選單列與瀏海是真的能用的 NotchGlass，
+   往下的每一段內容都裝在 macOS 自己的視窗裡（Finder、QuickTime、文字編輯、關於本機、便條紙）。
+   外觀切換只影響桌面和 macOS 視窗；App 模擬面板維持原稿。 */
+:root{
+  --desk:#F2F2F4; --ink:#1D1D1F; --ink-2:#636366; --hair:rgba(0,0,0,.14);
+  --win:#FFFFFF; --bar-a:#F7F7F8; --bar-b:#ECECEE; --zebra:#F4F5F7;
+  --blue:#0060DF; --blue-hi:#004FC0; --on-blue:#FFFFFF;
+  --sticky:#FFF6A6; --sticky-bar:#F2E36A; --sticky-ink:#3A3300;
+  --qt:#1C1C1E; --qt-bar:#2A2A2D; --qt-ink:rgba(255,255,255,.86);
+  --sys:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Hiragino Sans","Apple SD Gothic Neo","Microsoft JhengHei",sans-serif;
+  --display:var(--sys);
+  --round:"SF Pro Rounded",ui-rounded,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --hand:"Noteworthy","Bradley Hand","Segoe Print",cursive;
+  --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:56px}
+body{margin:0;background:var(--desk);color:var(--ink);font:400 17px/1.55 var(--sys);-webkit-font-smoothing:antialiased}
+a{color:var(--blue)}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer}
+button:disabled{cursor:default}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+img{max-width:100%}
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+@media(max-width:640px){.wrap{padding:0 16px}}
+
+/* ── 選單列（macOS 會依桌布自動變深／變淺，這裡依捲動位置切換） */
+.mb{position:fixed;top:0;left:0;right:0;height:32px;z-index:40;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;font:500 13px var(--sys);color:#fff;background:rgba(18,14,34,.30);
+  -webkit-backdrop-filter:blur(20px) saturate(1.3);backdrop-filter:blur(20px) saturate(1.3);transition:background-color .25s,color .25s}
+.mb.light{color:var(--ink);background:rgba(246,246,248,.74);box-shadow:0 .5px 0 var(--hair)}
+.mb a{color:inherit;text-decoration:none}
+.mb-l,.mb-r{display:flex;align-items:center;gap:18px;min-width:0}
+.mb-l b{font-weight:700}
+.mb-l a{opacity:.92}.mb-l a:hover{opacity:1}
+.mb-r svg{display:block}
+.mb-clock{font-variant-numeric:tabular-nums;white-space:nowrap}
+.mb-buy{display:inline-flex;align-items:center;min-height:24px;padding:3px 10px;border-radius:6px;background:rgba(255,255,255,.18);font-weight:600}
+.mb.light .mb-buy{background:var(--ink);color:#fff}
+.mb-lang{display:inline-flex;align-items:center;min-height:24px;padding:3px 6px;font-weight:500;opacity:.92}
+@media(max-width:1280px){.mb-l a.opt,.mb-r .opt{display:none}}
+@media(max-width:1100px){.mb-l a,.mb-r .st{display:none}}
+@media(max-width:760px){.mb-l a,.mb-r .st,.mb-l b{display:none}.mb{padding:0 12px}.mb-r{gap:12px}.mb-r .mb-lang{position:absolute;left:8px;top:4px}}
+
+/* ── 第一屏：桌面 */
+.hero{position:relative;min-height:clamp(720px,100vh,960px);background:#2a1d55 url(/notchglass-assets/v7-20261004/media/wallpaper.jpg) center/cover;color:#fff;padding-top:32px;overflow:hidden}
+.hero-grid{max-width:1280px;margin:0 auto;min-height:clamp(688px,calc(100vh - 32px),928px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:48px;padding:0 48px}
+.kick{margin:0 0 18px;font-size:16px;color:rgba(255,255,255,.82)}
+h1{margin:0;font:700 80px/.98 var(--display);letter-spacing:0;text-wrap:balance}
+.hero .sub{margin:24px 0 0;max-width:31em;font-size:19px;line-height:1.55;color:rgba(255,255,255,.88)}
+.hero .tryline{margin:12px 0 0;font-size:16px;color:rgba(255,255,255,.82)}
+.cta{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:30px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:11px;font-size:16px;font-weight:600;text-decoration:none;white-space:nowrap}
+.btn,.mbtn,.musicbtn{transition:background-color .18s ease,color .18s ease}
+.btn-w{background:#fff;color:var(--ink)}.btn-w:hover{background:#ECECEE}
+.btn-g{background:rgba(255,255,255,.16);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}.btn-g:hover{background:rgba(255,255,255,.24)}
+.fine{margin:18px 0 0;font-size:14px;color:rgba(255,255,255,.76)}
+.desk-r{position:relative;justify-self:center;width:min(100%,580px);padding-top:70px}
+.sticky{position:absolute;z-index:3;left:-40px;top:40px;width:210px;padding:0 0 16px;background:var(--sticky);color:var(--sticky-ink);
+  box-shadow:0 14px 30px -10px rgba(0,0,0,.45),0 1px 2px rgba(0,0,0,.2);transform:rotate(-3deg)}
+.sticky::before{content:"";display:block;height:14px;background:var(--sticky-bar)}
+.sticky p{margin:0;padding:10px 16px 0;font:500 18px/1.45 var(--sys);white-space:pre-line}
+.sticky p small{display:block;margin-top:8px;font-size:15px;line-height:1.3;opacity:.85}
+.arrow{position:absolute;z-index:2;left:-94px;top:-206px;width:120px;height:254px;pointer-events:none;color:rgba(255,255,255,.9);transition:opacity .25s}
+.ng-open .arrow{opacity:0}
+@media(max-width:1100px){.arrow{display:none}}
+@media(max-width:900px){
+  .hero-grid{grid-template-columns:1fr;gap:36px;padding:56px 24px 48px;min-height:0}
+  .desk-r{justify-self:stretch;width:100%;padding-top:0}
+  .sticky{position:relative;left:auto;top:auto;width:220px;margin:0 6px -18px auto}
+  .hero{min-height:0}
+}
+@media(max-width:640px){.hero-grid{padding:48px 16px 40px}.sticky p{font-size:19px}}
+
+/* ── macOS 視窗 */
+.win{position:relative;background:var(--win);border-radius:12px;overflow:hidden;
+  box-shadow:0 0 0 .5px rgba(0,0,0,.24),0 24px 54px -16px rgba(0,0,0,.30),0 2px 6px rgba(0,0,0,.08)}
+.bar{position:relative;height:38px;display:flex;align-items:center;padding:0 14px;background:linear-gradient(var(--bar-a),var(--bar-b));box-shadow:inset 0 -.5px 0 var(--hair);user-select:none}
+.lights{display:flex;gap:8px}.lights i{width:12px;height:12px;border-radius:50%;background:#FF5F57;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.18)}
+.lights i:nth-child(2){background:#FEBC2E}.lights i:nth-child(3){background:#28C840}
+.bar .title{position:absolute;left:84px;right:84px;text-align:center;font-size:13px;font-weight:600;color:#4A4A4F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+[data-drag] > .bar{cursor:grab}
+.win.dark{background:var(--qt);color:var(--qt-ink)}
+.win.dark .bar{background:var(--qt-bar);box-shadow:inset 0 -.5px 0 rgba(0,0,0,.6)}
+.win.dark .bar .title{color:rgba(255,255,255,.78)}
+
+/* Finder（第一屏，檔案可以拖） */
+.finder .body{display:flex;height:300px}
+.finder nav{width:150px;flex-shrink:0;padding:10px 8px;display:flex;flex-direction:column;gap:1px;background:#E9E9EC;font-size:13px;color:#2C2C2E}
+.finder nav span{padding:3px 8px;border-radius:6px}
+.finder nav .h{font-size:11px;font-weight:700;color:#8E8E93;padding:2px 8px 4px}
+.finder nav .on{background:rgba(0,0,0,.08)}
+.fgrid{flex:1;min-width:0;padding:14px 12px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:104px;gap:6px 6px;align-content:start;overflow-y:auto;color:#1D1D1F}
+.ff{display:flex;flex-direction:column;align-items:center;gap:6px;padding:4px 2px;border-radius:8px;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
+.ff .ib{width:70px;height:64px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.ff .nm{max-width:100%;padding:1px 6px;border-radius:4px;font-size:12px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ff.sel .ib{background:rgba(0,0,0,.08)}.ff.sel .nm{background:var(--blue);color:#fff}
+.ff img,.ghost img{width:60px;height:40px;object-fit:cover;box-shadow:0 0 0 2px #fff,0 2px 6px rgba(0,0,0,.35);-webkit-user-drag:none;pointer-events:none}
+.ff.new{animation:ngNew .38s cubic-bezier(.2,.9,.3,1.25) both}
+.demo-note{margin:14px 2px 0;font-size:14px;line-height:1.45;color:rgba(255,255,255,.9)}
+.demo-note b{display:inline-block;margin-right:6px;padding:1px 8px;border-radius:999px;background:rgba(255,255,255,.2);font-size:12px;font-weight:600}
+@media(max-width:640px){.finder nav{display:none}.fgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* ── 內容區 */
+.sec{padding:128px 0}
+.sec + .sec{padding-top:40px}
+h2{margin:0 0 20px;font:700 46px/1.06 var(--display);letter-spacing:0;text-wrap:balance;max-width:16em}
+html[lang="zh-Hant"] h2{letter-spacing:0;line-height:1.18}
+.lead{margin:0 0 16px;max-width:31em;font-size:19px;line-height:1.55;color:var(--ink-2)}
+.note{margin:0;max-width:36em;font-size:15px;line-height:1.55;color:var(--ink-2)}
+.row{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:72px;align-items:center}
+.row.flip > :first-child{order:2}
+@media(max-width:900px){.sec{padding:88px 0}.row{grid-template-columns:1fr;gap:36px}.row.flip > :first-child{order:0}}
+
+/* 四格說明：一小塊桌布上放一個靜態的拖放面板 */
+.strip{position:relative;height:300px;border-radius:16px;overflow:hidden;background:#2a1d55 url(/notchglass-assets/v7-20261004/media/wallpaper.jpg) 50% 0/cover;box-shadow:0 0 0 .5px rgba(0,0,0,.2),0 24px 54px -18px rgba(0,0,0,.35)}
+.strip .menu{position:absolute;inset:0 0 auto 0;height:32px;background:rgba(18,14,34,.3)}
+.strip .ng-static{position:absolute;top:0;left:50%;width:460px;height:196px;transform:translateX(-50%);transform-origin:top center;border-radius:0 0 20px 20px;overflow:hidden;color:#fff;
+  background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(30px) saturate(1.45);backdrop-filter:blur(30px) saturate(1.45);
+  box-shadow:inset 0 0 0 .75px rgba(255,255,255,.16),0 16px 34px rgba(0,0,0,.16),0 5px 10px rgba(0,0,0,.12)}
+@media(max-width:560px){.strip{height:240px}.strip .ng-static{transform:translateX(-50%) scale(.72)}}
+.caps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px;margin-top:56px}
+.cap{display:flex;flex-direction:column;gap:10px}
+.cap .ci{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--ink);color:#fff}
+.cap b{font-size:17px}
+.cap p{margin:0;font-size:15px;line-height:1.5;color:var(--ink-2)}
+@media(max-width:900px){.caps{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.caps{grid-template-columns:1fr}}
+
+/* QuickTime 視窗 */
+.qt video{display:block;width:100%;aspect-ratio:16/9;background:#000;object-fit:cover}
+.qt .ctl{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--qt)}
+.qt .pp{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.12);color:#fff;flex-shrink:0}
+.qt .pp .i-play{display:none}.qt .pp.paused .i-play{display:block}.qt .pp.paused .i-pause{display:none}
+.qt .trk{flex:1;height:22px;display:flex;align-items:center;cursor:pointer}
+.qt .trk span{position:relative;width:100%;height:4px;border-radius:2px;background:rgba(255,255,255,.18);overflow:hidden}
+.qt .trk i{position:absolute;left:0;top:0;bottom:0;width:0;background:#fff;border-radius:2px}
+.qt .tm{font:500 12px var(--mono);color:rgba(255,255,255,.72);font-variant-numeric:tabular-nums;flex-shrink:0}
+.qt-cap{margin:14px 4px 0;font-size:14px;line-height:1.5;color:var(--ink-2)}
+
+/* Finder 列表檢視：格式對照 */
+.list{margin-top:64px}
+.list .scroll{overflow-x:auto}
+.list table{width:100%;min-width:680px;border-collapse:collapse;font-size:14px}
+.list th{position:sticky;top:0;text-align:left;padding:7px 14px;font-size:12px;font-weight:600;color:#6E6E73;background:#fff;box-shadow:inset 0 -.5px 0 var(--hair)}
+.list th + th{box-shadow:inset 0 -.5px 0 var(--hair),inset .5px 0 0 var(--hair)}
+.list td{padding:10px 14px;vertical-align:top;line-height:1.45}
+.list tr:nth-child(even) td{background:var(--zebra)}
+.list td:first-child{width:36%;font-weight:600}
+.list td:last-child{width:22%;color:var(--ink-2)}
+.list .fi{display:inline-flex;vertical-align:-3px;margin-right:8px;color:#8E8E93}
+.tag{display:inline-block;padding:1px 8px;border-radius:999px;background:#FFE9CC;color:#7A3E00;font-size:12px;font-weight:600}
+@media(max-width:640px){.list table{min-width:0}.list thead{display:none}.list table,.list tbody,.list tr,.list td{display:block;width:auto!important}.list tr{padding:12px 14px}.list td{padding:0 0 4px;background:none!important}.list tr:nth-child(even){background:var(--zebra)}}
+.list .foot{padding:8px 14px;font-size:12px;color:#6E6E73;background:linear-gradient(var(--bar-a),var(--bar-b));box-shadow:inset 0 .5px 0 var(--hair)}
+
+/* 文字編輯視窗 */
+.txt pre{margin:0;padding:26px 28px 30px;font:15px/1.8 var(--sys);color:#1D1D1F;white-space:pre-wrap}
+.rtf .doc{padding:30px 34px 34px}
+.rtf .doc p{margin:0 0 18px;font:400 18px/1.75 var(--sys);color:#1D1D1F;text-wrap:pretty}
+.sig{margin:22px 0 2px;font:34px/1 var(--hand);color:#1D1D1F}
+.sig + small{font-size:14px;color:var(--ink-2);overflow-wrap:anywhere}
+.ql img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:50% 30%}
+.maker{display:grid;grid-template-columns:260px minmax(0,1fr);max-width:1120px;gap:48px;align-items:center}
+.maker .ql{width:100%;margin:0}
+@media(max-width:900px){.maker{grid-template-columns:220px minmax(0,1fr);gap:28px}.rtf .doc{padding:24px}.rtf .doc p{font-size:17px}}
+@media(max-width:700px){.maker{grid-template-columns:1fr;gap:28px}.maker .ql{max-width:200px;justify-self:center}.rtf .doc{padding:24px 22px}}
+
+/* 關於 NotchGlass（價格） */
+.about-wrap{display:flex;justify-content:center;align-items:flex-start;gap:28px;flex-wrap:wrap}
+.about{width:min(100%,420px)}
+.about .in{padding:30px 34px 26px;text-align:center}
+.about .icon{width:104px;height:104px}
+.about h3{margin:10px 0 2px;font-size:19px}
+.about .ver{margin:0;font-size:12px;color:#6E6E73}
+.price{margin:18px 0 0;font:700 64px/1 var(--display);letter-spacing:0}
+.price small{font-size:22px;letter-spacing:0;font-weight:600;color:var(--ink-2);margin-left:6px}
+.about ul{list-style:none;margin:18px 0 0;padding:0;font-size:15px;line-height:1.5;color:#3A3A3C}
+.about li{padding:4px 0}
+.about .btns{display:flex;justify-content:center;gap:10px;margin-top:22px}
+.mbtn{padding:7px 16px;border-radius:7px;font-size:14px;font-weight:600;text-decoration:none;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.18),0 1px 1px rgba(0,0,0,.06);background:#fff;color:var(--ink)}
+.mbtn.def{background:var(--blue);color:var(--on-blue);box-shadow:none}.mbtn.def:hover{background:var(--blue-hi)}
+.about .gm{margin:16px 0 0;font-size:12px;color:#6E6E73}
+.sticky.s2{position:relative;left:auto;top:28px;transform:rotate(4deg);width:210px}
+
+/* 說明視窗（FAQ） */
+.help{max-width:780px;margin:0 auto}
+.help details{border-top:.5px solid var(--hair)}
+.help details:first-of-type{border-top:0}
+.help summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:16px 22px;font-size:16px;font-weight:600}
+.help summary::-webkit-details-marker{display:none}
+.help summary::before{content:"";width:0;height:0;border-left:6px solid #8E8E93;border-top:4.5px solid transparent;border-bottom:4.5px solid transparent;transition:transform .15s;flex-shrink:0}
+.help details[open] summary::before{transform:rotate(90deg)}
+.help details p{margin:-6px 0 0;padding:0 22px 18px 38px;font-size:15px;color:var(--ink-2)}
+
+footer{padding:56px 0 72px;font-size:13px;line-height:1.7;color:var(--ink-2)}
+footer p{margin:0}
+
+/* ── NotchGlass 試玩：數值取自 App 原始碼（DL.Notch、DL.notchFlare、DropCell、ConvertPanel、MusicPanel） */
+.ng{position:fixed;top:0;left:0;z-index:50;width:209px;height:32px;overflow:hidden;color:#fff;background-color:#000;transform-origin:50% 0;
+  font:400 13px var(--sys);line-height:1.25;-webkit-font-smoothing:antialiased;transition:background-color .3s}
+.ng.glass{background-color:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(30px) saturate(1.45);backdrop-filter:blur(30px) saturate(1.45)}
+.ng-shadow{position:fixed;top:0;left:0;z-index:49;border-radius:0 0 20px 20px;opacity:0;pointer-events:none;transform-origin:50% 0;transition:opacity .3s;
+  box-shadow:0 16px 34px rgba(0,0,0,.16),0 5px 10px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.10)}
+.ng-gloss{position:absolute;inset:0;border-radius:0 0 20px 20px;opacity:0;pointer-events:none;transition:opacity .3s;
+  background:linear-gradient(180deg,rgba(255,255,255,.13) 0%,rgba(255,255,255,.04) 24%,rgba(255,255,255,0) 42%),linear-gradient(135deg,rgba(99,102,241,.06),rgba(99,102,241,0) 70%);
+  box-shadow:inset 0 0 0 .75px rgba(255,255,255,.16)}
+.ng-gloss::after{content:"";position:absolute;left:44px;right:44px;top:0;height:1px;background:linear-gradient(90deg,rgba(99,102,241,0),rgba(99,102,241,.7),rgba(139,92,246,.55),rgba(139,92,246,0))}
+.ng.glass .ng-gloss,.ng-shadow.on{opacity:1}
+.ng-c{position:absolute;top:0;width:460px}
+.ng button:focus-visible{outline-color:#8B8EF7}
+.ng-in{animation:ngIn .16s ease-in-out both}
+@keyframes ngIn{from{opacity:0;transform:translateY(-3px)}}
+@keyframes ngNew{from{opacity:0;transform:scale(.7)}}
+.ng-idle{position:absolute;inset:0;padding:0 24px 0 22px;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+.ng-idle .l{display:flex;align-items:center;gap:7px}
+.ng-idle img{width:19px;height:19px;border-radius:5px;box-shadow:0 0 0 .5px rgba(255,255,255,.12)}
+.ng-bars{width:17px;height:16px;display:flex;align-items:flex-end;justify-content:space-between}
+.ng-bars i{width:2px;border-radius:1px;background:rgba(255,255,255,.55);transform-origin:50% 100%;animation:ngBar .52s ease-in-out infinite alternate}
+.ng-bars.paused i{animation-play-state:paused}
+@keyframes ngBar{from{transform:scaleY(.28)}to{transform:scaleY(1)}}
+.ng-drag{padding:42px 14px 22px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.ng-hint{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:500;color:rgba(255,255,255,.62)}
+.ng-grid{width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.ng-cell{display:flex;flex-direction:column;align-items:center;gap:8px;padding:15px 0;border-radius:14px;background:#16161F;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.06);
+  transition:transform .26s cubic-bezier(.34,1.45,.64,1),background-color .15s,box-shadow .15s}
+.ng-cell .ic{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.07);color:rgba(255,255,255,.22)}
+.ng-cell .tt{display:flex;flex-direction:column;align-items:center;gap:2px}
+.ng-cell .t{font-size:11px;font-weight:500;color:rgba(255,255,255,.72)}
+.ng-cell .s,.ng-cell .s2{font-size:9px;color:rgba(255,255,255,.6);white-space:nowrap}
+.ng-cell .ok,.ng-cell .s2{display:none}
+.ng-cell.hov{background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1.2px rgba(255,255,255,.45);transform:scale(1.05)}
+.ng-cell.hov .ic{background:rgba(255,255,255,.16);color:#fff}.ng-cell.hov .t{color:#fff}
+.ng-cell.done{background:rgba(52,211,153,.06);box-shadow:inset 0 0 0 .5px rgba(52,211,153,.4)}
+.ng-cell.done .ic{background:rgba(52,211,153,.15);color:#34D399}.ng-cell.done .t{color:#34D399}
+.ng-cell.done .s,.ng-cell.done .g{display:none}.ng-cell.done .s2{display:inline;color:rgba(52,211,153,.75)}.ng-cell.done .ok{display:block}
+.ng-tabs{padding:40px 16px 8px;display:flex;align-items:center;gap:2px}
+.ng-tab{min-height:25px;padding:5px 6px;font-size:12px;color:rgba(255,255,255,.62)}.ng-tab.on{font-weight:600;color:#fff}
+.ng-fill{flex:1}
+.ng-note{margin-right:4px;font-size:9px;color:rgba(255,255,255,.62);white-space:nowrap}
+.ng-ib{width:26px;height:26px;margin:-2px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.62)}.ng-ib.on{color:#8B5CF6}
+.ng-div{height:.5px;background:rgba(255,255,255,.07)}
+.ng-body{padding:12px 16px 14px}
+.ng-music{display:flex;gap:16px;height:138px}
+.ng-cover{position:relative;width:138px;height:138px;flex-shrink:0}
+.ng-cover .art{position:relative;width:138px;height:138px;border-radius:8px;box-shadow:0 0 0 .5px rgba(255,255,255,.13)}
+.ng-cover .aura{position:absolute;inset:0;width:138px;height:138px;border-radius:30px;filter:blur(26px) saturate(1.4);animation:ngAura 3.2s ease-in-out infinite alternate}
+.ng-cover .aura.paused{animation-play-state:paused}
+@keyframes ngAura{from{opacity:.38;transform:scale(1.12)}to{opacity:.6;transform:scale(1.28)}}
+.ng-ph{width:138px;height:138px;border-radius:8px;background:#1E1E2A;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.13);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.22)}
+.ng-mcol{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between}
+.ng-title{font:600 16px var(--round);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ng-sub{margin-top:4px;font-size:12px;color:rgba(255,255,255,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ng-prog{display:flex;align-items:center;gap:10px;height:28px}
+.ng-time{width:36px;font:500 10px var(--mono);color:rgba(255,255,255,.72);font-variant-numeric:tabular-nums}.ng-time.r{text-align:right}
+.ng-track{flex:1;height:28px;display:flex;align-items:center;cursor:pointer}
+.ng-track:focus-visible{outline:2px solid #8B8EF7;outline-offset:2px;border-radius:6px}
+.ng-track span{position:relative;width:100%;height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+.ng-track i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:4px;background:#fff;transition:width .25s linear}
+.ng-ctrl{display:flex;align-items:center;gap:22px}
+.ng-mb{width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.72)}.ng-mb.p{width:36px;height:36px;color:#fff}
+.dim{opacity:.45}.dim2{opacity:.55}
+.ng-cv{display:flex;flex-direction:column;gap:8px}
+.ng-eh{display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,.62);margin-bottom:2px}
+.ng-chip{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:8px;background:#1E1E2A;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.06)}
+.ng-chip .n{flex:1;min-width:0;font-size:10px;color:rgba(255,255,255,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ng-ext{padding:2px 6px;border-radius:999px;background:rgba(255,255,255,.08);font-size:8px;font-weight:600;color:rgba(255,255,255,.72)}
+.ng-x{width:24px;height:24px;margin:-4px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55)}
+.ng-cat{display:block;font-size:8px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.55)}
+.ng-fl{display:flex;flex-wrap:wrap;column-gap:4px;margin:1px 0 4px}
+.ng-fmt{display:flex;align-items:center;min-width:24px;min-height:25px}
+.ng-fmt span{padding:3px 8px;border-radius:999px;font-size:9px;font-weight:600;background:#1E1E2A;color:rgba(255,255,255,.62);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.06)}
+.ng-fmt.on span{background:#fff;color:#0B0B12;box-shadow:none}
+.ng-go{width:100%;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:5px;background:#fff;color:#0B0B12;font-size:12px;font-weight:500}
+.ng-go:disabled{opacity:.35}
+@property --ng-a{syntax:"<angle>";inherits:false;initial-value:0deg}
+.ng-busy{padding:10px;border-radius:8px;display:flex;flex-direction:column;gap:6px;border:1px solid transparent;
+  background:linear-gradient(#16161f,#16161f) padding-box,conic-gradient(from var(--ng-a),transparent 0 62%,rgba(139,92,246,.95) 80%,rgba(255,255,255,.9) 86%,transparent 92%) border-box;animation:ngBeam 1.2s linear infinite}
+@keyframes ngBeam{to{--ng-a:360deg}}
+.ng-b4{position:relative;height:4px;border-radius:2px;background:rgba(255,255,255,.13);overflow:hidden}
+.ng-b4 i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:2px;background:#fff}
+.ng-pct{text-align:center;font:500 9px var(--mono);color:rgba(255,255,255,.62)}
+.ng-done{padding:10px;border-radius:8px;display:flex;align-items:center;gap:8px;background:rgba(52,211,153,.06);box-shadow:inset 0 0 0 .5px rgba(52,211,153,.2)}
+.ng-done .w{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.ng-done b{font-size:10px;color:#34D399}
+.ng-done span{font-size:9px;color:rgba(255,255,255,.62);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ng-link{display:inline-flex;align-items:center;min-height:24px;padding:0 4px;margin:-6px 0;font-size:10px;color:rgba(255,255,255,.62)}.ng-link.b{color:#60A5FA}
+.zone{position:fixed;top:0;z-index:30;border:1.5px dashed rgba(255,255,255,.75);border-top:0;border-radius:0 0 20px 20px;background:rgba(10,8,24,.22);
+  display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px;pointer-events:none}
+.zone span{font:500 12px var(--sys);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.ghost{position:fixed;left:0;top:0;z-index:60;width:120px;display:flex;flex-direction:column;align-items:center;gap:4px;opacity:.72;pointer-events:none}
+.ghost .nm{padding:1px 6px;border-radius:4px;background:var(--blue);color:#fff;font-size:12px}
+.toast{position:fixed;left:50%;bottom:24px;z-index:55;transform:translateX(-50%);max-width:calc(100vw - 32px);display:flex;align-items:center;gap:14px;
+  padding:11px 12px 11px 20px;border-radius:999px;background:rgba(14,14,20,.78);color:rgba(255,255,255,.95);font-size:14px;line-height:1.35;
+  -webkit-backdrop-filter:blur(22px) saturate(1.3);backdrop-filter:blur(22px) saturate(1.3);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.16),0 12px 30px rgba(0,0,0,.35)}
+.toast button{flex-shrink:0;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.16);font-size:13px;font-weight:600;color:#fff}
+.toast.plain{padding-right:20px}
+.demo-result{min-height:22px;margin:10px 4px 0;color:rgba(255,255,255,.88);font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+@media(max-width:640px){.toast{border-radius:16px;font-size:13.5px}}
+.musicbtn{display:inline-flex;align-items:center;gap:10px;margin-top:22px;padding:11px 18px;border-radius:11px;background:var(--ink);color:#fff;font-size:15px;font-weight:600}
+.musicbtn:hover{background:#3A3A3C}
+.winreset{position:fixed;left:16px;bottom:16px;z-index:45;padding:8px 14px;border-radius:999px;background:var(--ink);color:#fff;font-size:13px;font-weight:600;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.ng-bars i,.ng-cover .aura,.ng-busy,.ng-in,.ff.new{animation:none}.ng-cell,.btn,.mbtn,.musicbtn{transition:none}}
+
+/* Theme tokens retain Claude's layout, wallpaper and panel materials. */
+:root{color-scheme:light;--on-ink:#fff;--finder:#E9E9EC;--menu-light:rgba(246,246,248,.9)}
+html[data-theme="dark"]{color-scheme:dark;--desk:#151517;--ink:#F5F5F7;--ink-2:#B9B9C0;--hair:rgba(255,255,255,.18);--win:#262628;--bar-a:#363638;--bar-b:#2D2D30;--zebra:#303033;--blue:#7AB6FF;--blue-hi:#5BA5FF;--on-blue:#10151C;--on-ink:#1D1D1F;--finder:#202023;--menu-light:rgba(35,35,38,.94)}
+.mb.light{background:var(--menu-light)}
+.bar .title,.finder nav,.fgrid,.txt pre,.rtf .doc p,.sig,.about ul{color:var(--ink)}
+.finder nav{background:var(--finder)}
+.finder nav .h,.list th,.list .foot,.about .ver,.about .gm{color:var(--ink-2)}
+.list th,.mbtn{background:var(--win)}
+.mbtn.def{background:var(--blue)}
+.btn-w{color:#1D1D1F}
+.mb.light .mb-buy,.musicbtn,.winreset,.cap .ci{color:var(--on-ink)}
+.musicbtn:hover{background:var(--ink-2)}
+html[data-theme="dark"] .ff.sel .ib,html[data-theme="dark"] .finder nav .on{background:rgba(255,255,255,.12)}
+html[data-theme="dark"] .win{box-shadow:0 0 0 .5px rgba(255,255,255,.2),0 24px 54px -16px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.25)}
+.mb-choice{height:26px;max-width:88px;font:500 12px var(--sys);color:inherit;background:transparent;border:0;border-radius:4px;padding:0 2px;cursor:pointer}
+.mb-choice option{background:var(--win);color:var(--ink)}
+.mb-r{gap:10px}
+.mb-clock{display:none}
+html :is(h1,h2,.price,.price small){letter-spacing:0}
+h1{font-size:80px}h2{font-size:46px}
+@media(max-width:1100px){h1{font-size:64px}h2{font-size:40px}}
+@media(max-width:640px){h1{font-size:52px}h2{font-size:32px}.mb-choice{max-width:69px;font-size:11px}.mb-r{gap:4px}.mb-r #lang{position:absolute;left:6px;top:3px}.mb-buy{padding:3px 6px;font-size:11px}.mb-theme{width:46px}.mb{padding:0 6px}}

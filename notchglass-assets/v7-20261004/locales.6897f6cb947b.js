@@ -1,0 +1,114 @@
+/* Public-release copy only. App labels in the interactive illustration stay English. */
+window.NotchGlassLocales = {
+  en: {
+    v1cap: "Generated from the development version 1.5.16 interface, not a screen recording. PNG → JPEG really ran at its actual speed; the desktop and Finder are staged. Current download: 1.5.15. Appearance may differ.",
+    v2cap: "Interface preview from development version 1.5.16, not a screen recording or player compatibility test. Current download: 1.5.15. Appearance may differ.",
+    demoNote: "<b>Interactive illustration</b>Nothing here converts, uploads or changes anything on your computer. The illustrated App controls remain in English. Development interface: 1.5.16; current download: 1.5.15.",
+    dropS: "Drag a file toward the top center of your screen. The detection area can be adjusted in Settings.",
+    p2: "Lifetime license for up to 2 Macs. No subscription.",
+    s2: "paid once.\nno subscription.",
+    a6: "Download the latest release from your Gumroad purchase receipt. Quit NotchGlass and replace the app in Applications. Settings and the license stored in Keychain are preserved. Updates are installed manually.",
+    a7: "Spotify and Apple Music control may require Automation permission. Allow NotchGlass to control the player in System Settings › Privacy &amp; Security › Automation. Browser fallback has limited metadata, artwork and controls; it is not full player support.",
+    musS: "Spotify and Apple Music artwork, playback controls and seeking depend on the player, its version and your permissions. Browser fallback is limited. This clip is an interface illustration, not a compatibility test.",
+    ver: "Current download: 1.5.15",
+    downloads: "Downloads", favorites: "Favorites", recents: "Recents", applications: "Applications", desktop: "Desktop", documents: "Documents"
+  },
+  zh: {
+    v1cap: "由開發版 1.5.16 的介面程式碼生成，非螢幕錄影。PNG → JPEG 確實執行並以實際速度播放；桌面和 Finder 是佈景。目前下載版為 1.5.15，外觀可能不同。",
+    v2cap: "開發版 1.5.16 介面示意，非螢幕錄影或播放器相容性測試。目前下載版為 1.5.15，外觀可能不同。",
+    demoNote: "<b>互動示意</b>這裡不會轉檔、上傳或更改你的電腦。App 示意控制保留英文；介面取自開發版 1.5.16，目前下載版為 1.5.15。",
+    dropS: "把檔案拖向螢幕頂端中央即可。偵測範圍可以在設定裡調整。",
+    p2: "最多 2 台 Mac 的永久授權，沒有訂閱。", s2: "一次付費。\n沒有訂閱。",
+    a6: "從 Gumroad 購買收據下載最新版本，結束 NotchGlass，再替換「應用程式」裡的 App。設定與儲存在鑰匙圈的授權會保留；更新需手動安裝。",
+    a7: "控制 Spotify 和 Apple Music 可能需要「自動化」權限。到「系統設定 › 隱私權與安全性 › 自動化」允許 NotchGlass 控制播放器。瀏覽器 fallback 的歌曲資訊、封面和控制有限，不等於完整播放器支援。",
+    musS: "Spotify 和 Apple Music 的封面、切歌及時間軸，依播放器、版本與權限而異。瀏覽器 fallback 支援有限。這段影片是介面示意，不是相容性測試。",
+    ver: "目前下載版：1.5.15",
+    downloads: "下載項目", favorites: "喜好項目", recents: "最近項目", applications: "應用程式", desktop: "桌面", documents: "文件"
+  },
+  ja: {
+    n1: "試す", n2: "ドロップ", n3: "形式", n4: "音楽", n5: "制限", n6: "価格", n7: "ヘルプ", buyS: "購入",
+    kick: "NotchGlass：Mac のノッチから、ローカルでファイル変換", h1: "ファイルを<br>ノッチへ。",
+    sub: "MacBook の画面上部にあるノッチを、ファイルの操作場所に。上へドラッグして Convert、AirDrop、iCloud Drive にドロップしたら、作業へ戻れます。",
+    tryline: "このページ上部のノッチも操作できます。", buy: "購入 · US$6 から", watch: "動画を見る",
+    fine: "macOS 13 以降 · ノッチのない Mac にも対応 · 買い切り",
+    sticky: "試してみよう ↑\nsunrise.png を上のノッチへ。<small>マウスがない場合は、ファイルを選んでタイルをタップ。</small>",
+    stickyDone: "操作できました。\n実際の App では、自分のファイルを使えます。<small>AirDrop や、下の無音プレビューも試せます。</small>",
+    dropH: "ファイルを置く、4つの場所。", dropP: "ファイルを持って近づくとパネルが開き、離れるとノッチに戻ります。それ以外は、ただのノッチです。",
+    dropS: "ファイルを画面上部の中央へドラッグ。検出範囲は設定で調整できます。",
+    c1: "「ダウンロード › NotchClip」にコピーし、ファイルの貼り付けに対応する App 向けにクリップボードにも追加。", c2: "Mac 上で別の形式に変換。対応形式は下に掲載しています。",
+    c3: "ファイルを添付した状態で macOS の AirDrop 共有画面を開きます。", c4k: "iCloud Drive", c4: "「iCloud Drive › NotchGlass」にコピー。同期は macOS が行います。",
+    convH: "変換するのは、あなたの Mac。誰かのサーバーではありません。",
+    convP: "一般的な形式は macOS の内蔵機能で変換します。一部の動画・音声形式には FFmpeg の別途インストールが必要です。変換後のファイルは元のファイルの隣に、新しい名前で保存されます。上書きはしません。",
+    v1cap: "開発版 1.5.16 の UI コードから生成した映像で、画面収録ではありません。PNG → JPEG は実際に変換し、実際の速度で再生しています。デスクトップと Finder は演出です。現在の配布版は 1.5.15 で、外観が異なる場合があります。",
+    v2cap: "開発版 1.5.16 の UI プレビューです。画面収録やプレーヤーの互換性テストではありません。現在の配布版は 1.5.15 で、外観が異なる場合があります。",
+    listT: "対応する変換形式", th1: "元の形式", th2: "変換先", th3: "必要なもの",
+    r1a: "画像：HEIC、PNG、JPG、WebP、AVIF、TIFF、BMP", r1b: "相互変換、または PDF。複数の画像は1つの PDF にまとめます。",
+    r2b: "ページごとの PNG / JPG フォルダ、テキスト、Word（.docx）", r3a: "Word、Markdown、RTF、HTML、テキスト", r3b: "PDF。テキストは HTML にも変換できます。",
+    r4b: "相互変換、GIF、または音声のみ抽出（M4A、WAV）", r5b: "相互変換", r6b: "その他の動画・音声形式",
+    bi1: "内蔵", bi2: "内蔵", bi3: "内蔵", bi4: "内蔵", bi5: "内蔵", ff: "FFmpeg の別途インストール", listF: "出力できる画像形式は macOS のバージョンによって異なります。",
+    musH: "音楽が流れると、ノッチにも。", musP: "片側に小さなジャケット、反対側に再生状態のアニメーション。ポインタを合わせると、タイムライン、再生・一時停止、前後の曲への操作が開きます。",
+    musS: "Spotify と Apple Music のジャケット、曲送り、シークはプレーヤーのバージョンと権限によって異なります。ブラウザの fallback は限定対応です。映像は UI のイメージで、互換性テストではありません。",
+    awake: "カップのアイコンを押すと、再度押すか App を終了するまで、無操作による画面のスリープを防ぎます。手動スリープや蓋を閉じる操作は妨げません。",
+    limH: "できないことも、先に。", limP: "どんな App にも限界があります。購入する前に、NotchGlass の範囲を確認してください。",
+    limT: "- OCR 非対応。スキャン PDF の画像から文字は抽出できません。\n- PDF → Word は文字を保持しますが、複雑なレイアウトは崩れる場合があります。\n- MKV、WebM、MP3、FLAC などには FFmpeg が必要です。\n- macOS 13 以降の Mac 専用。iPhone、iPad、Windows 版はありません。\n- 音楽操作はプレーヤーと権限によって異なります。\n- 個人開発です。お問い合わせは開発者本人に届きます。",
+    le1: "こんにちは、Harry です。台湾で NotchGlass を一人で開発しています。デザイン、アニメーション、機能まで、自分で作りました。",
+    le2: "曲を変える、ファイルを変換する、誰かに送る。そのたびに作業から離れる必要がありました。MacBook の画面上部の空間で、その一手間を減らせないか。それが始まりです。",
+    le3: "US$6 からの買い切りで、サブスクリプションはありません。合わなければ、購入から14日以内にメールでご連絡ください。返金します。",
+    le4: "まだ初期段階で、開発者は私一人です。不具合やご要望を直接教えてください。実際に変更できる本人が読みます。",
+    ver: "現在の配布版：1.5.15", once: "から、買い切り", p1: "全機能を利用できます。プラン分けはありません。", p2: "最大2台の Mac で使える永久ライセンス。定期課金なし。", p3: "応援したい場合は、Gumroad で高めの金額を指定できます。", p4: "購入から14日以内は全額返金。",
+    qBtn: "質問はこちら", buyG: "Gumroad で購入", gm: "決済、領収書、ライセンスキーは Gumroad が提供します。", s2: "買い切り。\n定期課金なし。", helpT: "NotchGlass ヘルプ",
+    q1: "ノッチ付き MacBook が必要ですか？", a1: "いいえ。ノッチのない Mac では、画面上部の中央に表示されます。使い方は同じです。",
+    q2: "変換するファイルはアップロードされますか？", a2: "いいえ。変換は Mac 上で完了します。ライセンスや更新の確認、再生中の曲のジャケット取得には通信します。iCloud Drive にドロップしたファイルは iCloud フォルダへコピーされ、macOS が同期します。",
+    q3: "変換後のファイルはどこに保存されますか？", a3: "元のファイルの隣に、新しい名前で保存されます。上書きはしません。",
+    q4: "自分に合わなかったら？", a4: "購入から14日以内に harryjia1007@gmail.com へご連絡ください。全額返金します。",
+    q5: "インストールと有効化の方法は？", a5: "Gumroad の購入メールから App をダウンロードし、「アプリケーション」に移動します。Settings › License に購入時のキーを貼り付け、Activate を押してください。配布 App は Developer ID で署名し、Apple の公証を受けています。",
+    q6: "更新はどう行いますか？", a6: "Gumroad の購入メールから最新バージョンをダウンロードします。NotchGlass を終了し、「アプリケーション」の App を置き換えてください。設定とキーチェーンのライセンスは保持されます。手動更新です。",
+    q7: "メディア関連の権限が必要なのはなぜ？", a7: "Spotify と Apple Music の操作には「オートメーション」の許可が必要な場合があります。「システム設定 › プライバシーとセキュリティ › オートメーション」で許可してください。ブラウザ fallback の曲情報、ジャケット、操作は限定対応です。",
+    f1: "NotchGlass は台湾で一人の開発者が作っています。", f2: "このページのノッチはブラウザ内のシミュレーションです。ドロップしたものは送信されません。", zone: "この範囲にファイルが入ると NotchGlass が開きます",
+    demoNote: "<b>操作イメージ</b>変換、送信、PC の変更は行いません。App の操作表示は英語です。開発版 1.5.16 の UI を使用し、現在の配布版は 1.5.15 です。", winReset: "ウインドウを元の位置へ",
+    downloads: "ダウンロード", favorites: "よく使う項目", recents: "最近の項目", applications: "アプリケーション", desktop: "デスクトップ", documents: "書類"
+  },
+  ko: {
+    n1: "체험", n2: "드롭", n3: "형식", n4: "음악", n5: "제한", n6: "가격", n7: "도움말", buyS: "구매",
+    kick: "NotchGlass: Mac 노치에서 바로, 로컬 파일 변환", h1: "파일을<br>노치로.",
+    sub: "MacBook 화면 위쪽의 노치를 파일 작업 공간으로 바꿉니다. 파일을 위로 끌어 Convert, AirDrop, iCloud Drive에 놓고 하던 작업으로 돌아가세요.",
+    tryline: "이 페이지 위쪽의 노치도 직접 조작할 수 있습니다.", buy: "구매 · US$6부터", watch: "영상 보기", fine: "macOS 13 이상 · 노치 없는 Mac도 지원 · 일회성 구매",
+    sticky: "체험해 보세요 ↑\nsunrise.png를 위쪽 노치로 끌어오세요.<small>마우스가 없으면 파일을 선택한 뒤 타일을 누르세요.</small>",
+    stickyDone: "완료되었습니다.\n실제 앱에서는 내 파일로 작업합니다.<small>AirDrop과 아래의 무음 음악 미리보기도 체험하세요.</small>",
+    dropH: "파일을 놓을 네 곳.", dropP: "파일을 들고 가까이 가면 패널이 열리고, 멀어지면 노치로 돌아갑니다. 평소에는 그냥 노치입니다.", dropS: "파일을 화면 위쪽 중앙으로 끌어오세요. 감지 범위는 설정에서 조절할 수 있습니다.",
+    c1: "‘다운로드 › NotchClip’에 복사하고, 파일 붙여넣기를 지원하는 앱에서 쓸 수 있도록 클립보드에도 추가합니다.", c2: "Mac에서 파일 형식을 변환합니다. 지원 형식은 아래에서 확인하세요.", c3: "파일을 첨부한 상태로 macOS AirDrop 공유 창을 엽니다.", c4k: "iCloud Drive", c4: "‘iCloud Drive › NotchGlass’에 복사합니다. 동기화는 macOS가 처리합니다.",
+    convH: "다른 사람의 서버가 아닌, 내 Mac에서 변환.", convP: "일반적인 형식은 macOS 내장 기능으로 변환합니다. 일부 영상·오디오 형식에는 FFmpeg를 별도로 설치해야 합니다. 새 파일은 원본 옆에 새 이름으로 저장되며, 원본을 덮어쓰지 않습니다.",
+    v1cap: "개발 버전 1.5.16의 UI 코드로 생성한 영상으로, 화면 녹화가 아닙니다. PNG → JPEG 변환은 실제로 실행했고 실제 속도로 재생합니다. 바탕화면과 Finder는 연출입니다. 현재 다운로드 버전은 1.5.15이며 외관이 다를 수 있습니다.",
+    v2cap: "개발 버전 1.5.16의 UI 미리보기입니다. 화면 녹화나 플레이어 호환성 테스트가 아닙니다. 현재 다운로드 버전은 1.5.15이며 외관이 다를 수 있습니다.",
+    listT: "지원하는 변환 형식", th1: "원본", th2: "변환 결과", th3: "필요 사항", r1a: "이미지: HEIC, PNG, JPG, WebP, AVIF, TIFF, BMP", r1b: "상호 변환 또는 PDF. 여러 이미지는 PDF 하나로 합칩니다.", r2b: "페이지별 PNG/JPG 폴더, 일반 텍스트, Word(.docx)", r3a: "Word, Markdown, RTF, HTML, 일반 텍스트", r3b: "PDF. 일반 텍스트는 HTML로도 변환할 수 있습니다.", r4b: "상호 변환, GIF, 오디오만 추출(M4A, WAV)", r5b: "상호 변환", r6b: "그 밖의 영상·오디오 형식", bi1: "내장", bi2: "내장", bi3: "내장", bi4: "내장", bi5: "내장", ff: "FFmpeg 별도 설치", listF: "출력 가능한 이미지 형식은 macOS 버전에 따라 다릅니다.",
+    musH: "음악이 재생되면, 노치에도.", musP: "노치 한쪽에는 작은 앨범 커버가, 반대쪽에는 재생 상태 애니메이션이 표시됩니다. 포인터를 올리면 타임라인, 재생·일시 정지, 이전·다음 곡을 제어할 수 있는 플레이어가 펼쳐집니다.",
+    musS: "Spotify와 Apple Music의 커버, 곡 이동, 탐색은 플레이어 버전과 권한에 따라 다릅니다. 브라우저 fallback은 제한적입니다. 이 영상은 UI 예시이며 호환성 테스트가 아닙니다.", awake: "컵 아이콘을 누르면 다시 누르거나 앱을 종료할 때까지 유휴 상태로 인한 화면 잠자기를 막습니다. 수동 잠자기나 MacBook 덮개 닫기는 막지 않습니다.",
+    limH: "한계도 먼저 알려드립니다.", limP: "모든 앱에는 한계가 있습니다. 구매 후에 발견하지 않도록 NotchGlass의 범위를 미리 확인하세요.",
+    limT: "- OCR은 지원하지 않습니다. 스캔 PDF의 이미지에서 텍스트를 추출할 수 없습니다.\n- PDF → Word는 텍스트를 유지하지만 복잡한 레이아웃은 달라질 수 있습니다.\n- MKV, WebM, MP3, FLAC 등에는 FFmpeg가 필요합니다.\n- macOS 13 이상 Mac 전용. iPhone, iPad, Windows 버전은 없습니다.\n- 음악 제어는 플레이어와 권한에 따라 다릅니다.\n- 1인 개발 앱입니다. 문의는 개발자에게 직접 전달됩니다.",
+    le1: "안녕하세요. 대만에서 NotchGlass를 혼자 만드는 Harry입니다. 디자인, 애니메이션, 각 기능까지 직접 만들었습니다.", le2: "곡을 바꾸고, 파일을 변환하고, 전송할 때마다 하던 작업을 떠나야 했습니다. MacBook 화면 위쪽 공간이 그 한 단계를 줄여줄 수 있을까? NotchGlass는 이 질문에서 시작했습니다.", le3: "US$6부터 한 번만 결제하며 구독은 없습니다. 잘 맞지 않으면 구매 후 14일 이내에 이메일로 연락해 주세요. 환불해 드립니다.", le4: "아직 초기 제품이고 개발자는 저 한 명입니다. 불편한 점과 원하는 기능을 직접 알려주세요. 실제로 바꿀 수 있는 사람이 읽습니다.",
+    ver: "현재 다운로드 버전: 1.5.15", once: "부터, 한 번 결제", p1: "모든 기능을 제공합니다. 요금제 구분은 없습니다.", p2: "최대 Mac 2대의 영구 라이선스. 구독 없음.", p3: "더 응원하고 싶다면 Gumroad에서 더 높은 금액을 입력할 수 있습니다.", p4: "구매 후 14일 이내 전액 환불.", qBtn: "궁금한 점", buyG: "Gumroad에서 구매", gm: "결제, 영수증, 라이선스 키는 Gumroad가 처리합니다.", s2: "한 번 결제.\n구독 없음.", helpT: "NotchGlass 도움말",
+    q1: "노치가 있는 MacBook이 필요한가요?", a1: "아닙니다. 노치가 없는 Mac에서는 화면 위쪽 중앙에 표시되며 사용 방법은 같습니다.", q2: "변환할 때 파일을 업로드하나요?", a2: "아닙니다. 변환은 Mac에서 처리합니다. 라이선스 확인, 업데이트 확인, 재생 중인 곡의 커버 조회에는 인터넷을 사용합니다. iCloud Drive에 놓은 파일은 iCloud 폴더에 복사한 뒤 macOS가 동기화합니다.", q3: "변환한 파일은 어디에 저장되나요?", a3: "원본 옆에 새 이름으로 저장합니다. 덮어쓰지 않습니다.", q4: "제게 맞지 않으면 어떻게 하나요?", a4: "구매 후 14일 이내에 harryjia1007@gmail.com으로 연락하면 전액 환불합니다.",
+    q5: "설치와 활성화는 어떻게 하나요?", a5: "Gumroad 구매 영수증에서 앱을 다운로드하고 ‘응용 프로그램’으로 이동하세요. Settings › License에 구매 키를 붙여넣고 Activate를 누르세요. 배포 앱은 Developer ID로 서명되었으며 Apple 공증을 받았습니다.", q6: "업데이트는 어떻게 하나요?", a6: "Gumroad 구매 영수증에서 최신 버전을 다운로드하세요. NotchGlass를 종료하고 ‘응용 프로그램’의 앱을 교체하세요. 설정과 키체인의 라이선스는 유지됩니다. 업데이트는 수동으로 설치합니다.", q7: "미디어 관련 권한이 필요한 이유는 무엇인가요?", a7: "Spotify와 Apple Music 제어에는 자동화 권한이 필요할 수 있습니다. ‘시스템 설정 › 개인정보 보호 및 보안 › 자동화’에서 허용하세요. 브라우저 fallback의 곡 정보, 커버, 제어는 제한적입니다.",
+    f1: "NotchGlass는 대만에서 한 명의 개발자가 만듭니다.", f2: "이 페이지의 노치는 브라우저 시뮬레이션입니다. 파일을 전송하지 않습니다.", zone: "파일이 이 영역에 들어오면 NotchGlass가 열립니다", demoNote: "<b>인터랙티브 예시</b>변환, 업로드, 컴퓨터 변경은 하지 않습니다. 앱 예시의 제어 표시는 영어입니다. 개발 버전 1.5.16 UI이며 현재 다운로드는 1.5.15입니다.", winReset: "창을 원래 위치로", downloads: "다운로드", favorites: "즐겨찾기", recents: "최근 항목", applications: "응용 프로그램", desktop: "데스크탑", documents: "문서"
+  },
+  controls: {
+    zh: { language: "語言", appearance: "外觀", themes: ["自動", "淺色", "深色"], description: "NotchGlass：把常用檔案轉換放到 Mac 瀏海，在本機處理。US$6 起，一次付費，無訂閱。", files: "可以拖到瀏海的示意檔案", demo: "NotchGlass 互動示意", portrait: "NotchGlass 開發者 Harry 的照片", conversionVideo: "PNG 轉 JPEG 的合成介面示範", musicVideo: "音樂介面的無聲合成示範" },
+    en: { language: "Language", appearance: "Appearance", themes: ["Auto", "Light", "Dark"], description: "Convert files locally. Right from your Mac's notch. NotchGlass starts at US$6, paid once, with no subscription.", files: "Simulated files you can drag to the notch", demo: "NotchGlass interactive illustration", portrait: "Harry, the developer of NotchGlass", conversionVideo: "Composited interface demonstration of PNG to JPEG conversion", musicVideo: "Silent composited music interface demonstration" },
+    ja: { language: "言語", appearance: "外観", themes: ["自動", "ライト", "ダーク"], description: "NotchGlass：Mac のノッチからローカルでファイル変換。US$6 からの買い切り、定期課金なし。", files: "ノッチへドラッグできる模擬ファイル", demo: "NotchGlass の操作イメージ", portrait: "NotchGlass 開発者 Harry", conversionVideo: "PNG から JPEG への合成 UI デモ", musicVideo: "音楽 UI の無音合成デモ" },
+    ko: { language: "언어", appearance: "화면 모드", themes: ["자동", "라이트", "다크"], description: "NotchGlass: Mac 노치에서 바로 로컬 파일 변환. US$6부터 한 번 결제, 구독 없음.", files: "노치로 끌어올 수 있는 예시 파일", demo: "NotchGlass 인터랙티브 예시", portrait: "NotchGlass 개발자 Harry", conversionVideo: "PNG에서 JPEG로 변환하는 합성 UI 데모", musicVideo: "음악 UI 무음 합성 데모" }
+  },
+  common: {
+    ja: {
+      "Drag it to the notch, or press Enter to pick it up.": "ノッチへドラッグ、または Enter で選択。", "Turn off Keep Awake (simulated)": "画面スリープ防止を解除（模擬）", "Keep screen awake (simulated)": "画面スリープ防止（模擬）", "Settings (simulated)": "設定（模擬）", "Close": "閉じる", "Playback position": "再生位置", "Previous track": "前の曲", "Next track": "次の曲", "Pause": "一時停止", "Play": "再生", "Remove this file from the list": "このファイルを一覧から削除", " of ": " / ", "Cancel": "キャンセル", "Preview the music controls (silent)": "音楽操作をプレビュー（無音）", "Silent preview running. Point at the notch ↑": "無音プレビュー中。ノッチへポインタを ↑", "Resume the silent preview": "無音プレビューを再開", "Play video": "動画を再生", "Pause video": "動画を一時停止", "Video position": "動画の再生位置", "Simulated: in the app, this opens Settings in its own window.": "操作イメージ：実際の App では設定ウインドウを開きます。", "Simulated: in the app, this keeps your display from sleeping. Nothing changed here.": "操作イメージ：実際の App では画面スリープを防ぎます。ここでは変更しません。", "Simulated: in the app, this restores normal sleep. Nothing changed here.": "操作イメージ：実際の App では通常のスリープ設定に戻します。ここでは変更しません。"
+    },
+    ko: {
+      "Drag it to the notch, or press Enter to pick it up.": "노치로 끌거나 Enter를 눌러 선택하세요.", "Turn off Keep Awake (simulated)": "화면 깨어있기 끄기(예시)", "Keep screen awake (simulated)": "화면 깨어있기(예시)", "Settings (simulated)": "설정(예시)", "Close": "닫기", "Playback position": "재생 위치", "Previous track": "이전 곡", "Next track": "다음 곡", "Pause": "일시 정지", "Play": "재생", "Remove this file from the list": "목록에서 파일 제거", " of ": " / ", "Cancel": "취소", "Preview the music controls (silent)": "음악 제어 미리보기(무음)", "Silent preview running. Point at the notch ↑": "무음 미리보기 중. 노치에 포인터를 올리세요 ↑", "Resume the silent preview": "무음 미리보기 계속", "Play video": "영상 재생", "Pause video": "영상 일시 정지", "Video position": "영상 재생 위치", "Simulated: in the app, this opens Settings in its own window.": "예시: 실제 앱에서는 설정 창이 열립니다.", "Simulated: in the app, this keeps your display from sleeping. Nothing changed here.": "예시: 실제 앱에서는 화면 잠자기를 막습니다. 여기서는 변경하지 않습니다.", "Simulated: in the app, this restores normal sleep. Nothing changed here.": "예시: 실제 앱에서는 기본 잠자기로 돌아갑니다. 여기서는 변경하지 않습니다."
+    }
+  },
+  messages: {
+    zh: { drop: "放到 {0}（示意）", art: "{0} 的示意封面", picked: "{0} 已拿起（示意）。在瀏海裡選一格。", clip: "示意：App 會把 {0} 複製到「下載項目 › NotchClip」，並放進剪貼簿。", air: "示意：App 會叫出 AirDrop 分享視窗，並帶上 {0}。", cloud: "示意：App 會把 {0} 複製到「iCloud 雲碟 › NotchGlass」，再由 macOS 同步。", converted: "示意完成 · {0}" },
+    en: { drop: "Drop on {0} (simulated)", art: "Illustrated album art for {0}", picked: "{0} picked up (simulation). Choose a tile in the notch.", clip: "Simulated: the app would copy {0} to Downloads › NotchClip and your clipboard.", air: "Simulated: the app would open the AirDrop sheet with {0} attached.", cloud: "Simulated: the app would copy {0} to iCloud Drive › NotchGlass; macOS would sync it.", converted: "Demo complete · {0}" },
+    ja: { drop: "{0} にドロップ（模擬）", art: "{0} の模擬ジャケット", picked: "{0} を選択しました（模擬）。ノッチのタイルを選んでください。", clip: "操作イメージ：App は {0} を「ダウンロード › NotchClip」とクリップボードにコピーします。", air: "操作イメージ：App は {0} を添付して AirDrop 共有画面を開きます。", cloud: "操作イメージ：App は {0} を「iCloud Drive › NotchGlass」にコピーし、macOS が同期します。", converted: "操作イメージ完了 · {0}" },
+    ko: { drop: "{0}에 드롭(예시)", art: "{0}의 예시 앨범 커버", picked: "{0} 선택됨(예시). 노치에서 타일을 선택하세요.", clip: "예시: 앱은 {0}을 ‘다운로드 › NotchClip’과 클립보드에 복사합니다.", air: "예시: 앱은 {0}을 첨부한 AirDrop 공유 창을 엽니다.", cloud: "예시: 앱은 {0}을 ‘iCloud Drive › NotchGlass’에 복사하고 macOS가 동기화합니다.", converted: "예시 완료 · {0}" }
+  }
+};
