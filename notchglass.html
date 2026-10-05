@@ -1,13 +1,25 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>NotchGlass</title>
 <meta name="description" content="NotchGlass turns the MacBook notch into a place to put files: convert them on your Mac, AirDrop them, or save them to iCloud Drive. From US$6, paid once.">
 <link rel="icon" href="/notchglass-assets/v7-20261004/media/icon.png">
 <script src="/notchglass-assets/v7-20261004/preferences.4eb499dba501.js"></script>
 
-<link rel="stylesheet" href="/notchglass-assets/v7-20261004/styles.ff75ca446d90.css">
+<link rel="stylesheet" href="/notchglass-assets/v7-20261004/styles.ffc112e56288.css">
 
 <link rel="canonical" href="https://harryjia.com/notchglass"><meta property="og:type" content="website"><meta property="og:title" content="NotchGlass - Convert files locally, right from your Mac's notch."><meta property="og:url" content="https://harryjia.com/notchglass"><meta property="og:image" content="https://harryjia.com/notchglass-assets/v7-20261004/media/web-convert-poster.jpg"><meta property="og:description" content="Local file conversion, music controls and drag-and-drop shortcuts. From US$6, paid once. No subscription."></head><body><header class="mb" id="mb">
+  <!-- Menu / rotate-ccw: Lucide, ISC License.
+  Copyright (c) 2026 Lucide Icons and Contributors
+  Permission to use, copy, modify, and/or distribute this software for any purpose
+  with or without fee is hereby granted, provided that the above copyright notice
+  and this permission notice appear in all copies.
+  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+  REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT,
+  OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+  DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS
+  ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  -->
   <div class="mb-l">
     <b>NotchGlass</b>
     <a href="#try" data-i="n1">Try it</a>
@@ -19,8 +31,12 @@
     <a href="#faq" class="opt" data-i="n7">Help</a>
   </div>
   <div class="mb-r">
+    <button class="mb-toggle" id="mobileMenu" type="button" aria-label="Page options" aria-expanded="false" aria-controls="pageOptions"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16"></path><path d="M4 12h16"></path><path d="M4 19h16"></path></svg></button>
+    <div class="mb-options" id="pageOptions">
+    <label for="lang" data-i="languageLabel">Language</label><label for="theme" data-i="appearanceLabel">Appearance</label>
     <select class="mb-choice" id="lang" aria-label="Language"><option value="zh">繁體中文</option><option value="en" selected="">English</option><option value="ja">日本語</option><option value="ko">한국어</option></select>
     <select class="mb-choice mb-theme" id="theme" aria-label="外觀"><option value="auto">自動</option><option value="light">淺色</option><option value="dark">深色</option></select>
+    </div>
     <svg class="st opt" width="24" height="12" viewBox="0 0 24 12" fill="none" aria-hidden="true"><rect x=".75" y=".75" width="19.5" height="10.5" rx="3" stroke="currentColor" stroke-opacity=".55" stroke-width="1.2"></rect><rect x="2.5" y="2.5" width="14" height="7" rx="1.5" fill="currentColor"></rect><rect x="21.3" y="4" width="1.8" height="4" rx=".9" fill="currentColor" fill-opacity=".55"></rect></svg>
     <svg class="st" width="16" height="12" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M2 6.5a15 15 0 0 1 20 0"></path><path d="M5.5 10.2a10 10 0 0 1 13 0"></path><path d="M9 13.8a5 5 0 0 1 6 0"></path></svg>
     <span class="mb-clock st" id="clock"></span>
@@ -31,10 +47,11 @@
 <main>
 <section class="hero" id="try">
   <div class="hero-grid">
-    <div>
+    <div class="hero-copy">
       <p class="kick" data-i="kick">NotchGlass converts files on your Mac, right from the notch</p>
-      <h1 data-i="h1">drop it on<br>the notch.</h1>
-      <p class="sub" data-i="sub">NotchGlass turns the black cutout at the top of your MacBook into a place to put files. Drag one up, drop it on Convert, AirDrop or iCloud Drive, and get back to what you were doing.</p>
+      <h1><span class="desktop-headline" data-i="h1">drop it on<br>the notch.</span><span class="mobile-brand">NotchGlass</span></h1>
+      <p class="sub desktop-sub" data-i="sub">NotchGlass turns the black cutout at the top of your MacBook into a place to put files. Drag one up, drop it on Convert, AirDrop or iCloud Drive, and get back to what you were doing.</p>
+      <p class="sub mobile-sub" data-i="mobileSub">Convert files locally. Right from your Mac's notch.</p>
       <p class="tryline" data-i="tryline">The notch at the top of this page works too. Go ahead.</p>
       <div class="cta">
         <a class="btn btn-w" href="https://harryverse277.gumroad.com/l/oxkzgr?wanted=true" data-i="buy">Buy · from US$6</a>
@@ -55,8 +72,11 @@ drag sunrise.png up to the black notch.<small>No mouse? Click a file, then pick 
           <div class="fgrid" id="fgrid" role="group" aria-label="Files you can drag to the notch"></div>
         </div>
       </div>
+      <div class="demo-tools"><p class="phone-only" data-i="tapHint">Tap a file to try it.</p><button class="demo-reset" id="demoReset" type="button" aria-label="Reset interactive illustration" title="Reset interactive illustration"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg></button></div>
       <p class="demo-result" id="demo-result" role="status" aria-live="polite" aria-atomic="true"></p>
-      <p class="demo-note" data-i="demoNote"><b>Interactive demo</b>Nothing here converts, uploads or changes anything on your computer.</p>
+      <p class="demo-disclosure phone-only" data-i="demoShort">Browser illustration. No files are converted or uploaded.</p>
+      <p class="demo-note desktop-only" data-i="demoNote"><b>Interactive demo</b>Nothing here converts, uploads or changes anything on your computer.</p>
+      <details class="demo-details phone-only"><summary data-i="demoDetails">About this preview</summary><p data-i="demoNote"></p></details>
     </div>
   </div>
 </section>
@@ -93,7 +113,7 @@ drag sunrise.png up to the black notch.<small>No mouse? Click a file, then pick 
       <figure style="margin:0">
         <div class="win dark qt" data-drag="">
           <div class="bar"><div class="lights"><i></i><i></i><i></i></div><div class="title">notchglass-demo.mov</div></div>
-          <video id="v1" src="/notchglass-assets/v7-20261004/media/web-convert.mp4" poster="/notchglass-assets/v7-20261004/media/web-convert-poster.jpg" muted="" loop="" playsinline="" preload="metadata" aria-label="Dragging sunrise.png onto the notch, converting it to JPEG, and finding the result in Finder"></video>
+          <video id="v1" src="/notchglass-assets/v7-20261004/media/web-convert.mp4" poster="/notchglass-assets/v7-20261004/media/web-convert-poster.jpg" muted="" loop="" playsinline="" preload="none" aria-label="Dragging sunrise.png onto the notch, converting it to JPEG, and finding the result in Finder"></video>
           <div class="ctl"><button class="pp" type="button" data-video="v1" aria-label="Pause video"><svg class="i-pause" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5.5" y="4" width="4.6" height="16" rx="1.2"></rect><rect x="13.9" y="4" width="4.6" height="16" rx="1.2"></rect></svg><svg class="i-play" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.2v15.6a1 1 0 0 0 1.5.86l12.4-7.8a1 1 0 0 0 0-1.72L8.5 3.34A1 1 0 0 0 7 4.2z"></path></svg></button><div class="trk" role="slider" tabindex="0" data-video="v1" aria-label="Video position" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00"><span><i></i></span></div><span class="tm" data-video="v1">0:00</span></div>
         </div>
         <figcaption class="qt-cap" data-i="v1cap">Made from NotchGlass's own interface code. The PNG → JPEG conversion really ran, at real speed. The desktop and Finder around it are staged.</figcaption>
@@ -130,7 +150,7 @@ drag sunrise.png up to the black notch.<small>No mouse? Click a file, then pick 
     </div>
     <figure style="margin:0">
       <div class="media qt">
-        <video id="v2" src="/notchglass-assets/v7-20261004/media/web-music.mp4" poster="/notchglass-assets/v7-20261004/media/web-music-poster.jpg" muted="" loop="" playsinline="" preload="metadata" aria-label="The notch showing album art and an animated playback indicator, then opening into the music player"></video>
+        <video id="v2" src="/notchglass-assets/v7-20261004/media/web-music.mp4" poster="/notchglass-assets/v7-20261004/media/web-music-poster.jpg" muted="" loop="" playsinline="" preload="none" aria-label="The notch showing album art and an animated playback indicator, then opening into the music player"></video>
         <div class="ctl"><button class="pp" type="button" data-video="v2" aria-label="Pause video"><svg class="i-pause" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5.5" y="4" width="4.6" height="16" rx="1.2"></rect><rect x="13.9" y="4" width="4.6" height="16" rx="1.2"></rect></svg><svg class="i-play" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.2v15.6a1 1 0 0 0 1.5.86l12.4-7.8a1 1 0 0 0 0-1.72L8.5 3.34A1 1 0 0 0 7 4.2z"></path></svg></button><div class="trk" role="slider" tabindex="0" data-video="v2" aria-label="Video position" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00"><span><i></i></span></div><span class="tm" data-video="v2">0:00</span></div>
       </div>
       <figcaption class="qt-cap" data-i="v2cap">Interface preview from development version 1.5.16. Current download: 1.5.15. Appearance may differ.</figcaption>
@@ -241,7 +261,7 @@ drag sunrise.png up to the black notch.<small>No mouse? Click a file, then pick 
 <div class="ghost" id="ghost" hidden=""></div>
 <div class="toast" id="toast" role="status" hidden=""></div>
 
-<script src="/notchglass-assets/v7-20261004/locales.3623bd0d66df.js"></script>
-<script src="/notchglass-assets/v7-20261004/interactive.77370a7d80c9.js"></script>
+<script src="/notchglass-assets/v7-20261004/locales.4c207a61a557.js"></script>
+<script src="/notchglass-assets/v7-20261004/interactive.ee0e50508a9e.js"></script>
 
 </body></html>
