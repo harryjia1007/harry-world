@@ -19,10 +19,15 @@ const tr = (zh, en) => (LANG === 'en' ? en : zh);
 const WORKS = [
   { slot: 'work-notchglass', year: '2026', kind: tr('macOS App', 'macOS App'), status: tr('已上架', 'Shipped'), badge: '#D6FF3F',
     name: 'NotchGlass',
-    desc: tr('把筆電瀏海那塊「沒用的空間」，變成隨手可用的工具列。獨立設計、獨立開發，已於 Gumroad 上架。',
-             'Turns the “useless” MacBook notch into a handy toolbar. Designed and built solo — shipped on Gumroad.'),
-    impact: null, stack: ['Swift', 'SwiftUI', 'macOS'],
-    link: 'notchglass.html', cta: tr('看介紹・購買', 'Details & Buy') },
+    image: tr('/notchglass-assets/cover-20261006/notchglass-zh-1600.bf838182d735.webp', '/notchglass-assets/cover-20261006/notchglass-en-1600.7e95d39ba51b.webp'),
+    imageSrcset: tr('/notchglass-assets/cover-20261006/notchglass-zh-800.93c9eede37c4.webp 800w, /notchglass-assets/cover-20261006/notchglass-zh-1600.bf838182d735.webp 1600w', '/notchglass-assets/cover-20261006/notchglass-en-800.e92dee215ff3.webp 800w, /notchglass-assets/cover-20261006/notchglass-en-1600.7e95d39ba51b.webp 1600w'),
+    imageAlt: tr('NotchGlass 品牌封面：原版 Logo、本機 PNG 轉 JPG 及瀏海介面示意', 'NotchGlass brand cover: original logo and local PNG-to-JPG conversion interface preview'),
+    imageCaption: tr('介面示意；外觀依版本而異', 'Interface preview; appearance varies by version'),
+    desc: tr('把常用檔案轉換，放到 Mac 的瀏海。拖入支援的圖片或文件，在本機完成轉檔；音樂控制與檔案快捷操作，也在手邊。',
+             'Convert files locally, right from your Mac’s notch. Music controls and file shortcuts stay close to your work.'),
+    impact: null, stack: [tr('本機轉檔', 'Local conversion'), tr('音樂控制', 'Music controls'), tr('檔案拖放', 'File shortcuts')],
+    purchaseNote: tr('一次付費 · 無訂閱 · 14 天退款', 'Pay once · No subscription · 14-day refund'),
+    link: '/notchglass', cta: tr('看操作示範 · US$6 起', 'See it in action · from US$6') },
   { slot: 'work-injury', year: '2025', kind: tr('AI 系統', 'AI System'), status: tr('已收錄', 'Featured'), badge: '#D6FF3F',
     name: tr('運動傷害預防系統', 'Sports Injury Prevention'),
     desc: tr('用 AI 預測並提醒運動傷害風險，已在真實場域落地驗證。',
@@ -147,6 +152,7 @@ function renderWork() {
   WORKS.forEach((w, i) => {
     const idx = String(i + 1).padStart(2, '0');
     const card = el('div', 'work-card');
+    if (w.slot === 'work-notchglass') card.classList.add('work-card--product');
     card.innerHTML = `
       <span class="idx-wm">${idx}</span>
       <div class="work-shot"></div>
@@ -162,16 +168,30 @@ function renderWork() {
         ${w.impact ? `<div class="work-impact" style="border-color:${w.badge}"><p>${w.impact}</p></div>` : ''}
         <div class="work-stack">${w.stack.map(s => `<span>${s}</span>`).join('')}</div>
         ${w.link ? `<a class="work-cta" href="${w.link}" style="--cta:${w.badge}">${w.cta || '查看'} <i class="fa-solid fa-arrow-right"></i></a>` : ''}
+        ${w.purchaseNote ? `<p class="work-purchase-note">${w.purchaseNote}</p>` : ''}
       </div>`;
     const shot = card.querySelector('.work-shot');
-    shot.appendChild(imgSlot(w.slot, w.image));
-    shot.innerHTML += `<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>`;
-    // 有專頁的作品：整張封面也可點
+    const image = imgSlot(w.slot, w.image);
+    const img = image.querySelector('img');
+    if (w.imageAlt) img.alt = w.imageAlt;
+    if (w.imageSrcset) {
+      img.srcset = w.imageSrcset;
+      img.sizes = '(max-width: 720px) calc(100vw - 64px), (max-width: 1100px) 42vw, 520px';
+      img.width = 1600;
+      img.height = 900;
+    }
+    // Preserve image load/error listeners; rebuilding innerHTML would discard them.
     if (w.link) {
       const a = el('a'); a.href = w.link; a.className = 'work-shot-link';
-      a.setAttribute('aria-label', w.name);
-      shot.style.cursor = 'pointer';
-      shot.addEventListener('click', () => { window.location.href = w.link; });
+      a.setAttribute('aria-label', `${w.name} — ${w.cta}`);
+      a.appendChild(image);
+      shot.appendChild(a);
+    } else shot.appendChild(image);
+    for (const position of ['tl', 'tr', 'bl', 'br']) shot.appendChild(el('span', `corner ${position}`));
+    if (w.imageCaption) {
+      const caption = el('p', 'work-shot-caption');
+      caption.textContent = w.imageCaption;
+      shot.appendChild(caption);
     }
     list.appendChild(card);
   });
