@@ -345,6 +345,7 @@ b{font-weight:700}
 
 /* ---------- WORK ---------- */
 .work-list{display:flex;flex-direction:column;gap:22px}
+@media (min-width:721px){.work-list{display:grid;grid-auto-rows:1fr}}
 .work-card{
   background:linear-gradient(160deg,var(--card),var(--card-2));
   border:1px solid var(--line);border-radius:18px;padding:24px;
@@ -375,21 +376,16 @@ b{font-weight:700}
 .work-cta{display:inline-flex;align-items:center;gap:8px;margin-top:16px;
   font:700 13px var(--sans);color:#0A0A0A;background:var(--cta,#fff);
   padding:9px 16px;border-radius:6px;text-decoration:none;letter-spacing:.02em;
+  min-height:44px;max-width:100%;line-height:1.5;
   transition:transform .18s ease, box-shadow .18s ease}
 .work-cta:hover{transform:translateY(-2px);box-shadow:0 8px 20px color-mix(in srgb,var(--cta,#fff) 40%,transparent)}
 .work-cta i{font-size:11px;transition:transform .18s ease}
 .work-cta:hover i{transform:translateX(3px)}
 .work-shot-link{display:block;color:inherit;text-decoration:none;border-radius:12px}
 .work-shot-link:focus-visible{outline:3px solid var(--accent);outline-offset:5px}
-/* Keep the product cover above the portfolio's decorative scan/grain layers. */
-.work-card--product{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:center;z-index:41}
-.work-card--product:hover{transform:translateY(-3px)}
-.work-card--product .work-shot .img-slot{aspect-ratio:16/9;background:#F6F6F4}
+/* Fit the complete 16:9 cover inside the shared 16:10 project frame. */
+.work-card--product .work-shot .img-slot{background:#F6F6F4}
 .work-card--product .work-shot img{object-fit:contain}
-.work-card--product .work-name{font-size:28px;letter-spacing:0}
-.work-card--product .work-desc{font-size:15px;line-height:1.8;letter-spacing:0}
-.work-card--product .work-stack span{font-family:var(--sans);letter-spacing:0}
-.work-card--product .work-cta{min-height:44px;padding:10px 16px;letter-spacing:0;line-height:1.5;max-width:100%}
 .work-shot-caption{font:12px/1.6 var(--sans);letter-spacing:0;color:#A7AAA5;margin:8px 0 0}
 .work-purchase-note{font:12px/1.7 var(--sans);letter-spacing:0;color:#B2B5AD;margin:10px 0 0}
 @media (prefers-reduced-motion:reduce){.work-card--product,.work-card--product .work-cta{transition:none}.work-card--product:hover,.work-card--product .work-cta:hover{transform:none}}

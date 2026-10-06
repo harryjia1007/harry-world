@@ -176,7 +176,7 @@ function renderWork() {
     if (w.imageAlt) img.alt = w.imageAlt;
     if (w.imageSrcset) {
       img.srcset = w.imageSrcset;
-      img.sizes = '(max-width: 720px) calc(100vw - 64px), (max-width: 1100px) 42vw, 520px';
+      img.sizes = '(max-width: 720px) calc(100vw - 106px), 320px';
       img.width = 1600;
       img.height = 900;
     }
